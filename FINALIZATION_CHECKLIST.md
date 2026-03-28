@@ -28,6 +28,6 @@
 
 ## Release
 
-- [ ] Attach GitHub remote
-- [ ] Commit changes
+- [x] Attach GitHub remote
+- [x] Commit changes
 - [ ] Push branch
