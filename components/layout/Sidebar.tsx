@@ -2,21 +2,24 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, PenTool, History, Settings, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, PenTool, History, Settings, LogOut, Menu, X, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { Plan } from '@/types';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MENU_ITEMS = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'Generate', path: '/generate', icon: PenTool },
   { name: 'History', path: '/history', icon: History },
   { name: 'Settings', path: '/settings', icon: Settings },
-];
+] as const;
 
 interface SidebarContentProps {
   email?: string;
+  plan: Plan;
   pathname: string;
   onNavigate: () => void;
   onLogout: () => Promise<void>;
@@ -24,53 +27,84 @@ interface SidebarContentProps {
 
 function SidebarContent({
   email,
+  plan,
   pathname,
   onNavigate,
   onLogout,
 }: SidebarContentProps) {
   return (
-    <div className="flex flex-col h-full bg-[#111111] border-r border-[#222]">
-      <div className="p-6">
-        <div className="text-xl font-bold flex items-center gap-2 text-white">
-          <span className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-sm">S</span>
-          Stratify
+    <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border">
+      
+      <div className="px-6 py-8">
+        <div className="text-xl font-bold flex items-center gap-3 text-sidebar-foreground">
+          <div className="w-8 h-8 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-sm text-primary font-bold">
+            S
+          </div>
+          <span className="tracking-wide">Stratify</span>
         </div>
       </div>
 
-      <nav className="flex-1 px-4 space-y-2 mt-4">
+      <nav className="flex-1 px-3 space-y-1">
         {MENU_ITEMS.map((item) => {
           const Icon = item.icon;
           const isActive =
             pathname === item.path || (pathname.startsWith(item.path) && item.path !== '/dashboard');
 
           return (
-            <Link key={item.path} href={item.path} onClick={onNavigate}>
+            <Link key={item.path} href={item.path} onClick={onNavigate} className="block relative">
+              {isActive && (
+                <motion.div
+                  layoutId="active-nav-tab"
+                  className="absolute inset-0 bg-primary/10 border border-primary/20 rounded-lg"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                />
+              )}
               <div
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors
+                className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors duration-200
                   ${
                     isActive
-                      ? 'bg-blue-600/10 text-blue-500 font-medium'
-                      : 'text-gray-400 hover:text-white hover:bg-[#222]'
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent'
                   }`}
               >
-                <Icon size={18} />
-                {item.name}
+                <Icon size={18} className={isActive ? "text-primary" : ""} />
+                <span className="flex items-center gap-2 text-[14px] font-medium">
+                  {item.name}
+                  {item.path === '/history' && plan === 'free' ? (
+                    <Lock size={12} className="text-amber-500/80 mb-0.5" />
+                  ) : null}
+                </span>
               </div>
             </Link>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-[#222]">
-        <div className="bg-[#1A1A1A] p-3 rounded-lg border border-[#2A2A2A]">
-          <div className="text-xs text-gray-500 mb-2 truncate" title={email}>{email || 'user'}</div>
+      <div className="p-4 border-t border-sidebar-border">
+        <div className="p-3">
+          <div className="mb-4">
+            <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-1">Current Plan</div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-sidebar-foreground tracking-wide">{plan.toUpperCase()}</span>
+              <Link href="/settings" onClick={onNavigate} className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+                Upgrade
+              </Link>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-6 h-6 rounded-full bg-sidebar-accent border border-sidebar-border flex items-center justify-center text-[10px] font-bold text-sidebar-foreground/70">
+              {email?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <div className="text-[13px] text-muted-foreground truncate font-medium" title={email}>{email || 'user'}</div>
+          </div>
           <Button
             onClick={() => void onLogout()}
             variant="ghost"
-            className="w-full flex items-center justify-start gap-2 text-red-400 hover:text-red-300 hover:bg-red-950/30 h-8 px-2"
+            className="w-full flex items-center justify-start gap-2 text-destructive/80 hover:text-destructive hover:bg-destructive/10 h-8 px-2 rounded-lg transition-colors"
           >
             <LogOut size={16} />
-            <span className="text-sm">Çıkış Yap</span>
+            <span className="text-[13px] font-medium">Sign out</span>
           </Button>
         </div>
       </div>
@@ -78,7 +112,7 @@ function SidebarContent({
   );
 }
 
-export function Sidebar({ email }: { email?: string }) {
+export function Sidebar({ email, plan }: { email?: string; plan: Plan }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const supabase = createClient();
@@ -95,42 +129,58 @@ export function Sidebar({ email }: { email?: string }) {
   return (
     <>
       {/* Mobile Top Bar */}
-      <div className="md:hidden flex items-center justify-between bg-[#111] border-b border-[#222] p-4 fixed top-0 w-full z-40">
-        <div className="font-bold text-white flex items-center gap-2">
-          <span className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-xs">S</span>
+      <div className="md:hidden flex items-center justify-between bg-sidebar border-b border-sidebar-border p-4 fixed top-0 w-full z-40">
+        <div className="font-bold text-sidebar-foreground flex items-center gap-2">
+          <span className="w-6 h-6 rounded border border-primary/20 bg-primary/10 flex items-center justify-center text-xs text-primary">S</span>
           Stratify
         </div>
-        <button onClick={() => setMobileOpen(true)} className="text-gray-300">
+        <button onClick={() => setMobileOpen(true)} className="text-muted-foreground hover:text-sidebar-foreground transition-colors">
           <Menu size={24} />
         </button>
       </div>
 
       {/* Mobile Menu Overlay */}
-      {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <div className="w-64 bg-[#111] h-full relative z-10 animate-in slide-in-from-left">
-            <button 
+      <AnimatePresence>
+        {mobileOpen && (
+          <div className="md:hidden fixed inset-0 z-[50] flex">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm" 
               onClick={() => setMobileOpen(false)} 
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-              type="button"
-            >
-              <X size={24} />
-            </button>
-            <SidebarContent
-              email={email}
-              pathname={pathname}
-              onNavigate={() => setMobileOpen(false)}
-              onLogout={handleLogout}
             />
+            <motion.div 
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="p-4 w-72 h-full relative z-[60]"
+            >
+              <button 
+                onClick={() => setMobileOpen(false)} 
+                className="absolute top-8 right-8 text-muted-foreground hover:text-sidebar-foreground z-[70] bg-background/50 rounded-full p-1 border border-border"
+                type="button"
+              >
+                <X size={20} />
+              </button>
+              <SidebarContent
+                email={email}
+                plan={plan}
+                pathname={pathname}
+                onNavigate={() => setMobileOpen(false)}
+                onLogout={handleLogout}
+              />
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:block w-64 h-screen fixed inset-y-0 left-0 z-20">
+      <div className="hidden md:block fixed inset-y-0 left-0 z-20 w-64">
         <SidebarContent
           email={email}
+          plan={plan}
           pathname={pathname}
           onNavigate={() => setMobileOpen(false)}
           onLogout={handleLogout}

@@ -7,9 +7,9 @@ import { getErrorMessage } from '@/lib/utils/parsers';
 export async function POST(request: Request) {
   try {
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (!session) {
+    if (!user || authError) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -34,8 +34,8 @@ export async function POST(request: Request) {
 
     await adminClient.from('profiles').upsert(
       {
-        id: session.user.id,
-        email: session.user.email ?? '',
+        id: user.id,
+        email: user.email ?? '',
         plan: 'free',
         onboarding_completed: false,
       },
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     );
 
     const { error: oe } = await adminClient.from('onboarding').upsert({
-      user_id: session.user.id,
+      user_id: user.id,
       niche: body.niche.trim(),
       target_audience: body.target_audience.trim(),
       tone: body.tone.trim(),
@@ -57,13 +57,13 @@ export async function POST(request: Request) {
     const { error: pe } = await adminClient
       .from('profiles')
       .update({ onboarding_completed: true })
-      .eq('id', session.user.id);
+      .eq('id', user.id);
       
     if (pe) throw pe;
 
     try {
       await sendOnboardingEmail({
-        to: session.user.email ?? '',
+        to: user.email ?? '',
         niche: body.niche.trim(),
         tone: body.tone.trim(),
       });

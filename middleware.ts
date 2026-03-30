@@ -29,9 +29,22 @@ export async function middleware(request: NextRequest) {
   );
 
   // Bu işlem sadece Supabase token refresh işlemini arkada tetiklemek içindir
-  await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  // Tüm redirect işlemleri (login -> dashboard vd) Next.js server componentlere bırakılmıştır.
+  // Onboarding Guard - Only protect /generate and /history strictly
+  if (user && (request.nextUrl.pathname.startsWith('/generate') || request.nextUrl.pathname.startsWith('/history') || request.nextUrl.pathname.startsWith('/settings'))) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single();
+      
+    if (profile && !profile.onboarding_completed) {
+      return NextResponse.redirect(new URL('/onboarding', request.url));
+    }
+  }
+
+  // Diğer tüm redirect işlemleri (login -> dashboard vd) Next.js server componentlere bırakılmıştır.
   // Bu sayede sonsuz "Redirecting..." döngüleri engellenir.
   return supabaseResponse;
 }

@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -10,6 +9,7 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -40,6 +40,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -50,97 +51,103 @@
 }
 
 :root {
-  /* Her ikisine de koyu temayı yedirerek forced dark mode yaratıldı, blueprint talebi uyarınca */
-  /* Blueprint Colors:
-     Primary: #0A66C2
-     Background: #0F0F0F
-     Surface: #1A1A1A
-     Border: #2A2A2A
-     Text: #F5F5F5, Muted: #A0A0A0
-     Success: #22C55E
-     Warning: #F59E0B
-     Danger: #EF4444
-  */
-  --background: #0F0F0F;
-  --foreground: #F5F5F5;
-  --card: #1A1A1A;
-  --card-foreground: #F5F5F5;
-  --popover: #1A1A1A;
-  --popover-foreground: #F5F5F5;
-  --primary: #0A66C2;
+  /* Clean, professional SaaS look (Taplio inspired) */
+  --background: #FAFAFA; /* zinc-50 */
+  --foreground: #171717; /* zinc-900 */
+  --card: #FFFFFF;
+  --card-foreground: #171717;
+  --popover: #FFFFFF;
+  --popover-foreground: #171717;
+  
+  /* Primary: LinkedIn Blue */
+  --primary: #0A66C2; 
   --primary-foreground: #ffffff;
-  --secondary: #1f2937; /* Tailwind gray-800 benzeri */
-  --secondary-foreground: #f9fafb;
-  --muted: #27272a;
-  --muted-foreground: #A0A0A0;
-  --accent: #27272a;
-  --accent-foreground: #F5F5F5;
+  
+  --secondary: #F4F4F5; /* zinc-100 */
+  --secondary-foreground: #171717;
+  --muted: #F4F4F5;
+  --muted-foreground: #71717A; /* zinc-500 */
+  --accent: #EFF6FF; /* blue-50 */
+  --accent-foreground: #1D4ED8;
   --destructive: #EF4444;
-  --border: #2A2A2A;
-  --input: #2A2A2A;
+  --border: #E5E7EB; /* gray-200 */
+  --input: #E4E4E7; /* zinc-200 */
   --ring: #0A66C2;
   
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 8px; /* Blueprint gereksinimi */
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
   
-  --sidebar: #0F0F0F;
-  --sidebar-foreground: #F5F5F5;
+  /* Standard modern border-radius */
+  --radius: 8px;
+  
+  /* Sidebar settings - Clean, structural */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #171717;
   --sidebar-primary: #0A66C2;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1A1A1A;
-  --sidebar-accent-foreground: #F5F5F5;
-  --sidebar-border: #2A2A2A;
+  --sidebar-accent: #F4F4F5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #E5E7EB;
   --sidebar-ring: #0A66C2;
 }
 
-.dark {
-  --background: #0F0F0F;
-  --foreground: #F5F5F5;
-  --card: #1A1A1A;
-  --card-foreground: #F5F5F5;
-  --popover: #1A1A1A;
-  --popover-foreground: #F5F5F5;
-  --primary: #0A66C2;
-  --primary-foreground: #ffffff;
-  --secondary: #1f2937;
-  --secondary-foreground: #f9fafb;
-  --muted: #27272a;
-  --muted-foreground: #A0A0A0;
-  --accent: #27272a;
-  --accent-foreground: #F5F5F5;
-  --destructive: #EF4444;
-  --border: #2A2A2A;
-  --input: #2A2A2A;
-  --ring: #0A66C2;
-  
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  
-  --sidebar: #0F0F0F;
-  --sidebar-foreground: #F5F5F5;
-  --sidebar-primary: #0A66C2;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #1A1A1A;
-  --sidebar-accent-foreground: #F5F5F5;
-  --sidebar-border: #2A2A2A;
-  --sidebar-ring: #0A66C2;
-}
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  
   body {
     @apply bg-background text-foreground;
   }
+  
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-card/60 backdrop-blur-xl border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)];
+  }
+  
+  .glass-panel {
+    @apply bg-card/40 backdrop-blur-2xl border border-white/5 shadow-2xl;
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+  }
+  
+  .glow-box {
+    box-shadow: 0 0 30px rgba(29, 78, 216, 0.15), inset 0 0 20px rgba(29, 78, 216, 0.05);
+  }
+  
+  .animated-gradient-border {
+    position: relative;
+    background: var(--card);
+    background-clip: padding-box;
+    border: 1px solid transparent;
+  }
+
+  .animated-gradient-border::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: 0;
+    z-index: -1;
+    margin: -1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(59,130,246,0.5) 0%, rgba(29,78,216,0.1) 50%, rgba(16,185,129,0.3) 100%);
+    background-size: 200% 200%;
+    animation: gradientShift 4s ease infinite;
+  }
+  
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 }

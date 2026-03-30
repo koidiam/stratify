@@ -2,7 +2,8 @@ import { OnboardingData } from '@/types';
 
 export function buildInsightPrompt(
   data: OnboardingData,
-  linkedinContext?: string | null
+  linkedinContext?: string | null,
+  feedbackContext?: string | null
 ): string {
   return `You are a LinkedIn growth strategist specializing in the ${data.niche} niche.
 
@@ -12,6 +13,7 @@ User profile:
 - Tone: ${data.tone}
 ${data.goal ? `- Growth goal: ${data.goal}` : ''}
 ${linkedinContext ? `\nUse the following live LinkedIn research as your primary evidence base:\n${linkedinContext}` : ''}
+${feedbackContext ? `\nUser's past post performance:\n${feedbackContext}` : ''}
 
 Your task: Generate 3 strategic insights about what content works on LinkedIn for this specific niche RIGHT NOW.
 

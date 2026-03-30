@@ -54,8 +54,9 @@ function buildTrendQuery(data: OnboardingData): string {
 
 function normalizeLinkedInPost(record: ApifyRecord): LinkedInPostSignal | null {
   const author = getNestedRecord(record, 'author');
-  const content =
+  const rawContent =
     getString(record, ['text', 'content', 'postText', 'postContent', 'caption']) ?? '';
+  const content = rawContent.length > 400 ? rawContent.substring(0, 400) + '...' : rawContent;
 
   if (!content) {
     return null;

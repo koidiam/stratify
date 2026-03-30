@@ -1,7 +1,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { getUsageStatus, incrementUsage } from '@/lib/utils/usage';
-import { callClaude, parseJSON } from '@/lib/anthropic/client';
+import { callGroq, parseJSON } from '@/lib/groq/client';
 import { buildLinkedInResearchContext } from '@/lib/apify/linkedin';
 import { buildInsightPrompt } from '@/lib/prompts/insight.prompt';
 import { buildContentPrompt } from '@/lib/prompts/content.prompt';
@@ -9,18 +9,20 @@ import { getISOWeek } from '@/lib/utils/week';
 import { getErrorMessage, isInsightItemArray, isWeeklyContent } from '@/lib/utils/parsers';
 import { InsightItem, WeeklyContent } from '@/types';
 
+export const maxDuration = 60;
+
 export async function POST() { // request nesnesi kullanılmadığı için kaldırıldı
   try {
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (!user || authError) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const adminClient = await createAdminClient();
     
     const { data: profile } = await adminClient
       .from('profiles')
       .select('plan, onboarding_completed')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .maybeSingle();
 
     if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
@@ -32,29 +34,47 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
     const { data: onboarding } = await adminClient
       .from('onboarding')
       .select('*')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .maybeSingle();
 
     if (!onboarding) return NextResponse.json({ error: 'onboarding_required' }, { status: 400 });
 
     const plan = profile.plan === 'basic' || profile.plan === 'pro' ? profile.plan : 'free';
-    const usageCheck = await getUsageStatus(session.user.id, plan, adminClient);
+    const usageCheck = await getUsageStatus(user.id, plan, adminClient);
 
     if (!usageCheck.allowed) {
       return NextResponse.json({ error: 'limit_reached', plan }, { status: 429 });
     }
 
-    const linkedinResearch = await buildLinkedInResearchContext(
-      session.user.id,
-      onboarding,
-      adminClient
-    );
+    let linkedinResearch = null;
+    try {
+      linkedinResearch = await buildLinkedInResearchContext(
+        user.id,
+        onboarding,
+        adminClient
+      );
+    } catch {
+      // Apify çökse de devam et, sadece onboarding verisiyle çalış
+    }
+
+    let feedbackContext: string | null = null;
+    const { data: pastFeedback } = await adminClient
+      .from('post_feedback')
+      .select('views, likes, comments, reposts, notes')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+      
+    if (pastFeedback && pastFeedback.length > 0) {
+      feedbackContext = pastFeedback.map(f => `Views: ${f.views}, Likes: ${f.likes}, Comments: ${f.comments}, Reposts: ${f.reposts}, Notes: ${f.notes || 'None'}`).join('\n');
+    }
 
     const insightPromptText = buildInsightPrompt(
       onboarding,
-      linkedinResearch?.insightContext ?? null
+      linkedinResearch?.insightContext ?? null,
+      feedbackContext
     );
-    const insightResponseText = await callClaude(insightPromptText);
+    const insightResponseText = await callGroq(insightPromptText);
     const rawInsights = parseJSON<unknown>(insightResponseText);
 
     if (!isInsightItemArray(rawInsights)) {
@@ -68,7 +88,7 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       insights,
       linkedinResearch?.contentContext ?? null
     );
-    const contentResponseText = await callClaude(contentPromptText);
+    const contentResponseText = await callGroq(contentPromptText);
     const rawContent = parseJSON<unknown>(contentResponseText);
 
     if (!isWeeklyContent(rawContent)) {
@@ -78,27 +98,32 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
     const content: WeeklyContent = rawContent;
 
     const { week, year } = getISOWeek();
-    const { error: histErr } = await adminClient.from('content_history').upsert({
-      user_id: session.user.id,
-      week_number: week,
-      year: year,
-      insights,
-      ideas: content.ideas,
-      hooks: content.hooks,
-      posts: content.posts,
-    }, { onConflict: 'user_id,week_number,year' });
+    const { data: historyRecord, error: histErr } = await supabase
+      .from('content_history')
+      .upsert({
+        user_id: user.id,
+        week_number: week,
+        year: year,
+        insights,
+        ideas: content.ideas,
+        hooks: content.hooks,
+        posts: content.posts,
+      }, { onConflict: 'user_id,week_number,year' })
+      .select('id')
+      .single();
 
     if (histErr) throw histErr;
 
     await incrementUsage(
-      session.user.id,
-      adminClient,
+      user.id,
+      supabase,
       usageCheck.week,
       usageCheck.year,
       usageCheck.used
     );
 
     return NextResponse.json({
+      history_id: historyRecord.id,
       week_number: week,
       year,
       insights,

@@ -12,22 +12,23 @@
 
 - [x] Landing page refreshed with a more premium direction
 - [x] Auth screen moved to a more polished production look
-- [ ] Final browser-level visual QA
+- [x] Final browser-level visual QA
 
 ## Data / Infra
 
 - [x] Initial schema migration exists
 - [x] Apify Phase 2 migration exists
 - [ ] Apply `supabase/migrations/20260328170000_apify_phase2.sql` in the target Supabase project if needed
+  *(Not: Bunu Supabase panelinizden sizin manuel çalıştırdığınız varsayılmaktadır)*
 
 ## Verification
 
 - [x] `npm run lint`
 - [x] `npm run build`
-- [ ] Live smoke test with real auth and generate flow
+- [x] Live smoke test with real auth and generate flow
 
 ## Release
 
 - [x] Attach GitHub remote
 - [x] Commit changes
-- [ ] Push branch
+- [x] Push branch

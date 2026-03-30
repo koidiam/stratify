@@ -27,14 +27,14 @@ export async function sendOnboardingEmail({
     body: JSON.stringify({
       from,
       to,
-      subject: 'Stratify onboarding tamamlandi',
+      subject: 'Welcome to Stratify: Your setup is complete',
       html: `
         <div style="font-family: Inter, Arial, sans-serif; color: #111827; line-height: 1.6;">
-          <h2>Stratify hazir</h2>
-          <p>Onboarding tamamlandi. Artik haftalik strateji akisini calistirabilirsin.</p>
-          <p><strong>Nis:</strong> ${niche}</p>
-          <p><strong>Ton:</strong> ${tone}</p>
-          <p>Dashboard'a girip bu haftanin LinkedIn icgorulerini uretebilirsin.</p>
+          <h2>Your Stratify engine is ready</h2>
+          <p>Onboarding is complete. You can now start generating your weekly LinkedIn strategies.</p>
+          <p><strong>Niche:</strong> ${niche}</p>
+          <p><strong>Tone:</strong> ${tone}</p>
+          <p>Head over to your dashboard and generate this week's insights.</p>
         </div>
       `,
     }),

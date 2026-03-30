@@ -12,8 +12,19 @@ export async function getUsageStatus(
   plan: string,
   supabase: SupabaseClient
 ): Promise<{ allowed: boolean; used: number; limit: number; week: number; year: number }> {
-  const limit = PLAN_LIMITS[plan] ?? 1;
+  let limit = PLAN_LIMITS[plan] ?? 1;
   const { week, year } = getISOWeek();
+
+  if (plan === 'free') {
+    const { count } = await supabase
+      .from('content_history')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (count === 0) {
+      limit = 3;
+    }
+  }
 
   // Mevcut kullanımı al
   const { data, error } = await supabase
@@ -50,7 +61,7 @@ export async function incrementUsage(
       year,
       generations_used: used + 1,
       updated_at: new Date().toISOString(),
-    });
+    }, { onConflict: 'user_id,week_number,year' });
 
   if (error) throw new Error('Usage increment failed');
 

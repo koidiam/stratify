@@ -1,13 +1,14 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import { Toaster } from 'sonner';
+import { Toaster } from '@/components/ui/sonner';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Stratify | Büyüme ve Strateji Motoru',
-  description: 'AI destekli içerik üreterek profilinizi büyütün.',
+  title: 'Stratify | Growth & Strategy Engine',
+  description: 'AI-powered LinkedIn growth and content strategy system.',
 };
 
 export default function RootLayout({
@@ -16,11 +17,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    // Forced dark mode
-    <html lang="tr" className="dark">
+    // Light mode default for clean SaaS look
+    <html lang="en">
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
-        {children}
-        <Toaster theme="dark" position="top-center" />
+        <TooltipProvider>
+          {children}
+          <Toaster position="top-center" />
+        </TooltipProvider>
       </body>
     </html>
   );

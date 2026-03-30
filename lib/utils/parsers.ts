@@ -83,6 +83,7 @@ export function isWeeklyContent(value: unknown): value is WeeklyContent {
 export function isWeeklyGeneration(value: unknown): value is WeeklyGeneration {
   return (
     isRecord(value) &&
+    isString(value.history_id) &&
     typeof value.week_number === 'number' &&
     typeof value.year === 'number' &&
     isInsightItemArray(value.insights) &&

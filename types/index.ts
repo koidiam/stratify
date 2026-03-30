@@ -42,6 +42,7 @@ export interface WeeklyContent {
 }
 
 export interface WeeklyGeneration extends WeeklyContent {
+  history_id: string;
   week_number: number;
   year: number;
 }

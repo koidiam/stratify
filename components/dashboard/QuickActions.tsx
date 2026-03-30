@@ -1,60 +1,62 @@
-import { Card } from '@/components/ui/card';
-import { PenTool, Compass, Trophy } from 'lucide-react';
 import Link from 'next/link';
+import { Compass, PenTool, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export function QuickActions() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
       
-      {/* Yeni İçerik */}
-      <Card className="bg-[#111] border-[#222] p-6 hover:border-blue-500/50 transition-colors group flex flex-col justify-between">
+      {/* Generate */}
+      <Card className="bg-card border-border p-6 hover:border-primary/50 transition-colors group flex flex-col justify-between rounded-[16px]">
         <div>
-          <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 mb-4 group-hover:scale-110 transition-transform">
-            <PenTool size={24} />
+          <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-5 group-hover:scale-110 transition-transform">
+            <PenTool size={20} />
           </div>
-          <h3 className="text-lg font-bold text-white mb-2">Strateji & İçerik Üret</h3>
-          <p className="text-sm text-gray-400 mb-6">
-            Yapay zeka ile nişine uygun, psikolojik altyapısı sağlam postlar oluştur.
+          <h3 className="text-lg font-semibold text-foreground mb-2">Generate Strategy</h3>
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            Create AI-driven, psychologically sound posts tailored exactly to your niche.
           </p>
         </div>
         <Link href="/generate">
-          <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">Üretime Başla</Button>
+          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all">Start Generation</Button>
         </Link>
       </Card>
 
-      {/* Profil Geliştirme */}
-      <Card className="bg-[#111] border-[#222] p-6 flex flex-col justify-between">
+      {/* History */}
+      <Card className="bg-card border-border p-6 flex flex-col justify-between rounded-[16px]">
         <div>
-          <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 mb-4">
-            <Compass size={24} />
+          <div className="w-10 h-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-5">
+            <Compass size={20} />
           </div>
-          <h3 className="text-lg font-bold text-white mb-2">Geçmiş Analizi</h3>
-          <p className="text-sm text-gray-400 mb-6">
-            Önceki oluşturduğun postları ve seçtiğin kancaları incele.
+          <h3 className="text-lg font-semibold text-foreground mb-2">History Analysis</h3>
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            Review your previously generated posts, hooks, and historical metrics.
           </p>
         </div>
         <Link href="/history">
-          <Button variant="outline" className="w-full border-[#2A2A2A] text-gray-300 hover:text-white hover:bg-[#222]">
-            Tarihçeyi Gör
+          <Button variant="outline" className="w-full border-border bg-transparent text-foreground hover:bg-secondary transition-all">
+            View History
           </Button>
         </Link>
       </Card>
 
-      {/* Pro Tiers */}
-      <Card className="bg-[#111] border-[#222] p-6 flex flex-col justify-between bg-gradient-to-br from-[#111] to-[#1a1a2e]">
+      {/* Settings */}
+      <Card className="bg-card border-border p-6 flex flex-col justify-between rounded-[16px]">
         <div>
-          <div className="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-500 mb-4">
-            <Trophy size={24} />
+          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-5">
+            <Sparkles size={20} />
           </div>
-          <h3 className="text-lg font-bold text-white mb-2">Limitsiz Büyüme</h3>
-          <p className="text-sm text-gray-400 mb-6">
-            Stripe veya Iyzico ile sınırları kaldır. Sınırsız içerik ve derin analitik raporlarıyla büyü.
+          <h3 className="text-lg font-semibold text-foreground mb-2">Update Profile</h3>
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            Retrain your custom model by tweaking your niche, tone, and account settings.
           </p>
         </div>
-        <Button disabled variant="outline" className="w-full border-yellow-500/20 text-yellow-500/50">
-          Yakında (Faz 2)
-        </Button>
+        <Link href="/settings">
+          <Button variant="outline" className="w-full border-border bg-transparent text-foreground hover:bg-secondary transition-all">
+            Open Settings
+          </Button>
+        </Link>
       </Card>
 
     </div>
