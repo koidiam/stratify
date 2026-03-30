@@ -1,17 +1,24 @@
 import Groq from 'groq-sdk';
 
-if (!process.env.GROQ_API_KEY) {
-  throw new Error('GROQ_API_KEY is not set in environment variables');
-}
+let groq: Groq | null = null;
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
+function getGroqClient(): Groq {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error('GROQ_API_KEY is not set in environment variables');
+  }
+  if (!groq) {
+    groq = new Groq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
+  }
+  return groq;
+}
 
 export async function callGroq(prompt: string): Promise<string> {
   const strictPrompt = prompt + '\n\nIMPORTANT: Return ONLY valid, parseable JSON. Do not write markdown text. Ensure all string values are strictly escaped (e.g. use \\n instead of literal newlines inside strings, and escape quotes). No raw control characters.';
 
-  const chatCompletion = await groq.chat.completions.create({
+  const client = getGroqClient();
+  const chatCompletion = await client.chat.completions.create({
     messages: [
       {
         role: 'user',
