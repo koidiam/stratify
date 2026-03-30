@@ -1,45 +1,43 @@
 # Stratify
 
-LinkedIn icerik stratejisi ve haftalik post uretimi icin Next.js + Supabase tabanli uygulama.
+Stratify is an AI-driven LinkedIn content strategy and scheduling platform. It uses cutting-edge LLMs to analyze user niches, target audiences, and goals to generate high-performing hooks, insights, and weekly post drafts.
 
-## Hizli Baslangic
+## Tech Stack
 
-1. Bagimliliklari yukle:
+- **Framework**: Next.js 14+ (App Router)
+- **Database & Auth**: Supabase
+- **AI Engine**: Groq (Llama 3.3 70B)
+- **Styling**: Tailwind CSS & shadcn/ui
+- **Data Enrichment**: Apify (LinkedIn Profile Data)
+- **Emails**: Resend
 
-```bash
-npm install
-```
+## Getting Started
 
-2. `.env.local` icine su degiskenleri ekle:
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
 
-```env
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_SERVICE_ROLE_KEY=...
-ANTHROPIC_API_KEY=...
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+2. **Environment Setup**:
+   Copy the example environment file and fill in your keys:
+   ```bash
+   cp .env.example .env.local
+   ```
 
-3. Supabase semasini kur:
+3. **Database Setup**:
+   Apply the migrations located in the `/supabase/migrations` folder to set up your Supabase project.
 
-- `supabase/migrations/20260328143000_initial_schema.sql`
-- `supabase/README.md`
+4. **Run the Development Server**:
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-4. Gelistirme sunucusunu baslat:
+## Infrastructure
 
-```bash
-npm run dev
-```
-
-## Table Editor'da Gormen Gerekenler
-
-SQL dosyasini calistirdiktan sonra `public` schema altinda su tablolar gorunur:
-
-- `profiles`
-- `onboarding`
-- `content_history`
-- `usage_tracking`
-- `post_feedback`
-- `subscriptions`
-
-`subscriptions` tablosu billing entegrasyonu icin hazirlik amaclidir. Uygulamanin bugunku zorunlu akisi halen `profiles.plan` alanini kullanir.
+The application relies on several core database tables:
+- `profiles`: User information and settings
+- `onboarding`: User's niche, audience, and goals
+- `content_history`: Weekly generated insights and post drafts
+- `usage_tracking`: Generation quota tracking
+- `post_feedback`: Analytics and performance tracking for generated content
