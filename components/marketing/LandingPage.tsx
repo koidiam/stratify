@@ -138,9 +138,12 @@ export function LandingPage() {
   return (
     <main className="min-h-screen text-foreground bg-background relative selection:bg-primary/20">
       
-      {/* Super minimal grid background pattern */}
-      <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,#000_70%,transparent_100%)] opacity-40" />
+      {/* Precise grid background pattern */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30"
+          style={{ maskImage: 'radial-gradient(circle at 50% 0%, black 20%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at 50% 0%, black 20%, transparent 80%)' }}
+        />
         <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
            <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-primary/20 to-primary/5 opacity-30 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
         </div>
@@ -189,14 +192,14 @@ export function LandingPage() {
           animate="visible"
           className="flex flex-col items-center text-center mt-8 md:mt-20"
         >
-          <motion.div variants={itemVariants} className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary shadow-sm">
+          <motion.div variants={itemVariants} className="mb-8 inline-flex items-center self-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary shadow-sm">
             <Sparkles size={14} className="opacity-80" />
             The Data-Backed LinkedIn OS
           </motion.div>
-
-          <motion.h1 variants={itemVariants} className="max-w-4xl text-5xl font-bold leading-[1.1] tracking-tight text-foreground md:text-6xl lg:text-7xl">
+          
+          <motion.h1 variants={itemVariants} className="max-w-4xl text-center text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-7xl">
             Stop guessing. <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500 inline-block">
               Start writing with data.
             </span>
           </motion.h1>
