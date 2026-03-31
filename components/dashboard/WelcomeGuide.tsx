@@ -1,12 +1,17 @@
 import { Rocket, Sparkles, BookOpen, LineChart, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Plan } from '@/types';
 
-export function WelcomeGuide() {
+export function WelcomeGuide({ plan = 'free' }: { plan?: Plan }) {
+  const step1Description = plan === 'free'
+    ? 'Head to the Generate tab. The engine analyzes your niche from the Stratify database to produce insights and drafts. Pro plans include live LinkedIn scanning.'
+    : 'Head to the Generate tab. The engine sweeps LinkedIn for live data to find what works in your niche today.';
+
   const steps = [
     {
       icon: <Sparkles className="w-5 h-5 text-primary" />,
       title: '1. Fuel the Engine',
-      description: 'Head to the Generate tab. The engine sweeps LinkedIn for live data to find what works in your niche today.',
+      description: step1Description,
       bg: 'bg-primary/10',
       border: 'border-primary/20',
     },

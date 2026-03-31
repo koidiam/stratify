@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createAdminClient } from '@/lib/supabase/server';
+import { sendBillingEmail } from '@/lib/resend/client';
 
 export async function POST(req: Request) {
   try {
@@ -106,6 +107,27 @@ export async function POST(req: Request) {
 
       // Update profiles.plan
       await supabase.from('profiles').update({ plan: newPlan }).eq('id', userId);
+
+      // Send "what you unlocked" email — fully isolated, never breaks webhook
+      if ((eventName === 'subscription_created') && (newPlan === 'basic' || newPlan === 'pro')) {
+        try {
+          const { data: emailProfile } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', userId)
+            .maybeSingle();
+          
+          if (emailProfile?.email) {
+            await sendBillingEmail({ to: emailProfile.email, plan: newPlan });
+          }
+        } catch (emailErr) {
+          // Email failure must NEVER affect webhook response.
+          // Webhook idempotency (lemon_squeezy_events UNIQUE constraint) ensures
+          // duplicate events are blocked before reaching this code,
+          // so re-delivery won't cause duplicate emails.
+          console.warn('[Webhook] Billing email failed (non-fatal):', emailErr);
+        }
+      }
     }
     
     // 4. Fallback handle for purely terminal events

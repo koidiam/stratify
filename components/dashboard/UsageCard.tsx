@@ -57,12 +57,19 @@ export function UsageCard({ plan = 'free', usage = 0 }: Props) {
           <p className="text-amber-500/90 text-xs mt-2 font-medium">You are approaching your weekly limit.</p>
         )}
 
+        {plan === 'free' && percentage < 100 && (
+          <div className="text-[11px] text-muted-foreground mt-2 border border-border/50 bg-secondary/50 px-2 py-1.5 rounded-md flex items-center justify-between w-full">
+            <span>Live scraping locked.</span>
+            <Link href="/settings" className="text-primary hover:underline font-medium">Upgrade</Link>
+          </div>
+        )}
+
         <Link href="/generate" className="block mt-4">
           <Button
             disabled={percentage >= 100}
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-medium disabled:bg-secondary disabled:text-muted-foreground"
           >
-            {percentage >= 100 ? 'Limit Reached' : 'Generate Content'}
+            {percentage >= 100 ? 'Limit Reached' : 'Run Stratify Engine'}
           </Button>
         </Link>
       </div>

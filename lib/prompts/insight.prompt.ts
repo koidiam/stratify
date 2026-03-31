@@ -29,21 +29,23 @@ For each insight, identify:
 - trigger: The primary psychological trigger (choose one: Curiosity, Social proof, Scarcity, Relatability, Contrast, Progress)
 
 RESPOND ONLY WITH VALID JSON. No markdown, no explanation, no preamble:
-[
-  {
-    "insight": "...",
-    "why": "...",
-    "trigger": "..."
-  },
-  {
-    "insight": "...",
-    "why": "...",
-    "trigger": "..."
-  },
-  {
-    "insight": "...",
-    "why": "...",
-    "trigger": "..."
-  }
-]`;
+{
+  "insights": [
+    {
+      "insight": "...",
+      "why": "...",
+      "trigger": "..."
+    },
+    {
+      "insight": "...",
+      "why": "...",
+      "trigger": "..."
+    },
+    {
+      "insight": "...",
+      "why": "...",
+      "trigger": "..."
+    }
+  ]
+}`;
 }

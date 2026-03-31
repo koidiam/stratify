@@ -14,27 +14,12 @@ function getGroqClient(): Groq {
   return groq;
 }
 
-export async function callGroq(prompt: string): Promise<string> {
-  const strictPrompt = prompt + '\n\nIMPORTANT: Return ONLY valid, parseable JSON. Do not write markdown text. Ensure all string values are strictly escaped (e.g. use \\n instead of literal newlines inside strings, and escape quotes). No raw control characters.';
-
-  const client = getGroqClient();
-  const chatCompletion = await client.chat.completions.create({
-    messages: [
-      {
-        role: 'user',
-        content: strictPrompt,
-      },
-    ],
-    model: 'llama-3.3-70b-versatile',
-    temperature: 0.2, // Low temperature for code/JSON generation accuracy
-    max_tokens: 3000,
-  });
-
-  return chatCompletion.choices[0]?.message?.content || '';
-}
-
-export function parseJSON<T>(text: string): T {
-  // Strip any ```json or ``` marks from the LLM output safely
+/**
+ * Clean and parse JSON from Groq outputs.
+ * Removes markdown formatting, handles common serialization issues.
+ * Throws a specific Error if parsing completely fails.
+ */
+function parseJSON<T>(text: string, contextName: string = 'Unknown'): T {
   let cleaned = text.trim();
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '');
@@ -42,18 +27,54 @@ export function parseJSON<T>(text: string): T {
 
   try {
     return JSON.parse(cleaned) as T;
-  } catch (err) {
-    console.error('Initial JSON parse failed, trying cleanup...', err);
-    
-    // Remove invalid control characters but keep common structural formatting
+  } catch (_err) {
     cleaned = cleaned.replace(/[\x00-\x09\x0B-\x1F]/g, '');
-    
     try {
       return JSON.parse(cleaned) as T;
-    } catch (err2) {
-      // Fix bad escape sequences (e.g. \s -> s, \+ -> +) that are invalid in strict JSON
+    } catch (_err2) {
       cleaned = cleaned.replace(/\\([^"\\\/bfnrtu])/g, '$1');
-      return JSON.parse(cleaned) as T;
+      try {
+        return JSON.parse(cleaned) as T;
+      } catch (finalErr) {
+        console.error(`[parseJSON] Failed in ${contextName}. Raw text sample:`, text.substring(0, 500));
+        throw new Error(`Failed to parse Groq AI response as JSON in ${contextName}.`);
+      }
     }
   }
+}
+
+/**
+ * Generates Structured JSON.
+ * Forces the model to respond in JSON format and parses the result.
+ */
+export async function generateStructuredJSON<T>(prompt: string, contextName: string = 'Unknown'): Promise<T> {
+  const strictPrompt = prompt + '\n\nIMPORTANT: Return ONLY valid JSON. Do not write markdown text. Ensure all string values are strictly escaped.';
+
+  const client = getGroqClient();
+  const chatCompletion = await client.chat.completions.create({
+    messages: [{ role: 'user', content: strictPrompt }],
+    model: 'llama-3.3-70b-versatile',
+    temperature: 0.2, // Low temperature for deterministic JSON structure
+    max_tokens: 3000,
+    response_format: { type: 'json_object' },
+  });
+
+  const content = chatCompletion.choices[0]?.message?.content || '{}';
+  return parseJSON<T>(content, contextName);
+}
+
+/**
+ * Generates plain text specifically (used for refine operations).
+ * No JSON formatting forced.
+ */
+export async function generateText(prompt: string): Promise<string> {
+  const client = getGroqClient();
+  const chatCompletion = await client.chat.completions.create({
+    messages: [{ role: 'user', content: prompt }],
+    model: 'llama-3.3-70b-versatile',
+    temperature: 0.7, // Slightly higher for rewriting/refining text naturally
+    max_tokens: 1500,
+  });
+
+  return chatCompletion.choices[0]?.message?.content || '';
 }

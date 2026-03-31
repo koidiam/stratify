@@ -92,22 +92,30 @@ export default async function DashboardPage() {
       </div>
 
       {currentUsage === 0 && (
-        <div className="rounded-[24px] border border-primary/30 bg-primary/5 p-8 text-center mb-6">
-          <div className="text-4xl mb-4">⚡</div>
-          <h3 className="text-xl font-bold text-foreground mb-2">
-            Ready to generate this week's strategy?
-          </h3>
-          <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
-            The engine scans your niche, extracts what's working, and builds
-            your hooks and drafts in under 60 seconds.
-          </p>
-          <Link
-            href="/generate"
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-all"
-          >
-            Generate this week's strategy
-            <ArrowRight size={16} />
-          </Link>
+        <div className="rounded-[24px] border border-primary/30 bg-gradient-to-b from-primary/10 to-transparent p-8 text-center mb-6 relative overflow-hidden group">
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] opacity-20 group-hover:opacity-40 transition-opacity" />
+          <div className="relative z-10">
+            <div className="text-4xl mb-4 inline-block drop-shadow-md">⚙️</div>
+            <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">
+              Stratify Engine is Idle
+            </h3>
+            <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto leading-relaxed">
+              Your niche matrix is primed. Run the engine to synthesize patterns, generate viral hooks, and produce ready-to-publish drafts.
+            </p>
+            <Link
+              href="/generate"
+              className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-all shadow-xl shadow-primary/20 hover:scale-[1.02]"
+            >
+              Ignite Stratify Engine
+              <ArrowRight size={16} className="ml-1" />
+            </Link>
+            
+            {plan === 'free' && (
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground bg-background/50 w-max mx-auto px-3 py-1 rounded-full border border-border/50">
+                Premium Live Scraping locked. <Link href="/settings" className="text-primary hover:underline ml-1 font-medium">Upgrade to Pro</Link>
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -141,11 +149,11 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-8">
-        <WelcomeGuide />
+        <WelcomeGuide plan={plan} />
       </div>
 
       <div className="mt-8">
-        <QuickActions />
+        <QuickActions plan={plan} />
       </div>
     </div>
   );
