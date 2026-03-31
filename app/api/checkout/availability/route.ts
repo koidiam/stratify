@@ -23,12 +23,14 @@ export async function GET() {
       
     if (error) {
       console.error('Founding availability db lookup error:', error);
-      return NextResponse.json({ available: false });
+      return NextResponse.json({ available: false, remaining: 0 });
     }
 
-    // Limit is hardcoded to 15.
-    return NextResponse.json({ available: (count || 0) < 15 });
+    const claimed = count || 0;
+    const remaining = Math.max(0, 15 - claimed);
+
+    return NextResponse.json({ available: remaining > 0, remaining });
   } catch (err: unknown) {
-    return NextResponse.json({ available: false });
+    return NextResponse.json({ available: false, remaining: 0 });
   }
 }
