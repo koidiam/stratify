@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card';
 import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
 import { ProfileForm } from '@/components/settings/ProfileForm';
 
+import { PlanManager } from '@/components/settings/PlanManager';
+
 export default async function SettingsPage() {
   const supabase = await createClient();
   const {
@@ -118,6 +120,8 @@ export default async function SettingsPage() {
                 {plan.toUpperCase()} TIER
               </span>
             </div>
+            
+            <PlanManager currentPlan={plan} />
           </div>
         </Card>
 
