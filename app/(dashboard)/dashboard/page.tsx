@@ -149,11 +149,11 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-8">
-        <WelcomeGuide />
+        <WelcomeGuide plan={plan} />
       </div>
 
       <div className="mt-8">
-        <QuickActions />
+        <QuickActions plan={plan} />
       </div>
     </div>
   );

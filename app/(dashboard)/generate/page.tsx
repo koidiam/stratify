@@ -171,8 +171,10 @@ export default function GeneratePage() {
               Map your weekly LinkedIn strategy.
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
-              Your onboarding context, live LinkedIn signals, and generation limits flow 
-              into a single pipeline. First insights, then hooks, then final ready-to-publish drafts.
+              {userPlan === 'free'
+                ? 'Your onboarding context and generation limits flow into a single pipeline. First insights, then hooks, then final ready-to-publish drafts.'
+                : 'Your onboarding context, live LinkedIn signals, and generation limits flow into a single pipeline. First insights, then hooks, then final ready-to-publish drafts.'
+              }
             </p>
           </div>
 
@@ -230,10 +232,20 @@ export default function GeneratePage() {
               </p>
 
               <div className="mx-auto mb-10 grid max-w-3xl gap-4 md:grid-cols-3">
-                <div className="rounded-xl border border-border bg-secondary p-5 text-left">
-                  <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">01</div>
+                <div className="rounded-xl border border-border bg-secondary p-5 text-left relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">01</div>
+                    {userPlan === 'free' && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">PRO</span>
+                    )}
+                  </div>
                   <div className="font-medium text-foreground">Signal scan</div>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Real-time strategic signals are gathered based on your niche and audience.</p>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    {userPlan === 'free'
+                      ? 'Niche patterns analyzed from your Stratify database.'
+                      : 'Real-time signals gathered from live LinkedIn data.'
+                    }
+                  </p>
                 </div>
                 <div className="rounded-xl border border-border bg-secondary p-5 text-left">
                   <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">02</div>
