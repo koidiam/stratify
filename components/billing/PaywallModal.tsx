@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, Check } from 'lucide-react';
 import { useFoundingStatus } from '@/hooks/useFoundingStatus';
+import { FoundingStrip } from '@/components/billing/FoundingStrip';
 
 interface PaywallModalProps {
   open: boolean;
@@ -15,7 +16,7 @@ interface PaywallModalProps {
 
 export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalProps) {
   const [loading, setLoading] = useState<string | null>(null);
-  const { loaded, available, remaining } = useFoundingStatus();
+  const { loaded, available, claimed, total } = useFoundingStatus();
 
   const handleCheckout = async (plan: string) => {
     setLoading(plan);
@@ -41,7 +42,7 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[42rem] bg-card border-border rounded-[24px]">
+      <DialogContent className="max-w-[44rem] bg-card border-border rounded-[24px]">
         <DialogHeader className="mb-4">
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <Sparkles className="text-primary w-6 h-6" />
@@ -55,28 +56,16 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
         <div className="grid md:grid-cols-2 gap-4">
           {/* Basic Card */}
           <div className="border border-border bg-secondary/30 rounded-2xl p-6 relative flex flex-col">
-            {loaded && (
-               <div className={`absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-sm ${available ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                 {available ? `Founding Offer — ${remaining} Spots Left` : 'Founding Sold Out'}
-               </div>
-            )}
-            <h3 className="font-bold text-xl mb-1 text-foreground mt-2">Basic</h3>
-            <p className="text-sm text-muted-foreground mb-4">Steady professional growth</p>
-            <div className="mb-6 font-semibold flex items-baseline flex-wrap gap-2">
-              {available ? (
-                <>
-                  <div className="flex items-baseline">
-                    <span className="text-4xl tracking-tight">$9</span>
-                    <span className="text-muted-foreground font-normal ml-1">/mo</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground line-through ml-1">$15/mo</span>
-                </>
-              ) : (
-                <div className="flex items-baseline">
-                  <span className="text-4xl tracking-tight">$15</span>
-                  <span className="text-muted-foreground font-normal ml-1">/mo</span>
-                </div>
-              )}
+            <FoundingStrip plan="BASIC" loaded={loaded} available={available} claimed={claimed} total={total} />
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="font-bold text-xl mb-1 text-foreground">Basic</h3>
+                <p className="text-sm text-muted-foreground">Steady professional growth</p>
+              </div>
+            </div>
+            <div className="mb-6 font-semibold flex items-baseline">
+              <span className="text-4xl tracking-tight">$15</span>
+              <span className="text-muted-foreground font-normal ml-1">/mo</span>
             </div>
             <ul className="space-y-3 mb-8 flex-1">
                <li className="flex items-center text-sm font-medium"><Check className="text-primary mr-2 h-4 w-4" /> 3 Generations / week</li>
@@ -93,30 +82,18 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
 
           {/* Pro Card */}
           <div className="border border-primary/40 bg-primary/5 rounded-2xl p-6 relative flex flex-col shadow-sm">
-            {loaded && (
-               <div className={`absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-sm ${available ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                 {available ? `Founding Offer — ${remaining} Spots Left` : 'Founding Sold Out'}
-               </div>
-            )}
-            <h3 className="font-bold text-xl mb-1 text-foreground flex items-center gap-2 mt-2">
-               Pro {available && <Sparkles className="h-4 w-4 text-primary" />}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">Complete scaling solution</p>
-            <div className="mb-6 font-semibold flex items-baseline flex-wrap gap-2">
-              {available ? (
-                <>
-                  <div className="flex items-baseline">
-                    <span className="text-4xl tracking-tight">$19</span>
-                    <span className="text-muted-foreground font-normal ml-1">/mo</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground line-through ml-1">$29/mo</span>
-                </>
-              ) : (
-                <div className="flex items-baseline">
-                  <span className="text-4xl tracking-tight">$29</span>
-                  <span className="text-muted-foreground font-normal ml-1">/mo</span>
-                </div>
-              )}
+            <FoundingStrip plan="PRO" loaded={loaded} available={available} claimed={claimed} total={total} />
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="font-bold text-xl mb-1 text-foreground flex items-center gap-2">
+                  Pro <Sparkles className="h-4 w-4 text-primary" />
+                </h3>
+                <p className="text-sm text-muted-foreground">Complete scaling solution</p>
+              </div>
+            </div>
+            <div className="mb-6 font-semibold flex items-baseline">
+              <span className="text-4xl tracking-tight">$29</span>
+              <span className="text-muted-foreground font-normal ml-1">/mo</span>
             </div>
             <ul className="space-y-3 mb-8 flex-1">
                <li className="flex items-center text-sm font-medium"><Check className="text-primary mr-2 h-4 w-4" /> 50 Generations / week</li>

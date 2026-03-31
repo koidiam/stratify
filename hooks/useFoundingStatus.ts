@@ -4,6 +4,8 @@ export interface FoundingStatus {
   loaded: boolean;
   available: boolean;
   remaining: number;
+  claimed: number;
+  total: number;
 }
 
 export function useFoundingStatus() {
@@ -11,6 +13,8 @@ export function useFoundingStatus() {
     loaded: false,
     available: false,
     remaining: 0,
+    claimed: 0,
+    total: 15,
   });
 
   useEffect(() => {
@@ -21,11 +25,13 @@ export function useFoundingStatus() {
           loaded: true,
           available: !!data.available,
           remaining: typeof data.remaining === 'number' ? data.remaining : 0,
+          claimed: typeof data.claimed === 'number' ? data.claimed : 0,
+          total: typeof data.total === 'number' ? data.total : 15,
         });
       })
       .catch((err) => {
         console.error('Failed to load founding status:', err);
-        setStatus({ loaded: true, available: false, remaining: 0 });
+        setStatus({ loaded: true, available: false, remaining: 0, claimed: 0, total: 15 });
       });
   }, []);
 

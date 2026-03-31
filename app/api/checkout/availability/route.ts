@@ -29,8 +29,8 @@ export async function GET() {
     const claimed = count || 0;
     const remaining = Math.max(0, 15 - claimed);
 
-    return NextResponse.json({ available: remaining > 0, remaining });
+    return NextResponse.json({ available: remaining > 0, remaining, claimed, total: 15 });
   } catch (err: unknown) {
-    return NextResponse.json({ available: false, remaining: 0 });
+    return NextResponse.json({ available: false, remaining: 0, claimed: 0, total: 15 });
   }
 }
