@@ -8,6 +8,7 @@ import { buildContentPrompt } from '@/lib/prompts/content.prompt';
 import { getISOWeek } from '@/lib/utils/week';
 import { getErrorMessage, isInsightItemArray, isWeeklyContent } from '@/lib/utils/parsers';
 import { InsightItem, WeeklyContent } from '@/types';
+import { sendLimitReachedEmail, sendPreLimitEmail } from '@/lib/resend/client';
 
 export const maxDuration = 60;
 
@@ -43,6 +44,32 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
     const usageCheck = await getUsageStatus(user.id, plan, adminClient);
 
     if (!usageCheck.allowed) {
+      // --- Limit Reached Email (isolated side effect) ---
+      // try/catch ensures email failure NEVER changes the 429 response.
+      // Rate limit: limit_email_sent flag in usage_tracking prevents duplicates.
+      // New week = new usage_tracking row = flag naturally resets via DEFAULT false.
+      try {
+        const { data: usageRow } = await adminClient
+          .from('usage_tracking')
+          .select('limit_email_sent')
+          .eq('user_id', user.id)
+          .eq('week_number', usageCheck.week)
+          .eq('year', usageCheck.year)
+          .maybeSingle();
+
+        if (usageRow && !usageRow.limit_email_sent && user.email) {
+          await sendLimitReachedEmail({ to: user.email, plan, used: usageCheck.used });
+          await adminClient
+            .from('usage_tracking')
+            .update({ limit_email_sent: true })
+            .eq('user_id', user.id)
+            .eq('week_number', usageCheck.week)
+            .eq('year', usageCheck.year);
+        }
+      } catch (emailErr) {
+        console.warn('[Generate] Limit reached email failed (non-fatal):', emailErr);
+      }
+
       return NextResponse.json({
         error: 'Weekly usage limit reached',
         code: 'limit_reached',
@@ -132,6 +159,37 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       usageCheck.year,
       usageCheck.used
     );
+
+    // --- Pre-Limit Warning Email (isolated side effect) ---
+    // Triggers at >=80% usage. Only for Basic (2/3) and Pro (40/50).
+    // Free has 1 limit so first generate = 100% = skip warning, go straight to limit.
+    // try/catch ensures email failure NEVER affects the generate response.
+    // Rate limit: warning_email_sent flag. New week = new row = flag resets via DEFAULT false.
+    const newUsed = usageCheck.used + 1;
+    const usagePercent = (newUsed / usageCheck.limit) * 100;
+    if (usagePercent >= 80 && usagePercent < 100 && plan !== 'free') {
+      try {
+        const { data: usageRow } = await adminClient
+          .from('usage_tracking')
+          .select('warning_email_sent')
+          .eq('user_id', user.id)
+          .eq('week_number', usageCheck.week)
+          .eq('year', usageCheck.year)
+          .maybeSingle();
+
+        if (usageRow && !usageRow.warning_email_sent && user.email) {
+          await sendPreLimitEmail({ to: user.email, plan, used: newUsed, limit: usageCheck.limit });
+          await adminClient
+            .from('usage_tracking')
+            .update({ warning_email_sent: true })
+            .eq('user_id', user.id)
+            .eq('week_number', usageCheck.week)
+            .eq('year', usageCheck.year);
+        }
+      } catch (emailErr) {
+        console.warn('[Generate] Pre-limit warning email failed (non-fatal):', emailErr);
+      }
+    }
 
     return NextResponse.json({
       history_id: historyRecord.id,
