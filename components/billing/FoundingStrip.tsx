@@ -55,7 +55,7 @@ export function FoundingStrip({ plan, status, claimed, total }: FoundingStripPro
           {isSoldOut 
             ? `All ${total} spots have been claimed. Regular pricing applies.`
             : isError 
-            ? `Availability status updating. Limited to the first ${total} users.`
+            ? `Founding availability temporarily unavailable.`
             : `Only ${Math.max(0, total - claimed)} spots left. Lock in early-adopter pricing forever.`}
         </p>
         

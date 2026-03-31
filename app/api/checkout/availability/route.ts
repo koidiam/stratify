@@ -5,12 +5,18 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const isDev = process.env.NODE_ENV === 'development';
     const supabase = await createAdminClient();
+    
     const basicFs = process.env.LEMON_SQUEEZY_FOUNDING_BASIC_VARIANT_ID;
     const proFs = process.env.LEMON_SQUEEZY_FOUNDING_PRO_VARIANT_ID;
 
+    // Fail in production if keys are missing to prevent false claims
     if (!basicFs || !proFs) {
-      console.warn('[Availability API] Missing Founding Variant IDs in environment. Using fallback for local dev.');
+      console.error('[Availability API] Missing Founding Variant IDs in environment.');
+      if (!isDev) {
+        return NextResponse.json({ status: 'error', error: 'Missing environment keys configuration' });
+      }
     }
 
     const queryBasic = basicFs || 'dev_fallback_basic';
@@ -24,13 +30,19 @@ export async function GET() {
       
     if (error) {
       console.error('[Availability API] DB lookup failed:', error);
-      // Graceful local dev fallback if the table doesn't exist yet
-      return NextResponse.json({ 
-        status: 'available', 
-        remaining: 15, 
-        claimed: 0, 
-        total: 15 
-      });
+      
+      // Dev fallback: render fake 0/15 so UI is completely reviewable without DB migrations
+      if (isDev) {
+        return NextResponse.json({ 
+          status: 'available', 
+          remaining: 15, 
+          claimed: 0, 
+          total: 15 
+        });
+      }
+
+      // Production strict rule: Actual errors must not fake availability scarcity numbers
+      return NextResponse.json({ status: 'error', error: 'Database querying error' });
     }
 
     const claimed = count || 0;
@@ -44,7 +56,6 @@ export async function GET() {
     });
   } catch (err: unknown) {
     console.error('[Availability API] Fatal server crash:', err);
-    // If the server physically crashes, that's a real 'error' state
     return NextResponse.json({ status: 'error', error: 'Server Crash' });
   }
 }
