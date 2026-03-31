@@ -55,8 +55,8 @@ const PLANS: Plan[] = [
   },
   {
     name: 'BASIC',
-    price: { monthly: '$29', yearly: '$240' },
-    yearlySubtext: '$348/yr',
+    price: { monthly: '$15', yearly: '$120' },
+    yearlySubtext: '$180/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
     description: 'For creators who post consistently',
     featureCategories: [
@@ -87,15 +87,15 @@ const PLANS: Plan[] = [
   },
   {
     name: 'PRO',
-    price: { monthly: '$49', yearly: '$408' },
-    yearlySubtext: '$588/yr',
+    price: { monthly: '$29', yearly: '$240' },
+    yearlySubtext: '$348/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
     description: 'For founders who grow with data',
     featureCategories: [
       {
         title: 'CONTENT GENERATION',
         items: [
-          { name: 'Higher usage limits', active: true },
+          { name: '50 generations per week', active: true },
           { name: '3 insights + psychological analysis', active: true },
           { name: '3 ready-to-publish posts + priority', active: true },
           { name: '5 hooks + 5 content ideas', active: true },
@@ -418,7 +418,7 @@ Here's what I'd do differently —`}
                 </div>
                 {isYearly && plan.yearlySubtext && (
                   <div className="text-xs font-semibold text-emerald-500 mt-1">
-                    {plan.name === 'BASIC' ? 'Save $108 — 2 months free' : 'Save $180 — 3 months free'}
+                    {plan.name === 'BASIC' ? 'Save $60 — 4 months free' : 'Save $108 — 4 months free'}
                   </div>
                 )}
                 <div className="text-sm text-muted-foreground/80 mb-6 h-5 font-medium mt-1">

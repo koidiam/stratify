@@ -43,7 +43,14 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
     const usageCheck = await getUsageStatus(user.id, plan, adminClient);
 
     if (!usageCheck.allowed) {
-      return NextResponse.json({ error: 'limit_reached', plan }, { status: 429 });
+      return NextResponse.json({
+        error: 'Weekly usage limit reached',
+        code: 'limit_reached',
+        plan,
+        used: usageCheck.used,
+        limit: usageCheck.limit,
+        upgradeRequired: true
+      }, { status: 429 });
     }
 
     let linkedinResearch = null;
