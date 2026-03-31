@@ -81,12 +81,13 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       linkedinResearch?.insightContext ?? null,
       feedbackContext
     );
-    const rawInsightsResponse = await generateStructuredJSON<{ insights?: unknown }>(insightPromptText);
+    const rawInsightsResponse = await generateStructuredJSON<{ insights?: unknown }>(insightPromptText, 'InsightStage');
     const rawInsights = typeof rawInsightsResponse === 'object' && rawInsightsResponse !== null && 'insights' in rawInsightsResponse
       ? rawInsightsResponse.insights
       : rawInsightsResponse;
 
     if (!isInsightItemArray(rawInsights)) {
+      console.error('[Generate API] Insight validation failed.', JSON.stringify(rawInsights).substring(0, 300));
       throw new Error('Insight response was not valid JSON.');
     }
 
@@ -97,9 +98,10 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       insights,
       linkedinResearch?.contentContext ?? null
     );
-    const rawContent = await generateStructuredJSON<unknown>(contentPromptText);
+    const rawContent = await generateStructuredJSON<unknown>(contentPromptText, 'ContentStage');
 
     if (!isWeeklyContent(rawContent)) {
+      console.error('[Generate API] Content validation failed.', JSON.stringify(rawContent).substring(0, 300));
       throw new Error('Content response was not valid JSON.');
     }
 

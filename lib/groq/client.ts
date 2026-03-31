@@ -19,7 +19,7 @@ function getGroqClient(): Groq {
  * Removes markdown formatting, handles common serialization issues.
  * Throws a specific Error if parsing completely fails.
  */
-function parseJSON<T>(text: string): T {
+function parseJSON<T>(text: string, contextName: string = 'Unknown'): T {
   let cleaned = text.trim();
   if (cleaned.startsWith('```')) {
     cleaned = cleaned.replace(/^```[a-zA-Z]*\n?/, '').replace(/\n?```$/, '');
@@ -36,7 +36,8 @@ function parseJSON<T>(text: string): T {
       try {
         return JSON.parse(cleaned) as T;
       } catch (finalErr) {
-        throw new Error('Failed to parse Groq AI response as JSON.');
+        console.error(`[parseJSON] Failed in ${contextName}. Raw text sample:`, text.substring(0, 500));
+        throw new Error(`Failed to parse Groq AI response as JSON in ${contextName}.`);
       }
     }
   }
@@ -46,7 +47,7 @@ function parseJSON<T>(text: string): T {
  * Generates Structured JSON.
  * Forces the model to respond in JSON format and parses the result.
  */
-export async function generateStructuredJSON<T>(prompt: string): Promise<T> {
+export async function generateStructuredJSON<T>(prompt: string, contextName: string = 'Unknown'): Promise<T> {
   const strictPrompt = prompt + '\n\nIMPORTANT: Return ONLY valid JSON. Do not write markdown text. Ensure all string values are strictly escaped.';
 
   const client = getGroqClient();
@@ -59,7 +60,7 @@ export async function generateStructuredJSON<T>(prompt: string): Promise<T> {
   });
 
   const content = chatCompletion.choices[0]?.message?.content || '{}';
-  return parseJSON<T>(content);
+  return parseJSON<T>(content, contextName);
 }
 
 /**
