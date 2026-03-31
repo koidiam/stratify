@@ -81,7 +81,10 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       linkedinResearch?.insightContext ?? null,
       feedbackContext
     );
-    const rawInsights = await generateStructuredJSON<unknown>(insightPromptText);
+    const rawInsightsResponse = await generateStructuredJSON<{ insights?: unknown }>(insightPromptText);
+    const rawInsights = typeof rawInsightsResponse === 'object' && rawInsightsResponse !== null && 'insights' in rawInsightsResponse
+      ? rawInsightsResponse.insights
+      : rawInsightsResponse;
 
     if (!isInsightItemArray(rawInsights)) {
       throw new Error('Insight response was not valid JSON.');
