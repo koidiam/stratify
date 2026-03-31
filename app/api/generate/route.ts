@@ -1,7 +1,7 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { getUsageStatus, incrementUsage } from '@/lib/utils/usage';
-import { callGroq, parseJSON } from '@/lib/groq/client';
+import { generateStructuredJSON } from '@/lib/groq/client';
 import { buildLinkedInResearchContext } from '@/lib/apify/linkedin';
 import { buildInsightPrompt } from '@/lib/prompts/insight.prompt';
 import { buildContentPrompt } from '@/lib/prompts/content.prompt';
@@ -81,8 +81,7 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       linkedinResearch?.insightContext ?? null,
       feedbackContext
     );
-    const insightResponseText = await callGroq(insightPromptText);
-    const rawInsights = parseJSON<unknown>(insightResponseText);
+    const rawInsights = await generateStructuredJSON<unknown>(insightPromptText);
 
     if (!isInsightItemArray(rawInsights)) {
       throw new Error('Insight response was not valid JSON.');
@@ -95,8 +94,7 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       insights,
       linkedinResearch?.contentContext ?? null
     );
-    const contentResponseText = await callGroq(contentPromptText);
-    const rawContent = parseJSON<unknown>(contentResponseText);
+    const rawContent = await generateStructuredJSON<unknown>(contentPromptText);
 
     if (!isWeeklyContent(rawContent)) {
       throw new Error('Content response was not valid JSON.');
