@@ -108,7 +108,7 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
     const content: WeeklyContent = rawContent;
 
     const { week, year } = getISOWeek();
-    const { data: historyRecord, error: histErr } = await supabase
+    const { data: historyRecord, error: histErr } = await adminClient
       .from('content_history')
       .upsert({
         user_id: user.id,
@@ -126,7 +126,7 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
 
     await incrementUsage(
       user.id,
-      supabase,
+      adminClient,
       usageCheck.week,
       usageCheck.year,
       usageCheck.used
