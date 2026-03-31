@@ -136,7 +136,7 @@ const itemVariants = {
 
 export function LandingPage() {
   const [isYearly, setIsYearly] = useState(false);
-  const { loaded, available, claimed, total } = useFoundingStatus();
+  const { status, claimed, total } = useFoundingStatus();
 
   return (
     <main className="min-h-screen text-foreground bg-background relative selection:bg-primary/20">
@@ -411,8 +411,8 @@ Here's what I'd do differently —`}
                   </div>
                 )}
                 
-                {!isYearly && loaded && (plan.name === 'BASIC' || plan.name === 'PRO') && (
-                  <FoundingStrip plan={plan.name} loaded={loaded} available={available} claimed={claimed} total={total} />
+                {!isYearly && (plan.name === 'BASIC' || plan.name === 'PRO') && (
+                  <FoundingStrip plan={plan.name as 'BASIC' | 'PRO'} status={status} claimed={claimed} total={total} />
                 )}
                 
                 <div className="text-xl font-bold text-foreground mb-2 mt-2">{plan.name}</div>

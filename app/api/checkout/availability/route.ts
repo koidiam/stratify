@@ -9,12 +9,10 @@ export async function GET() {
     const basicFs = process.env.LEMON_SQUEEZY_FOUNDING_BASIC_VARIANT_ID;
     const proFs = process.env.LEMON_SQUEEZY_FOUNDING_PRO_VARIANT_ID;
 
-    // Both founding elements must be configured to fetch their status.
     if (!basicFs || !proFs) {
-      return NextResponse.json({ available: false });
+      return NextResponse.json({ status: 'error', error: 'Missing environment keys' });
     }
 
-    // Measure total claimed so far
     const { count, error } = await supabase
       .from('subscriptions')
       .select('*', { count: 'exact', head: true })
@@ -23,14 +21,19 @@ export async function GET() {
       
     if (error) {
       console.error('Founding availability db lookup error:', error);
-      return NextResponse.json({ available: false, remaining: 0 });
+      return NextResponse.json({ status: 'error', error: 'DB Error' });
     }
 
     const claimed = count || 0;
     const remaining = Math.max(0, 15 - claimed);
 
-    return NextResponse.json({ available: remaining > 0, remaining, claimed, total: 15 });
+    return NextResponse.json({ 
+      status: remaining > 0 ? 'available' : 'sold_out',
+      remaining, 
+      claimed, 
+      total: 15 
+    });
   } catch (err: unknown) {
-    return NextResponse.json({ available: false, remaining: 0, claimed: 0, total: 15 });
+    return NextResponse.json({ status: 'error', error: 'Server Crash' });
   }
 }

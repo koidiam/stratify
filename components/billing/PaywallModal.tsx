@@ -16,7 +16,7 @@ interface PaywallModalProps {
 
 export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalProps) {
   const [loading, setLoading] = useState<string | null>(null);
-  const { loaded, available, claimed, total } = useFoundingStatus();
+  const { status, claimed, total } = useFoundingStatus();
 
   const handleCheckout = async (plan: string) => {
     setLoading(plan);
@@ -56,7 +56,7 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
         <div className="grid md:grid-cols-2 gap-4">
           {/* Basic Card */}
           <div className="border border-border bg-secondary/30 rounded-2xl p-6 relative flex flex-col">
-            <FoundingStrip plan="BASIC" loaded={loaded} available={available} claimed={claimed} total={total} />
+            <FoundingStrip plan="BASIC" status={status} claimed={claimed} total={total} />
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="font-bold text-xl mb-1 text-foreground">Basic</h3>
@@ -73,16 +73,16 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
             </ul>
             <Button
               className="w-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
-              onClick={() => handleCheckout(available ? 'founding_basic' : 'basic')}
-              disabled={loading !== null || !loaded}
+              onClick={() => handleCheckout(status === 'available' ? 'founding_basic' : 'basic')}
+              disabled={loading !== null || status === 'loading'}
             >
-              {loading === (available ? 'founding_basic' : 'basic') ? <Loader2 className="animate-spin h-4 w-4" /> : available ? 'Claim Founding Offer ($9)' : 'Upgrade to Basic'}
+              {loading === (status === 'available' ? 'founding_basic' : 'basic') ? <Loader2 className="animate-spin h-4 w-4" /> : status === 'available' ? 'Claim Founding Offer ($9)' : 'Upgrade to Basic'}
             </Button>
           </div>
 
           {/* Pro Card */}
           <div className="border border-primary/40 bg-primary/5 rounded-2xl p-6 relative flex flex-col shadow-sm">
-            <FoundingStrip plan="PRO" loaded={loaded} available={available} claimed={claimed} total={total} />
+            <FoundingStrip plan="PRO" status={status} claimed={claimed} total={total} />
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="font-bold text-xl mb-1 text-foreground flex items-center gap-2">
@@ -101,10 +101,10 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
             </ul>
             <Button
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md shadow-primary/20"
-              onClick={() => handleCheckout(available ? 'founding_pro' : 'pro')}
-              disabled={loading !== null || !loaded}
+              onClick={() => handleCheckout(status === 'available' ? 'founding_pro' : 'pro')}
+              disabled={loading !== null || status === 'loading'}
             >
-              {loading === (available ? 'founding_pro' : 'pro') ? <Loader2 className="animate-spin h-4 w-4" /> : available ? 'Claim Founding Offer ($19)' : 'Upgrade to Pro'}
+              {loading === (status === 'available' ? 'founding_pro' : 'pro') ? <Loader2 className="animate-spin h-4 w-4" /> : status === 'available' ? 'Claim Founding Offer ($19)' : 'Upgrade to Pro'}
             </Button>
           </div>
         </div>
