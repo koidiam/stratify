@@ -24,18 +24,43 @@ export async function POST(req: Request) {
 
     const payload = JSON.parse(rawBody);
     const eventName = payload.meta.event_name;
+    const eventId = req.headers.get('x-event-id') || payload.meta.webhook_id || crypto.randomUUID();
     const customData = payload.meta.custom_data || {};
     const userId = customData.user_id;
 
     // Use Service Role admin client to bypass RLS
     const supabase = await createAdminClient();
 
-    // Persist all incoming events for accountability
-    await supabase.from('lemon_squeezy_events').insert({
+    // 1 & 5. Idempotency check & DB Error handle
+    const { data: existingEvent, error: eventError } = await supabase
+      .from('lemon_squeezy_events')
+      .select('id')
+      .eq('event_id', eventId)
+      .maybeSingle();
+      
+    if (eventError && eventError.code === '42P01') {
+      console.error('FATAL: Table lemon_squeezy_events does not exist. Did you run the migration?');
+      return NextResponse.json({ error: 'Database not initialized properly' }, { status: 500 });
+    }
+
+    if (existingEvent) {
+      return NextResponse.json({ success: true, reason: 'duplicate_event_ignored' });
+    }
+
+    const { error: insertError } = await supabase.from('lemon_squeezy_events').insert({
+      event_id: eventId,
       event_name: eventName,
       body: payload,
       processed: true
     });
+
+    if (insertError) {
+       console.error('Event insert failed:', insertError);
+       // Ignore duplicate key errors if race condition
+       if (insertError.code !== '23505') {
+          return NextResponse.json({ error: 'DB insertion failed' }, { status: 500 });
+       }
+    }
 
     if (!userId) {
       console.warn('No custom_data.user_id found in payload.');
@@ -49,10 +74,20 @@ export async function POST(req: Request) {
       const variantId = attributes.variant_id.toString();
       const status = attributes.status; // e.g., active, past_due, expired, cancelled
       
+      // 2 & 4. Safe mapping (unknown variant -> ignore) & Cancel state
       let newPlan = 'free';
-      if (status === 'active' || status === 'on_trial') {
-        if (variantId === process.env.LEMON_SQUEEZY_BASIC_VARIANT_ID) newPlan = 'basic';
-        else if (variantId === process.env.LEMON_SQUEEZY_PRO_VARIANT_ID) newPlan = 'pro';
+      const basicVariant = process.env.LEMON_SQUEEZY_BASIC_VARIANT_ID;
+      const proVariant = process.env.LEMON_SQUEEZY_PRO_VARIANT_ID;
+      
+      if (status === 'active' || status === 'on_trial' || status === 'past_due') {
+        if (variantId === basicVariant) newPlan = 'basic';
+        else if (variantId === proVariant) newPlan = 'pro';
+        else {
+          console.warn(`Unmapped variant ID received: ${variantId}`);
+          return NextResponse.json({ success: true, reason: 'ignored_unknown_variant' });
+        }
+      } else if (status === 'cancelled' || status === 'expired' || status === 'unpaid') {
+        newPlan = 'free';
       }
 
       // Upsert Subscription record
@@ -80,9 +115,11 @@ export async function POST(req: Request) {
       await supabase.from('profiles').update({ plan: newPlan }).eq('id', userId);
     }
     
-    // Fallback logic for expired subscriptions
+    // 4. Fallback handle for purely terminal events
     if (eventName === 'subscription_expired' || eventName === 'subscription_cancelled') {
-       // Only downgrade if the payload targets the active user. Could check existing subscriptions.
+       const lsId = payload.data.id;
+       // Also explicitly update the sub record if it exists
+       await supabase.from('subscriptions').update({ status: 'cancelled' }).eq('lemon_squeezy_id', lsId);
        await supabase.from('profiles').update({ plan: 'free' }).eq('id', userId);
     }
 

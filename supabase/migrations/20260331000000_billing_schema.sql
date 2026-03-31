@@ -21,6 +21,7 @@ CREATE POLICY "Users can read own subscriptions"
 -- lemon_squeezy_events table (for webhook history & debugging)
 CREATE TABLE IF NOT EXISTS public.lemon_squeezy_events (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    event_id VARCHAR UNIQUE,
     event_name VARCHAR NOT NULL,
     body JSONB NOT NULL,
     processed BOOLEAN DEFAULT FALSE,
