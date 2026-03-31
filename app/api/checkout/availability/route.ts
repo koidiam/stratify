@@ -6,12 +6,8 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const supabase = await createAdminClient();
-    const basicFs = process.env.LEMON_SQUEEZY_FOUNDING_BASIC_VARIANT_ID;
-    const proFs = process.env.LEMON_SQUEEZY_FOUNDING_PRO_VARIANT_ID;
-
-    if (!basicFs || !proFs) {
-      return NextResponse.json({ status: 'error', error: 'Missing environment keys' });
-    }
+    const basicFs = process.env.LEMON_SQUEEZY_FOUNDING_BASIC_VARIANT_ID || 'missing_basic_fs';
+    const proFs = process.env.LEMON_SQUEEZY_FOUNDING_PRO_VARIANT_ID || 'missing_pro_fs';
 
     const { count, error } = await supabase
       .from('subscriptions')
