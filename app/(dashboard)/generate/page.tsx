@@ -5,11 +5,13 @@ import { InsightViewer } from '@/components/generate/InsightViewer';
 import { ContentHooks } from '@/components/generate/ContentHooks';
 import { FinalPost } from '@/components/generate/FinalPost';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Radar, Sparkles, Zap, AlertCircle } from 'lucide-react';
+import { ArrowRight, Loader2, Radar, Sparkles, Zap, AlertCircle, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyGeneration } from '@/types';
 import { getApiError, getErrorMessage, isWeeklyGeneration } from '@/lib/utils/parsers';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
+import { Plan } from '@/types';
 import { PaywallModal } from '@/components/billing/PaywallModal';
 
 const STEPS = [
@@ -18,15 +20,29 @@ const STEPS = [
   { id: 3, label: 'Final draft' },
 ];
 
-const LOADING_MESSAGES = [
-  "Connecting to Strategy Engine...",
-  "Analyzing your niche and audience...",
-  "Gathering real-time LinkedIn signals...",
-  "Designing high-engagement hooks...",
-  "Applying psychological triggers...",
-  "Polishing drafts to your brand tone...",
-  "Finalizing output..."
-];
+const getLoadingMessages = (plan: Plan) => {
+  if (plan === 'free') {
+    return [
+      "Connecting to Stratify Engine...",
+      "Analyzing your niche and audience.",
+      "Accessing Stratify Matrix (Niche Cache)...",
+      "Designing high-engagement hooks...",
+      "Applying psychological triggers...",
+      "Polishing drafts to your brand tone...",
+      "Finalizing output..."
+    ];
+  }
+  
+  return [
+    "Connecting to Stratify Engine...",
+    "Analyzing your niche and audience...",
+    "Gathering real-time LinkedIn signals...",
+    "Designing high-engagement hooks...",
+    "Applying psychological triggers...",
+    "Polishing drafts to your brand tone...",
+    "Finalizing output..."
+  ];
+};
 
 export default function GeneratePage() {
   const [step, setStep] = useState(0);
@@ -39,17 +55,38 @@ export default function GeneratePage() {
   
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallData, setPaywallData] = useState({ used: 0, limit: 0 });
+  const [userPlan, setUserPlan] = useState<Plan>('free');
+
+  useEffect(() => {
+    const fetchPlan = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (data?.plan) {
+        setUserPlan(data.plan as Plan);
+      }
+    };
+    fetchPlan();
+  }, []);
 
   useEffect(() => {
     if (!loading) {
       setLoadingMsgIdx(0);
       return;
     }
+    const messages = getLoadingMessages(userPlan);
     const timer = setInterval(() => {
-      setLoadingMsgIdx((prev) => Math.min(prev + 1, LOADING_MESSAGES.length - 1));
+      setLoadingMsgIdx((prev) => Math.min(prev + 1, messages.length - 1));
     }, 1200);
     return () => clearInterval(timer);
-  }, [loading]);
+  }, [loading, userPlan]);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -185,11 +222,11 @@ export default function GeneratePage() {
                 {loading ? <Loader2 size={32} className="animate-spin text-primary" /> : <Zap size={32} />}
               </div>
               <h2 className="mb-4 text-2xl md:text-4xl font-semibold tracking-tight text-foreground">
-                Generate your weekly plan in one click
+                Activate the Stratify Engine
               </h2>
               <p className="mb-12 text-base leading-relaxed text-muted-foreground">
-                The engine gathers context, extracts patterns from the database, and 
-                turns them into incredible hooks and drafts matched to your brand tone.
+                Our AI engine analyzes your niche signals, maps them to proven frameworks, 
+                and engineers high-engagement hooks and valid drafts matched to your brand tone.
               </p>
 
               <div className="mx-auto mb-10 grid max-w-3xl gap-4 md:grid-cols-3">
@@ -242,7 +279,7 @@ export default function GeneratePage() {
                             exit={{ opacity: 0, y: -5 }}
                             className="text-sm font-semibold text-foreground"
                           >
-                            {LOADING_MESSAGES[loadingMsgIdx]}
+                            {getLoadingMessages(userPlan)[loadingMsgIdx]}
                           </motion.div>
                         </AnimatePresence>
                         <div className="text-xs text-muted-foreground">Generating 3 insights, 5 hooks, 3 drafts...</div>
@@ -299,11 +336,19 @@ export default function GeneratePage() {
                   <Button 
                     onClick={handleGenerate} 
                     size="lg"
-                    className="h-14 md:h-12 min-w-[240px] rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 shadow-xl shadow-primary/20"
+                    className="h-14 md:h-12 min-w-[240px] rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 shadow-xl shadow-primary/20 group"
                   >
-                    Initialize Strategy
+                    <Sparkles className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    Run Stratify Engine
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
+                  
+                  {userPlan === 'free' && (
+                    <div className="text-[11px] text-muted-foreground border border-border/50 bg-secondary/50 px-3 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                      <Lock size={10} className="opacity-70" />
+                      Live Web Scraping is locked. Engine will use the Niche Matrix Cache.
+                    </div>
+                  )}
                   
                   <div className="flex items-center justify-center gap-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
                     <Zap size={12} />
