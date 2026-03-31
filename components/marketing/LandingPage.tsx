@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowRight, Radar, Settings2, BarChart3, Fingerprint, Sparkles, CheckCircle2, ArrowUpRight, Check, X, Info, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useFoundingStatus } from '@/hooks/useFoundingStatus';
 
 type FeatureItem = { name: string; active: boolean; badge?: string; tooltip?: string };
 type FeatureCategory = { title: string; items: FeatureItem[] };
@@ -134,6 +135,7 @@ const itemVariants = {
 
 export function LandingPage() {
   const [isYearly, setIsYearly] = useState(false);
+  const { loaded, available, remaining } = useFoundingStatus();
 
   return (
     <main className="min-h-screen text-foreground bg-background relative selection:bg-primary/20">
@@ -403,18 +405,32 @@ Here's what I'd do differently —`}
                 }`}
               >
                 {plan.featured && (
-                  <div className="absolute -top-3 left-0 right-0 mx-auto w-max bg-primary text-primary-foreground text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                  <div className="absolute -top-3 left-0 right-0 mx-auto w-max bg-primary text-primary-foreground text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-10">
                     MOST POPULAR
                   </div>
                 )}
-                <div className="text-xl font-bold text-foreground mb-2">{plan.name}</div>
-                <div className="mb-2 flex items-baseline gap-1">
+                {(plan.name === 'BASIC' || plan.name === 'PRO') && !isYearly && loaded && !plan.featured && (
+                  <div className={`absolute -top-3 left-0 right-0 mx-auto w-max text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-10 shadow-sm ${available ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    {available ? `Founding Offer — ${remaining} Spots Left` : 'Founding Sold Out'}
+                  </div>
+                )}
+                {(plan.name === 'BASIC' || plan.name === 'PRO') && !isYearly && loaded && plan.featured && (
+                  <div className={`absolute -top-8 left-0 right-0 mx-auto w-max text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-10 shadow-sm ${available ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'}`}>
+                    {available ? `Founding Offer — ${remaining} Spots Left` : 'Founding Sold Out'}
+                  </div>
+                )}
+                
+                <div className="text-xl font-bold text-foreground mb-2 mt-2">{plan.name}</div>
+                <div className="mb-2 flex items-baseline gap-1 flex-wrap">
                   <span className="text-5xl font-bold tracking-tight text-foreground">
-                    {isYearly ? plan.price.yearly : plan.price.monthly}
+                    {!isYearly && available && (plan.name === 'BASIC' || plan.name === 'PRO') ? (plan.name === 'BASIC' ? '$9' : '$19') : (isYearly ? plan.price.yearly : plan.price.monthly)}
                   </span>
                   <span className="text-muted-foreground text-sm font-medium">
                     {isYearly ? plan.frequency.yearly : plan.frequency.monthly}
                   </span>
+                  {!isYearly && available && (plan.name === 'BASIC' || plan.name === 'PRO') && (
+                     <span className="text-sm line-through text-muted-foreground ml-2">{plan.price.monthly}</span>
+                  )}
                 </div>
                 {isYearly && plan.yearlySubtext && (
                   <div className="text-xs font-semibold text-emerald-500 mt-1">
