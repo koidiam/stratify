@@ -58,10 +58,11 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       linkedinResearch = await buildLinkedInResearchContext(
         user.id,
         onboarding,
-        adminClient
+        adminClient,
+        plan
       );
-    } catch {
-      // Apify çökse de devam et, sadece onboarding verisiyle çalış
+    } catch (err) {
+      console.warn('[Apify Layer Fallback] Research failed completely. Proceeding Groq-only natively.', err);
     }
 
     let feedbackContext: string | null = null;
@@ -143,6 +144,7 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
     });
 
   } catch (error: unknown) {
+    console.error('[Generate API] Master Catch Block Error:', error);
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

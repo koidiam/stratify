@@ -28,27 +28,39 @@ export async function runApifyActor<T>(
     params.set('maxItems', String(options.maxItems));
   }
 
-  const response = await fetch(
-    `${APIFY_BASE}/acts/${encodeURIComponent(actorId)}/run-sync-get-dataset-items?${params.toString()}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(input),
-      cache: 'no-store',
+  // 15 saniyelik timeout kalkanı: Next.js Vercel 60s/10s timeout'undan önce patlamalı
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    const response = await fetch(
+      `${APIFY_BASE}/acts/${encodeURIComponent(actorId)}/run-sync-get-dataset-items?${params.toString()}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+        cache: 'no-store',
+        signal: controller.signal,
+      }
+    );
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Apify actor ${actorId} failed with status ${response.status}.`);
     }
-  );
 
-  if (!response.ok) {
-    throw new Error(`Apify actor ${actorId} failed with status ${response.status}.`);
+    const data: unknown = await response.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error(`Apify actor ${actorId} returned an unexpected payload.`);
+    }
+
+    return data as T[];
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
   }
-
-  const data: unknown = await response.json();
-
-  if (!Array.isArray(data)) {
-    throw new Error(`Apify actor ${actorId} returned an unexpected payload.`);
-  }
-
-  return data as T[];
 }
