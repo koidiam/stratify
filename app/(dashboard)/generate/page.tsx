@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { WeeklyGeneration } from '@/types';
 import { getApiError, getErrorMessage, isWeeklyGeneration } from '@/lib/utils/parsers';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PaywallModal } from '@/components/billing/PaywallModal';
 
 const STEPS = [
   { id: 1, label: 'Signal scan' },
@@ -35,6 +36,9 @@ export default function GeneratePage() {
   const [data, setData] = useState<WeeklyGeneration | null>(null);
   const [selectedPost, setSelectedPost] = useState<string>('');
   const [selectedPostIndex, setSelectedPostIndex] = useState<number | null>(null);
+  
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallData, setPaywallData] = useState({ used: 0, limit: 0 });
 
   useEffect(() => {
     if (!loading) {
@@ -55,12 +59,15 @@ export default function GeneratePage() {
       const json: unknown = await res.json();
       
       if (!res.ok) {
-        const error = getApiError(json);
-
-        if (error === 'limit_reached') {
-          throw new Error('Weekly limit reached. Upgrade your plan to continue.');
+        if (res.status === 429) {
+          const payload = json as Record<string, unknown>;
+          if (payload.code === 'limit_reached') {
+             setPaywallData({ used: Number(payload.used) || 0, limit: Number(payload.limit) || 0 });
+             setShowPaywall(true);
+             return;
+          }
         }
-
+        const error = getApiError(json);
         throw new Error(error ?? 'An error occurred');
       }
 
@@ -367,6 +374,7 @@ export default function GeneratePage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} used={paywallData.used} limit={paywallData.limit} />
     </div>
   );
 }

@@ -24,29 +24,15 @@ export async function POST(req: Request) {
 
     const payload = JSON.parse(rawBody);
     const eventName = payload.meta.event_name;
-    const eventId = req.headers.get('x-event-id') || payload.meta.webhook_id || crypto.randomUUID();
+    // signature is unique to the exact payload content, making it a perfect idempotency key
+    const eventId = signatureHeader; 
     const customData = payload.meta.custom_data || {};
     const userId = customData.user_id;
 
     // Use Service Role admin client to bypass RLS
     const supabase = await createAdminClient();
 
-    // 1 & 5. Idempotency check & DB Error handle
-    const { data: existingEvent, error: eventError } = await supabase
-      .from('lemon_squeezy_events')
-      .select('id')
-      .eq('event_id', eventId)
-      .maybeSingle();
-      
-    if (eventError && eventError.code === '42P01') {
-      console.error('FATAL: Table lemon_squeezy_events does not exist. Did you run the migration?');
-      return NextResponse.json({ error: 'Database not initialized properly' }, { status: 500 });
-    }
-
-    if (existingEvent) {
-      return NextResponse.json({ success: true, reason: 'duplicate_event_ignored' });
-    }
-
+    // 1. Idempotency via DB Constraint (event_id UNIQUE)
     const { error: insertError } = await supabase.from('lemon_squeezy_events').insert({
       event_id: eventId,
       event_name: eventName,
@@ -55,11 +41,16 @@ export async function POST(req: Request) {
     });
 
     if (insertError) {
-       console.error('Event insert failed:', insertError);
-       // Ignore duplicate key errors if race condition
-       if (insertError.code !== '23505') {
-          return NextResponse.json({ error: 'DB insertion failed' }, { status: 500 });
+       if (insertError.code === '42P01') {
+          console.error('FATAL: Table lemon_squeezy_events does not exist. Did you run the migration?');
+          return NextResponse.json({ error: 'Database not initialized properly' }, { status: 500 });
        }
+       // 23505 is PostgreSQL's unique_violation error code. Block duplicate processing completely.
+       if (insertError.code === '23505') {
+          return NextResponse.json({ success: true, reason: 'duplicate_event_caught_by_db' });
+       }
+       console.error('Event insert failed:', insertError);
+       return NextResponse.json({ error: 'DB insertion failed' }, { status: 500 });
     }
 
     if (!userId) {
@@ -78,10 +69,12 @@ export async function POST(req: Request) {
       let newPlan = 'free';
       const basicVariant = process.env.LEMON_SQUEEZY_BASIC_VARIANT_ID;
       const proVariant = process.env.LEMON_SQUEEZY_PRO_VARIANT_ID;
+      const basicFs = process.env.LEMON_SQUEEZY_FOUNDING_BASIC_VARIANT_ID;
+      const proFs = process.env.LEMON_SQUEEZY_FOUNDING_PRO_VARIANT_ID;
       
       if (status === 'active' || status === 'on_trial' || status === 'past_due') {
-        if (variantId === basicVariant) newPlan = 'basic';
-        else if (variantId === proVariant) newPlan = 'pro';
+        if (variantId === basicVariant || variantId === basicFs) newPlan = 'basic';
+        else if (variantId === proVariant || variantId === proFs) newPlan = 'pro';
         else {
           console.warn(`Unmapped variant ID received: ${variantId}`);
           return NextResponse.json({ success: true, reason: 'ignored_unknown_variant' });

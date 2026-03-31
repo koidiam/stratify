@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { initLemonSqueezy } from '@/lib/lemonsqueezy/client';
 import { createCheckout } from '@lemonsqueezy/lemonsqueezy.js';
 
@@ -19,6 +19,24 @@ export async function POST(req: Request) {
     let variantId;
     if (plan === 'basic') variantId = process.env.LEMON_SQUEEZY_BASIC_VARIANT_ID;
     else if (plan === 'pro') variantId = process.env.LEMON_SQUEEZY_PRO_VARIANT_ID;
+    else if (plan === 'founding_basic' || plan === 'founding_pro') {
+      const basicFs = process.env.LEMON_SQUEEZY_FOUNDING_BASIC_VARIANT_ID;
+      const proFs = process.env.LEMON_SQUEEZY_FOUNDING_PRO_VARIANT_ID;
+      if (!basicFs || !proFs) {
+        return NextResponse.json({ error: 'Founding billing keys not configured' }, { status: 400 });
+      }
+      
+      const adminClient = await createAdminClient();
+      const { count } = await adminClient.from('subscriptions')
+         .select('*', { count: 'exact', head: true })
+         .in('variant_id', [basicFs, proFs])
+         .in('status', ['active', 'past_due', 'on_trial']);
+      
+      if ((count || 0) >= 15) {
+         return NextResponse.json({ error: 'Founding member spots are fully claimed' }, { status: 400 });
+      }
+      variantId = plan === 'founding_basic' ? basicFs : proFs;
+    }
     
     if (!storeId || !variantId) {
       // In development, gracefully fail without bringing down the system.

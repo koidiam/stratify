@@ -4,7 +4,7 @@ import { getISOWeek } from './week';
 export const PLAN_LIMITS: Record<string, number> = {
   free: 1,
   basic: 3,
-  pro: 999, // "sınırsız" — yeterince büyük bir sayı
+  pro: 50,
 };
 
 export async function getUsageStatus(
@@ -16,14 +16,7 @@ export async function getUsageStatus(
   const { week, year } = getISOWeek();
 
   if (plan === 'free') {
-    const { count } = await supabase
-      .from('content_history')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
-
-    if (count === 0) {
-      limit = 3;
-    }
+    limit = 1;
   }
 
   // Mevcut kullanımı al
