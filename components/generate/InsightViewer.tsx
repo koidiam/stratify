@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Sparkles } from 'lucide-react';
 
 interface Insight {
   insight: string;
@@ -11,10 +11,16 @@ interface Insight {
 interface Props {
   insights: Insight[];
   onNext: () => void;
+  weekNumber?: number;
+  year?: number;
+  dataSource?: string;
 }
 
-export function InsightViewer({ insights, onNext }: Props) {
+export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }: Props) {
   if (insights.length === 0) return null;
+
+  const sourceLabel = dataSource ?? 'Niche signals';
+  const timeLabel = weekNumber && year ? `Week ${weekNumber}, ${year}` : 'This week';
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
@@ -27,6 +33,10 @@ export function InsightViewer({ insights, onNext }: Props) {
           Latest trends, psychological frameworks, and audience analysis in your niche. 
           These patterns form the foundation for your hooks and drafts.
         </p>
+        <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-primary/70">
+          <CheckCircle2 className="h-3 w-3" />
+          Signal extraction complete · {insights.length} {insights.length === 1 ? 'pattern' : 'patterns'} identified
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -36,18 +46,21 @@ export function InsightViewer({ insights, onNext }: Props) {
             className="flex flex-col rounded-[20px] border-border bg-card shadow-sm p-6 transition-all hover:-translate-y-1 hover:border-primary/30"
           >
             <div className="flex-1">
-              <div className="mb-3 text-[10px] font-bold uppercase tracking-wider text-primary">Insight 0{idx + 1}</div>
+              <div className="mb-3 text-[10px] font-bold uppercase tracking-wider text-primary">Signal 0{idx + 1}</div>
               <h3 className="mb-3 text-base font-semibold leading-snug text-foreground">{item.insight}</h3>
               <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{item.why}</p>
               
               <div className="rounded-xl border border-border bg-secondary p-4 text-xs text-muted-foreground">
-                <span className="mb-1.5 block text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">Psychological Trigger</span>
-                {item.trigger}
+                <span className="mb-1.5 flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
+                  <span>🧠</span>
+                  Pattern Detected
+                </span>
+                <span className="text-foreground/80">Trigger:</span> {item.trigger}
               </div>
             </div>
             <div className="mt-4 pt-4 border-t border-border flex items-center gap-1.5">
-              <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                Based on patterns in your niche
+              <span className="text-[10px] font-medium text-muted-foreground/60 tracking-wide">
+                Source: {sourceLabel} · {timeLabel}
               </span>
             </div>
           </Card>

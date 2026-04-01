@@ -35,14 +35,14 @@ function SidebarContent({
   return (
     <div className="flex flex-col h-full bg-sidebar border-r border-sidebar-border">
       
-      <div className="px-6 py-8">
+      <Link href="/dashboard" onClick={onNavigate} className="block px-6 py-8">
         <div className="text-xl font-bold flex items-center gap-3 text-sidebar-foreground">
           <div className="w-8 h-8 rounded bg-primary/10 border border-primary/20 flex items-center justify-center text-sm text-primary font-bold">
             S
           </div>
           <span className="tracking-wide">Stratify</span>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex-1 px-3 space-y-1">
         {MENU_ITEMS.map((item) => {
@@ -130,10 +130,10 @@ export function Sidebar({ email, plan }: { email?: string; plan: Plan }) {
     <>
       {/* Mobile Top Bar */}
       <div className="md:hidden flex items-center justify-between bg-sidebar border-b border-sidebar-border p-4 fixed top-0 w-full z-40">
-        <div className="font-bold text-sidebar-foreground flex items-center gap-2">
+        <Link href="/dashboard" className="font-bold text-sidebar-foreground flex items-center gap-2">
           <span className="w-6 h-6 rounded border border-primary/20 bg-primary/10 flex items-center justify-center text-xs text-primary">S</span>
           Stratify
-        </div>
+        </Link>
         <button onClick={() => setMobileOpen(true)} className="text-muted-foreground hover:text-sidebar-foreground transition-colors">
           <Menu size={24} />
         </button>
