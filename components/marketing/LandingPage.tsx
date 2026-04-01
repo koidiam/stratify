@@ -121,7 +121,7 @@ export function LandingPage() {
               S
             </div>
             <div>
-              <div className="text-sm font-semibold tracking-tight text-foreground">Stratify OS</div>
+              <div className="text-sm font-semibold tracking-tight text-foreground">Stratify</div>
             </div>
           </div>
 
@@ -137,7 +137,7 @@ export function LandingPage() {
             </Link>
             <Link
               href="/register"
-              className="inline-flex items-center justify-center rounded-md bg-foreground text-background px-4 py-2 text-sm font-medium transition-transform hover:bg-foreground/90 active:scale-95"
+              className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium transition-transform hover:bg-primary/90 active:scale-95"
             >
               Access System
             </Link>
@@ -419,8 +419,8 @@ Here's my expensive lesson —`}
                     : 'border border-border/50 bg-card/40'
                 }`}
               >
-                {!isYearly && (plan.name === 'BASIC' || plan.name === 'PRO') && (
-                  <FoundingStrip plan={plan.name as 'BASIC' | 'PRO'} status={status} claimed={claimed} total={total} />
+                {(plan.name === 'BASIC' || plan.name === 'PRO') && (
+                  <FoundingStrip plan={plan.name as 'BASIC' | 'PRO'} status={status} claimed={claimed} total={total} isYearly={isYearly} />
                 )}
                 
                 <div className="text-[9px] md:text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-2 mt-1">{plan.name}</div>
@@ -472,7 +472,7 @@ Here's my expensive lesson —`}
         
         {/* Footer */}
         <footer className="mt-16 md:mt-24 pt-6 md:pt-8 border-t border-border/30 flex flex-col md:flex-row items-center justify-between text-muted-foreground text-[10px] md:text-xs font-medium pb-8 md:pb-0">
-          <div>© {new Date().getFullYear()} Stratify. Data-Backed OS.</div>
+          <div>© {new Date().getFullYear()} Stratify. All rights reserved.</div>
           <div className="flex gap-4 md:gap-6 mt-4 md:mt-0">
             <Link href="/terms" className="hover:text-foreground transition-colors uppercase tracking-wider">Terms</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors uppercase tracking-wider">Privacy</Link>

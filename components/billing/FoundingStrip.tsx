@@ -6,21 +6,18 @@ interface FoundingStripProps {
   status: FoundingStatusType;
   claimed: number;
   total: number;
+  isYearly?: boolean;
 }
 
-export function FoundingStrip({ plan, status, claimed, total }: FoundingStripProps) {
+export function FoundingStrip({ plan, status, claimed, total, isYearly = false }: FoundingStripProps) {
   if (status === 'loading') {
+    // Silent height-matched skeleton instead of "Checking availability" UI
     return (
-      <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4 flex flex-col justify-center min-h-[110px] shadow-sm">
-         <div className="flex items-center gap-2 text-muted-foreground/70 justify-center">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm font-medium">Checking availability...</span>
-         </div>
-      </div>
+      <div className="mb-6 rounded-xl border border-border/10 bg-muted/5 p-4 flex flex-col justify-center min-h-[110px] opacity-50 animate-pulse" />
     );
   }
 
-  const foundingPrice = plan === 'BASIC' ? '$9' : '$19';
+  const foundingPrice = plan === 'BASIC' ? (isYearly ? '$72' : '$9') : (isYearly ? '$144' : '$19');
   const isAvailable = status === 'available';
   const isSoldOut = status === 'sold_out';
   const isError = status === 'error';
@@ -64,7 +61,7 @@ export function FoundingStrip({ plan, status, claimed, total }: FoundingStripPro
             {foundingPrice}
           </span>
           <span className={`text-sm font-medium ${isAvailable || isError ? 'text-muted-foreground' : 'text-muted-foreground/50 line-through'}`}>
-            /mo forever
+            {isYearly ? '/yr forever' : '/mo forever'}
           </span>
         </div>
       </div>
