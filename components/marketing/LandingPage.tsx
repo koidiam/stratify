@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Radar, Settings2, BarChart3, Fingerprint, Sparkles, Check, X, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, Radar, Settings2, BarChart3, Fingerprint, Sparkles, Check, X, ArrowUpRight, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useFoundingStatus } from '@/hooks/useFoundingStatus';
 import { FoundingStrip } from '@/components/billing/FoundingStrip';
@@ -13,6 +13,7 @@ type Plan = {
   yearlySubtext: string | null;
   frequency: { monthly: string; yearly: string };
   description: string;
+  unlocksText?: string;
   features: string[];
   buttonText: string;
   featured: boolean;
@@ -24,12 +25,12 @@ const PLANS: Plan[] = [
     price: { monthly: '$0', yearly: '$0' },
     yearlySubtext: null,
     frequency: { monthly: '/mo', yearly: '/yr' },
-    description: 'Experience the baseline output capacity. No credit card required.',
+    description: 'Experience the baseline pipeline. See the system work before committing.',
     features: [
-      '1 weekly extraction cycle',
-      '1 analyzed insight',
-      '1 synthesized post draft',
-      '5 generated hook variations'
+      '1 extraction cycle per week',
+      '1 validated insight',
+      '1 final post draft',
+      'Basic hook generation'
     ],
     buttonText: 'Start Free',
     featured: false,
@@ -39,14 +40,13 @@ const PLANS: Plan[] = [
     price: { monthly: '$15', yearly: '$120' },
     yearlySubtext: '$180/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
-    description: 'For creators producing content consistently.',
+    description: 'For creators who need a consistent, data-[backed] weekly presence.',
+    unlocksText: 'Unlocks full week coverage & history vault',
     features: [
-      '3 weekly extraction cycles',
-      '3 analyzed insights per cycle',
-      '3 synthesized post drafts',
-      'Full history vault access',
-      'Tone profile saving',
-      'Performance feedback loop'
+      '3 extraction cycles per week',
+      '3 full post drafts',
+      'Automated tone matching',
+      'Full history vault access'
     ],
     buttonText: 'Get Started',
     featured: true,
@@ -56,14 +56,13 @@ const PLANS: Plan[] = [
     price: { monthly: '$29', yearly: '$240' },
     yearlySubtext: '$348/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
-    description: 'For teams and founders scaling their strategy.',
+    description: 'For founders scaling revenue through serious audience building.',
+    unlocksText: 'Unlocks competitor tracking & deep psychology',
     features: [
-      '50 weekly extraction cycles',
-      'Deep psychological analysis',
-      'Priority draft synthesis',
+      '50 extraction cycles per week',
+      'Deep psychological mapping',
       'Competitor signal tracking',
-      'Signature style matching',
-      'Priority technical support'
+      'Priority draft synthesis'
     ],
     buttonText: 'Get Started',
     featured: false,
@@ -120,7 +119,8 @@ export function LandingPage() {
           </div>
 
           <nav className="hidden items-center gap-6 md:flex border border-border bg-card/50 backdrop-blur-md px-6 py-2.5 rounded-full shadow-sm">
-            <a href="#mechanisms" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Mechanisms</a>
+            <a href="#mechanisms" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">How it works</a>
+            <a href="#pipeline" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">The Pipeline</a>
             <a href="#pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Plans</a>
           </nav>
 
@@ -142,20 +142,20 @@ export function LandingPage() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="flex flex-col items-center text-center mt-8 md:mt-20"
+          className="flex flex-col items-center text-center mt-8 md:mt-16"
         >
           <motion.div variants={itemVariants} className="mb-8 inline-flex items-center self-center gap-2 rounded-full border border-border bg-secondary/50 px-4 py-1.5 text-xs font-semibold text-muted-foreground shadow-sm">
-            <Radar size={14} className="opacity-80" />
-            Signal-Driven Content System
+            <Radar size={14} className="opacity-80 text-primary" />
+            Not an AI Writer. A Signal-Driven Content System.
           </motion.div>
           
           <motion.h1 variants={itemVariants} className="max-w-4xl text-center text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-7xl">
-            Stop guessing. <br className="hidden md:block" />
-            Engineer your content with data.
+            Stop posting into the void. <br className="hidden md:block" />
+            Let data write your strategy.
           </motion.h1>
 
-          <motion.p variants={itemVariants} className="mt-6 max-w-2xl text-lg md:text-xl text-muted-foreground leading-relaxed">
-            Connect your niche matrix. Extract validated signals. Generate a weekly strategy backed by proven patterns, not random AI prompts.
+          <motion.p variants={itemVariants} className="mt-8 max-w-2xl text-lg md:text-xl text-muted-foreground leading-relaxed">
+            For founders and creators tired of guesswork. Stratify scans your niche, extracts proven psychological triggers, and synthesizes your weekly LinkedIn drafts—all in one seamless pipeline.
           </motion.p>
 
           <motion.div variants={itemVariants} className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto">
@@ -170,60 +170,72 @@ export function LandingPage() {
               href="#mechanisms"
               className="w-full sm:w-auto inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-card px-8 text-sm font-medium text-foreground shadow-sm transition-all hover:bg-secondary"
             >
-              View Mechanisms
+              See how it works
             </a>
           </motion.div>
         </motion.section>
 
-        {/* Core System Mechanisms */}
+        {/* Core System Mechanisms -> Replaced generic text with outcome-driven descriptions */}
         <motion.section 
           id="mechanisms"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.6 }}
-          className="mt-32 md:mt-48"
+          className="mt-32 md:mt-40"
         >
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground mb-4">Core System Mechanisms</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">Stratify is built on extraction, calibration, and batch processing.</p>
+            <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-foreground mb-4">How the system replaces guesswork</h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+              Generic ChatGPT prompts get you ignored. Stratify grounds every word in reality.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="rounded-[24px] border border-border bg-card p-8 shadow-sm">
+            <div className="rounded-[24px] border border-border bg-card p-8 shadow-sm flex flex-col">
               <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-6 text-foreground border border-border">
                 <Radar size={20} />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-3">Signal Extraction</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                Instead of generic prompts, the system extracts patterns from your defined niche matrix to ground every insight in reality.
+              <h3 className="text-lg font-semibold text-foreground mb-2">1. Signal Extraction</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-grow">
+                The engine scans your niche matrix to find what holds attention right now. It ignores noise and isolates the underlying psychological triggers.
               </p>
+              <div className="pt-4 border-t border-border/50">
+                <p className="text-xs font-semibold text-foreground"><span className="text-primary mr-1">Outcome:</span> You build authority around validated topics, not random ideas.</p>
+              </div>
             </div>
 
-            <div className="rounded-[24px] border border-border bg-card p-8 shadow-sm">
+            <div className="rounded-[24px] border border-border bg-card p-8 shadow-sm flex flex-col">
               <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-6 text-foreground border border-border">
                 <Fingerprint size={20} />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-3">Tone Calibration</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                Your profile preferences, audience constraints, and reference texts act as boundaries. Drafts are calibrated to your natural style.
+              <h3 className="text-lg font-semibold text-foreground mb-2">2. Tone Calibration</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-grow">
+                Your profile, constraints, and reference texts act as hard borders for the AI. It applies the extracted signals purely through your lens.
               </p>
+              <div className="pt-4 border-t border-border/50">
+                <p className="text-xs font-semibold text-foreground"><span className="text-primary mr-1">Outcome:</span> Your drafts sound like a sharper version of your natural voice.</p>
+              </div>
             </div>
 
-            <div className="rounded-[24px] border border-border bg-card p-8 shadow-sm">
+            <div className="rounded-[24px] border border-border bg-card p-8 shadow-sm flex flex-col">
               <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mb-6 text-foreground border border-border">
                 <Settings2 size={20} />
               </div>
-              <h3 className="text-lg font-semibold text-foreground mb-3">Batch Processing</h3>
-              <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                Run the engine once a week. The system processes a complete batch of insights, hooks, and drafts in parallel, saving hours of manual drafting.
+              <h3 className="text-lg font-semibold text-foreground mb-2">3. Weekly Batching</h3>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-grow">
+                The pipeline synthesizes insights, engineered hooks, and final post drafts all at once. Run the engine every Monday and close the tab.
               </p>
+              <div className="pt-4 border-t border-border/50">
+                <p className="text-xs font-semibold text-foreground"><span className="text-primary mr-1">Outcome:</span> Consistent posting without the daily blank-page panic.</p>
+              </div>
             </div>
           </div>
         </motion.section>
 
-        {/* Sample Output Section */}
+        {/* Sample Output Section -> "Aha Moment" Insight to Draft Pipeline */}
         <motion.section
+          id="pipeline"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
@@ -232,44 +244,52 @@ export function LandingPage() {
         >
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-4">
-              Sample Workflow Output
+              The Insight <ArrowRight className="inline-block mx-1 w-6 h-6 text-muted-foreground/50" /> Hook <ArrowRight className="inline-block mx-1 w-6 h-6 text-muted-foreground/50" /> Draft Pipeline
             </h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
-              A look at the raw extraction and synthesis process for a SaaS founder context.
+              See exactly how raw data transforms into a ready-to-publish strategy for a SaaS founder context.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            <div className="rounded-[24px] border border-border bg-card p-6 shadow-sm">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">
-                Analyzed Signal
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto relative cursor-default">
+            
+            {/* Step 1 */}
+            <div className="rounded-[24px] border border-border bg-card p-6 shadow-sm z-10 relative">
+              <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm shadow-sm ring-4 ring-background">1</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4 ml-3">
+                The Raw Signal
               </div>
               <p className="text-foreground font-medium text-sm leading-relaxed mb-3">
-                Sharing failures builds stronger trust metrics than success stories. Readers connect with vulnerability.
+                Sharing failures builds stronger trust metrics than success stories. Readers connect deeply with vulnerability.
               </p>
               <div className="mt-4 inline-flex items-center gap-1.5 rounded-md bg-secondary px-3 py-1.5 text-xs font-semibold text-foreground border border-border/50">
-                Trigger: Relatability
+                <Zap size={12} className="text-primary" /> Trigger: Relatability
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-border bg-card p-6 shadow-sm">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">
-                Generated Hook Variation
+            {/* Step 2 */}
+            <div className="rounded-[24px] border border-border bg-card p-6 shadow-sm z-10 relative">
+              <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm shadow-sm ring-4 ring-background">2</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4 ml-3">
+                The Hook Synthesis
               </div>
               <p className="text-foreground font-semibold text-lg leading-snug">
                 &quot;The mistake that killed our first $10K MRR&quot;
               </p>
               <p className="text-muted-foreground text-xs mt-4 leading-relaxed">
-                Applies the extracted signal. Opens a curiosity loop to drive expanded views.
+                Applies the extracted signal directly. Opens an immediate curiosity loop to drive expanded views.
               </p>
             </div>
 
-            <div className="rounded-[24px] border border-border bg-card p-6 shadow-sm">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">
-                Synthesized Draft
+            {/* Step 3 */}
+            <div className="rounded-[24px] border border-border bg-card p-6 shadow-sm z-10 relative">
+              <div className="absolute -top-3 -left-3 w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center text-sm shadow-sm ring-4 ring-background">3</div>
+              <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4 ml-3">
+                The Final Draft
               </div>
-              <p className="text-foreground text-sm leading-relaxed whitespace-pre-line font-mono">
-                {`We hit $8K MRR in month 3.
+              <div className="p-4 bg-secondary/30 border border-border/40 rounded-xl relative">
+                <p className="text-foreground text-sm leading-relaxed whitespace-pre-line font-mono">
+                  {`We hit $8K MRR in month 3.
 
 Then we tried to scale too fast.
 
@@ -277,8 +297,9 @@ Hired 2 devs before we had repeatable sales.
 
 3 months later: back to $2K.
 
-Here's what I'd do differently —`}
-              </p>
+Here's my expensive lesson —`}
+                </p>
+              </div>
             </div>
           </div>
         </motion.section>
@@ -334,9 +355,15 @@ Here's what I'd do differently —`}
                   </span>
                 </div>
                 
-                <p className="text-sm text-muted-foreground mb-8 min-h-[40px] leading-relaxed border-b border-border/50 pb-6">{plan.description}</p>
+                <p className="text-sm text-muted-foreground mb-4 min-h-[40px] leading-relaxed">{plan.description}</p>
                 
-                <div className="space-y-4 mb-8 flex-1">
+                {plan.unlocksText && (
+                  <div className="mb-6 bg-primary/10 border border-primary/20 text-primary text-xs font-semibold px-3 py-2 rounded-lg">
+                    {plan.unlocksText}
+                  </div>
+                )}
+                
+                <div className="space-y-4 flex-1 border-t border-border/50 pt-6 mb-8">
                   {plan.features.map((feature, i) => (
                     <div key={i} className="flex items-start gap-3 text-sm text-foreground/90">
                       <Check size={16} className="text-muted-foreground mt-0.5 shrink-0" />
