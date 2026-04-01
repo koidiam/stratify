@@ -16,6 +16,7 @@ interface CachedScrapeOptions {
   userId: string;
   supabase: SupabaseClient;
   maxItems?: number;
+  allowScrape?: boolean;
 }
 
 function getMonthStartIso(): string {
@@ -118,12 +119,18 @@ export async function getCachedOrScrape<T>({
   userId,
   supabase,
   maxItems,
+  allowScrape = true,
 }: CachedScrapeOptions): Promise<T[]> {
   const cacheEntry = await getCacheEntry<T>(cacheKey, supabase);
   const nowIso = new Date().toISOString();
 
   if (cacheEntry?.expiresAt && cacheEntry.expiresAt > nowIso) {
     return cacheEntry.results;
+  }
+
+  // If scrape is explicitly disabled for this plan/call, return stale cache or empty
+  if (!allowScrape) {
+    return cacheEntry?.results ?? [];
   }
 
   const monthlyScrapeCount = await getMonthlyScrapeCount(userId, supabase);
@@ -143,7 +150,8 @@ export async function getCachedOrScrape<T>({
     await persistCache(cacheKey, actorId, ttlDays, results, supabase);
     await recordUsage(userId, actorId, results.length, supabase);
     return results;
-  } catch {
+  } catch (error) {
+    console.warn(`[Apify Fallback] actor ${actorId} failed or timed out:`, error);
     return cacheEntry?.results ?? [];
   }
 }

@@ -1,12 +1,16 @@
 import { Rocket, Sparkles, BookOpen, LineChart, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Plan } from '@/types';
+import { getWelcomeGuideStep1 } from '@/lib/constants/plan-copy';
 
-export function WelcomeGuide() {
+export function WelcomeGuide({ plan = 'free' }: { plan?: Plan }) {
+  const step1Description = getWelcomeGuideStep1(plan);
+
   const steps = [
     {
       icon: <Sparkles className="w-5 h-5 text-primary" />,
       title: '1. Fuel the Engine',
-      description: 'Head to the Generate tab. The engine sweeps LinkedIn for live data to find what works in your niche today.',
+      description: step1Description,
       bg: 'bg-primary/10',
       border: 'border-primary/20',
     },

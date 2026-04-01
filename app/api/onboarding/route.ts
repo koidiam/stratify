@@ -1,5 +1,5 @@
 import { createAdminClient, createClient } from '@/lib/supabase/server';
-import { sendOnboardingEmail } from '@/lib/resend/client';
+import { sendWelcomeEmail } from '@/lib/resend/client';
 import { NextResponse } from 'next/server';
 import { OnboardingData } from '@/types';
 import { getErrorMessage } from '@/lib/utils/parsers';
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     if (pe) throw pe;
 
     try {
-      await sendOnboardingEmail({
+      await sendWelcomeEmail({
         to: user.email ?? '',
         niche: body.niche.trim(),
         tone: body.tone.trim(),

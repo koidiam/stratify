@@ -88,7 +88,7 @@ function SidebarContent({
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-sidebar-foreground tracking-wide">{plan.toUpperCase()}</span>
               <Link href="/settings" onClick={onNavigate} className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
-                Upgrade
+                Manage
               </Link>
             </div>
           </div>

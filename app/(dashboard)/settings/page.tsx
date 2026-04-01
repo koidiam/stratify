@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card';
 import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
 import { ProfileForm } from '@/components/settings/ProfileForm';
 
+import { PlanManager } from '@/components/settings/PlanManager';
+
 export default async function SettingsPage() {
   const supabase = await createClient();
   const {
@@ -107,26 +109,19 @@ export default async function SettingsPage() {
               <Shield className="text-primary w-5 h-5" /> Plan
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[90%]">
-              Stripe integration is arriving in Phase 2, but your plan tier logic is already active.
+              Manage your current subscription and access levels.
             </p>
 
             <div className="mb-8 mt-6">
               <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Current Plan
               </span>
-              <span className={`text-2xl font-bold tracking-tight ${plan === 'pro' ? 'text-primary' : 'text-foreground'}`}>
+              <span className={`text-2xl font-bold tracking-tight ${plan === 'pro' || plan === 'basic' ? 'text-primary' : 'text-foreground'}`}>
                 {plan.toUpperCase()} TIER
               </span>
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Button disabled className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium disabled:opacity-50">
-                Phase 2: Upgrade to Basic
-              </Button>
-              <Button disabled variant="outline" className="border-border text-foreground hover:bg-secondary font-medium disabled:opacity-50">
-                Phase 2: Upgrade to Pro
-              </Button>
-            </div>
+            
+            <PlanManager currentPlan={plan} />
           </div>
         </Card>
 

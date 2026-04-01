@@ -2,8 +2,10 @@ import Link from 'next/link';
 import { Compass, PenTool, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Plan } from '@/types';
+import { QUICK_ACTIONS_DESCRIPTION, getQuickActionsUpgradeHint } from '@/lib/constants/plan-copy';
 
-export function QuickActions() {
+export function QuickActions({ plan = 'free' }: { plan?: Plan }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
       
@@ -15,7 +17,12 @@ export function QuickActions() {
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">Generate Strategy</h3>
           <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-            Create AI-driven, psychologically sound posts tailored exactly to your niche.
+            {QUICK_ACTIONS_DESCRIPTION}
+            {getQuickActionsUpgradeHint(plan) && (
+              <span className="block mt-1.5 text-xs text-muted-foreground/70">
+                {getQuickActionsUpgradeHint(plan)}
+              </span>
+            )}
           </p>
         </div>
         <Link href="/generate">

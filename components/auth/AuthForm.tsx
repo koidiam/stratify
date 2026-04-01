@@ -98,7 +98,7 @@ export function AuthForm({ type }: { type: 'login' | 'register' }) {
               growth with a <span className="text-primary font-bold">system.</span>
             </h2>
             <p className="max-w-sm text-sm leading-relaxed text-muted-foreground mr-6">
-              Sign in to your account, complete your onboarding flow, and feed the weekly strategy engine with live data.
+              Sign in to your account, complete your onboarding flow, and let the strategy engine map your weekly LinkedIn plan.
             </p>
           </div>
 

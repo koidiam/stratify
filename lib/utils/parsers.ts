@@ -21,7 +21,12 @@ export function getErrorMessage(error: unknown): string {
     return error.message;
   }
 
-  return 'Beklenmeyen bir hata olustu.';
+  // Prevent generic masking by dumping the object.
+  try {
+    return typeof error === 'object' ? JSON.stringify(error) : String(error);
+  } catch {
+    return 'Beklenmeyen bir hata olustu (Unstringifiable error).';
+  }
 }
 
 export function getApiError(value: unknown): string | null {
@@ -32,39 +37,58 @@ export function getApiError(value: unknown): string | null {
   return value.error;
 }
 
+function getCaseInsensitiveValue(record: UnknownRecord, keyPaths: string[]): unknown {
+  const keys = Object.keys(record);
+  for (const target of keyPaths) {
+    const found = keys.find((k) => k.toLowerCase() === target.toLowerCase());
+    if (found !== undefined) return record[found];
+  }
+  return undefined;
+}
+
 export function isInsightItemArray(value: unknown): value is InsightItem[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) =>
-        isRecord(item) &&
-        isString(item.insight) &&
-        isString(item.why) &&
-        isString(item.trigger)
-    )
-  );
+  if (!Array.isArray(value)) return false;
+  return value.every((item) => {
+    if (!isRecord(item)) return false;
+    const insightStr = getCaseInsensitiveValue(item, ['insight']);
+    const whyStr = getCaseInsensitiveValue(item, ['why']);
+    const triggerStr = getCaseInsensitiveValue(item, ['trigger']);
+    
+    // Auto-normalize the item so TypeScript casts work flawlessly upstream
+    if (isString(insightStr)) item.insight = insightStr;
+    if (isString(whyStr)) item.why = whyStr;
+    if (isString(triggerStr)) item.trigger = triggerStr;
+
+    return isString(insightStr) && isString(whyStr) && isString(triggerStr);
+  });
 }
 
 function isIdeaItemArray(value: unknown): value is IdeaItem[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) => isRecord(item) && isString(item.idea) && isString(item.type)
-    )
-  );
+  if (!Array.isArray(value)) return false;
+  return value.every((item) => {
+    if (!isRecord(item)) return false;
+    const ideaStr = getCaseInsensitiveValue(item, ['idea']);
+    const typeStr = getCaseInsensitiveValue(item, ['type']);
+    if (isString(ideaStr)) item.idea = ideaStr;
+    if (isString(typeStr)) item.type = typeStr;
+    return isString(ideaStr) && isString(typeStr);
+  });
 }
 
 function isPostItemArray(value: unknown): value is PostItem[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) =>
-        isRecord(item) &&
-        isString(item.content) &&
-        isString(item.type) &&
-        isString(item.explanation)
-    )
-  );
+  if (!Array.isArray(value)) return false;
+  return value.every((item) => {
+    if (!isRecord(item)) return false;
+    const contentStr = getCaseInsensitiveValue(item, ['content', 'post', 'text']);
+    const typeStr = getCaseInsensitiveValue(item, ['type']);
+    const expStr = getCaseInsensitiveValue(item, ['explanation', 'why']);
+    
+    if (isString(contentStr)) item.content = contentStr;
+    if (isString(typeStr)) item.type = typeStr;
+    if (isString(expStr)) item.explanation = expStr;
+    
+    return isString(contentStr) && isString(typeStr) && isString(expStr);
+  });
 }
 
 function isStringArray(value: unknown): value is string[] {

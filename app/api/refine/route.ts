@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { callGroq } from '@/lib/groq/client';
+import { generateText } from '@/lib/groq/client';
 import { getErrorMessage } from '@/lib/utils/parsers';
 
 export async function POST(req: Request) {
@@ -26,7 +26,7 @@ Instruction: ${instruction}
 
 Return only the revised post text, no explanation. Do not wrap in quotes or markdown blocks unless it's part of the post.`;
 
-    const revisedContent = await callGroq(prompt);
+    const revisedContent = await generateText(prompt);
 
     return NextResponse.json({ content: revisedContent.trim() });
   } catch (error: unknown) {

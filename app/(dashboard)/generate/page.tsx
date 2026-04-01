@@ -5,11 +5,15 @@ import { InsightViewer } from '@/components/generate/InsightViewer';
 import { ContentHooks } from '@/components/generate/ContentHooks';
 import { FinalPost } from '@/components/generate/FinalPost';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Radar, Sparkles, Zap, AlertCircle } from 'lucide-react';
+import { ArrowRight, Loader2, Radar, Sparkles, Zap, AlertCircle, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyGeneration } from '@/types';
 import { getApiError, getErrorMessage, isWeeklyGeneration } from '@/lib/utils/parsers';
 import { motion, AnimatePresence } from 'framer-motion';
+import { createClient } from '@/lib/supabase/client';
+import { Plan } from '@/types';
+import { PaywallModal } from '@/components/billing/PaywallModal';
+import { getLoadingMessages, getGenerateHeaderDescription, getSignalScanDescription, showProLabel } from '@/lib/constants/plan-copy';
 
 const STEPS = [
   { id: 1, label: 'Signal scan' },
@@ -17,15 +21,7 @@ const STEPS = [
   { id: 3, label: 'Final draft' },
 ];
 
-const LOADING_MESSAGES = [
-  "Connecting to Strategy Engine...",
-  "Analyzing your niche and audience...",
-  "Gathering real-time LinkedIn signals...",
-  "Designing high-engagement hooks...",
-  "Applying psychological triggers...",
-  "Polishing drafts to your brand tone...",
-  "Finalizing output..."
-];
+
 
 export default function GeneratePage() {
   const [step, setStep] = useState(0);
@@ -35,17 +31,41 @@ export default function GeneratePage() {
   const [data, setData] = useState<WeeklyGeneration | null>(null);
   const [selectedPost, setSelectedPost] = useState<string>('');
   const [selectedPostIndex, setSelectedPostIndex] = useState<number | null>(null);
+  
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallData, setPaywallData] = useState({ used: 0, limit: 0 });
+  const [userPlan, setUserPlan] = useState<Plan>('free');
+
+  useEffect(() => {
+    const fetchPlan = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('profiles')
+        .select('plan')
+        .eq('id', user.id)
+        .maybeSingle();
+      
+      if (data?.plan) {
+        setUserPlan(data.plan as Plan);
+      }
+    };
+    fetchPlan();
+  }, []);
 
   useEffect(() => {
     if (!loading) {
       setLoadingMsgIdx(0);
       return;
     }
+    const messages = getLoadingMessages(userPlan);
     const timer = setInterval(() => {
-      setLoadingMsgIdx((prev) => Math.min(prev + 1, LOADING_MESSAGES.length - 1));
+      setLoadingMsgIdx((prev) => Math.min(prev + 1, messages.length - 1));
     }, 1200);
     return () => clearInterval(timer);
-  }, [loading]);
+  }, [loading, userPlan]);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -55,12 +75,15 @@ export default function GeneratePage() {
       const json: unknown = await res.json();
       
       if (!res.ok) {
-        const error = getApiError(json);
-
-        if (error === 'limit_reached') {
-          throw new Error('Weekly limit reached. Upgrade your plan to continue.');
+        if (res.status === 429) {
+          const payload = json as Record<string, unknown>;
+          if (payload.code === 'limit_reached') {
+             setPaywallData({ used: Number(payload.used) || 0, limit: Number(payload.limit) || 0 });
+             setShowPaywall(true);
+             return;
+          }
         }
-
+        const error = getApiError(json);
         throw new Error(error ?? 'An error occurred');
       }
 
@@ -127,8 +150,7 @@ export default function GeneratePage() {
               Map your weekly LinkedIn strategy.
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
-              Your onboarding context, live LinkedIn signals, and generation limits flow 
-              into a single pipeline. First insights, then hooks, then final ready-to-publish drafts.
+              {getGenerateHeaderDescription(userPlan)}
             </p>
           </div>
 
@@ -178,18 +200,25 @@ export default function GeneratePage() {
                 {loading ? <Loader2 size={32} className="animate-spin text-primary" /> : <Zap size={32} />}
               </div>
               <h2 className="mb-4 text-2xl md:text-4xl font-semibold tracking-tight text-foreground">
-                Generate your weekly plan in one click
+                Activate the Stratify Engine
               </h2>
               <p className="mb-12 text-base leading-relaxed text-muted-foreground">
-                The engine gathers context, extracts patterns from the database, and 
-                turns them into incredible hooks and drafts matched to your brand tone.
+                Our AI engine analyzes your niche signals, maps them to proven frameworks, 
+                and engineers high-engagement hooks and valid drafts matched to your brand tone.
               </p>
 
               <div className="mx-auto mb-10 grid max-w-3xl gap-4 md:grid-cols-3">
-                <div className="rounded-xl border border-border bg-secondary p-5 text-left">
-                  <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">01</div>
+                <div className="rounded-xl border border-border bg-secondary p-5 text-left relative">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">01</div>
+                    {showProLabel(userPlan) && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">PRO</span>
+                    )}
+                  </div>
                   <div className="font-medium text-foreground">Signal scan</div>
-                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Real-time strategic signals are gathered based on your niche and audience.</p>
+                  <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    {getSignalScanDescription(userPlan)}
+                  </p>
                 </div>
                 <div className="rounded-xl border border-border bg-secondary p-5 text-left">
                   <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">02</div>
@@ -235,7 +264,7 @@ export default function GeneratePage() {
                             exit={{ opacity: 0, y: -5 }}
                             className="text-sm font-semibold text-foreground"
                           >
-                            {LOADING_MESSAGES[loadingMsgIdx]}
+                            {getLoadingMessages(userPlan)[loadingMsgIdx]}
                           </motion.div>
                         </AnimatePresence>
                         <div className="text-xs text-muted-foreground">Generating 3 insights, 5 hooks, 3 drafts...</div>
@@ -292,11 +321,19 @@ export default function GeneratePage() {
                   <Button 
                     onClick={handleGenerate} 
                     size="lg"
-                    className="h-14 md:h-12 min-w-[240px] rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 shadow-xl shadow-primary/20"
+                    className="h-14 md:h-12 min-w-[240px] rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-150 shadow-xl shadow-primary/20 group"
                   >
-                    Initialize Strategy
+                    <Sparkles className="mr-2 h-4 w-4 opacity-70 group-hover:opacity-100 transition-opacity" />
+                    Run Stratify Engine
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
+                  
+                  {userPlan === 'free' && (
+                    <div className="text-[11px] text-muted-foreground border border-border/50 bg-secondary/50 px-3 py-1.5 rounded-full inline-flex items-center gap-1.5">
+                      <Lock size={10} className="opacity-70" />
+                      Live Web Scraping is locked. Engine will use the Niche Matrix Cache.
+                    </div>
+                  )}
                   
                   <div className="flex items-center justify-center gap-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/50">
                     <Zap size={12} />
@@ -367,6 +404,7 @@ export default function GeneratePage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} used={paywallData.used} limit={paywallData.limit} />
     </div>
   );
 }

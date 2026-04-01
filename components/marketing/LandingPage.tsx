@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ArrowRight, Radar, Settings2, BarChart3, Fingerprint, Sparkles, CheckCircle2, ArrowUpRight, Check, X, Info, Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useFoundingStatus } from '@/hooks/useFoundingStatus';
+import { FoundingStrip } from '@/components/billing/FoundingStrip';
 
 type FeatureItem = { name: string; active: boolean; badge?: string; tooltip?: string };
 type FeatureCategory = { title: string; items: FeatureItem[] };
@@ -42,9 +44,9 @@ const PLANS: Plan[] = [
         items: [
           { name: 'Full history access', active: false },
           { name: 'Tone profile saving', active: false },
-          { name: 'Feedback analysis', active: false, tooltip: "Track how your posts perform. The more data you give it, the smarter your weekly strategy becomes." },
-          { name: 'Deep competitor analysis', active: false, tooltip: "Shows you what's actually going viral in your niche this week, so you always know what to write and why it works." },
-          { name: 'Signature Style Engine', active: false, tooltip: "The AI studies how you write — your rhythm, tone, and structure — then applies it to every post it generates for you." },
+          { name: 'Feedback Loop', active: false, tooltip: "Track how your posts perform. The more data you give it, the smarter your weekly strategy becomes." },
+          { name: 'Deep competitor analysis', active: false, tooltip: "Shows you what's actually going viral in your niche this week, so you always know what to write and why it works.", badge: 'Coming soon' },
+          { name: 'Signature Style Engine', active: false, tooltip: "The AI studies how you write — your rhythm, tone, and structure — then applies it to every post it generates for you.", badge: 'Coming soon' },
           { name: 'Priority support', active: false },
         ]
       }
@@ -55,8 +57,8 @@ const PLANS: Plan[] = [
   },
   {
     name: 'BASIC',
-    price: { monthly: '$29', yearly: '$240' },
-    yearlySubtext: '$348/yr',
+    price: { monthly: '$15', yearly: '$120' },
+    yearlySubtext: '$180/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
     description: 'For creators who post consistently',
     featureCategories: [
@@ -74,9 +76,9 @@ const PLANS: Plan[] = [
         items: [
           { name: 'Full history access', active: true },
           { name: 'Tone profile saving', active: true },
-          { name: 'Feedback analysis', active: true, tooltip: "Track how your posts perform. The more data you give it, the smarter your weekly strategy becomes." },
-          { name: 'Deep competitor analysis', active: false, tooltip: "Shows you what's actually going viral in your niche this week, so you always know what to write and why it works." },
-          { name: 'Signature Style Engine', active: false, tooltip: "The AI studies how you write — your rhythm, tone, and structure — then applies it to every post it generates for you." },
+          { name: 'Feedback Loop', active: true, tooltip: "Track how your posts perform. The more data you give it, the smarter your weekly strategy becomes." },
+          { name: 'Deep competitor analysis', active: false, tooltip: "Shows you what's actually going viral in your niche this week, so you always know what to write and why it works.", badge: 'Coming soon' },
+          { name: 'Signature Style Engine', active: false, tooltip: "The AI studies how you write — your rhythm, tone, and structure — then applies it to every post it generates for you.", badge: 'Coming soon' },
           { name: 'Priority support', active: false },
         ]
       }
@@ -87,15 +89,15 @@ const PLANS: Plan[] = [
   },
   {
     name: 'PRO',
-    price: { monthly: '$49', yearly: '$408' },
-    yearlySubtext: '$588/yr',
+    price: { monthly: '$29', yearly: '$240' },
+    yearlySubtext: '$348/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
     description: 'For founders who grow with data',
     featureCategories: [
       {
         title: 'CONTENT GENERATION',
         items: [
-          { name: 'Unlimited generations', active: true },
+          { name: '50 generations per week', active: true },
           { name: '3 insights + psychological analysis', active: true },
           { name: '3 ready-to-publish posts + priority', active: true },
           { name: '5 hooks + 5 content ideas', active: true },
@@ -106,9 +108,9 @@ const PLANS: Plan[] = [
         items: [
           { name: 'Full history access', active: true },
           { name: 'Tone profile saving', active: true },
-          { name: 'Feedback analysis', active: true, tooltip: "Track how your posts perform. The more data you give it, the smarter your weekly strategy becomes." },
-          { name: 'Deep competitor analysis', active: true, tooltip: "Shows you what's actually going viral in your niche this week, so you always know what to write and why it works." },
-          { name: 'Signature Style Engine', active: true, tooltip: "The AI studies how you write — your rhythm, tone, and structure — then applies it to every post it generates for you." },
+          { name: 'Feedback Loop', active: true, tooltip: "Track how your posts perform. The more data you give it, the smarter your weekly strategy becomes." },
+          { name: 'Deep competitor analysis', active: true, tooltip: "Shows you what's actually going viral in your niche this week, so you always know what to write and why it works.", badge: 'Coming soon' },
+          { name: 'Signature Style Engine', active: true, tooltip: "The AI studies how you write — your rhythm, tone, and structure — then applies it to every post it generates for you.", badge: 'Coming soon' },
           { name: 'Priority support', active: true },
         ]
       }
@@ -134,6 +136,7 @@ const itemVariants = {
 
 export function LandingPage() {
   const [isYearly, setIsYearly] = useState(false);
+  const { status, claimed, total } = useFoundingStatus();
 
   return (
     <main className="min-h-screen text-foreground bg-background relative selection:bg-primary/20">
@@ -223,11 +226,6 @@ export function LandingPage() {
               See how it works
             </a>
           </motion.div>
-          
-          <motion.p variants={itemVariants} className="mt-6 text-sm text-muted-foreground flex items-center justify-center gap-2">
-             <CheckCircle2 size={14} className="text-emerald-500" />
-             No credit card required. Cancel anytime.
-          </motion.p>
         </motion.section>
 
         {/* What makes us different - Distinct Features */}
@@ -250,9 +248,12 @@ export function LandingPage() {
               <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-6 text-blue-600 border border-blue-500/20">
                 <Radar size={24} />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">You'll never post into the void again</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3">
+                <span className="block text-sm font-bold text-blue-500 mb-1">Signal Engine</span>
+                You&apos;ll never post into the void again
+              </h3>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                Generic AI writes generic posts. Stratify scans your niche's real timeline — so every insight is grounded in what's actually working this week, not last year.
+                Generic AI writes generic posts. Stratify scans your niche&apos;s real timeline — so every insight is grounded in what&apos;s actually working this week, not last year.
               </p>
             </div>
 
@@ -261,7 +262,10 @@ export function LandingPage() {
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-6 text-emerald-600 border border-emerald-500/20">
                 <Fingerprint size={24} />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">Write at AI speed. Sound like yourself.</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3">
+                <span className="block text-sm font-bold text-emerald-500 mb-1">Signature Style Engine</span>
+                Write at AI speed. Sound like yourself.
+              </h3>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6">
                 Your onboarding saves your tone, audience, and reference posts. Every hook and draft is calibrated to your voice — not a generic LinkedIn template.
               </p>
@@ -272,9 +276,12 @@ export function LandingPage() {
               <div className="w-12 h-12 rounded-2xl bg-purple-500/10 flex items-center justify-center mb-6 text-purple-600 border border-purple-500/20">
                 <Settings2 size={24} />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-3">30 minutes on Monday. The rest of the week, just post.</h3>
+              <h3 className="text-xl font-bold text-foreground mb-3">
+                <span className="block text-sm font-bold text-purple-500 mb-1">Strategy & Draft Engine</span>
+                30 minutes on Monday. The rest of the week, just post.
+              </h3>
               <p className="text-muted-foreground text-sm leading-relaxed mb-6">
-                One click generates a week's worth of insights, hooks, and drafts. No more staring at a blank page on Tuesday morning.
+                One click generates a week&apos;s worth of insights, hooks, and drafts. No more staring at a blank page on Tuesday morning.
               </p>
             </div>
           </div>
@@ -305,7 +312,7 @@ export function LandingPage() {
             {/* Insight Card */}
             <div className="rounded-[24px] border border-border bg-card p-6 shadow-sm">
               <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">
-                This week's insight
+                This week&apos;s insight
               </div>
               <p className="text-foreground font-semibold mb-3">
                 Failure posts outperform success stories by 2.3x in the SaaS niche.
@@ -325,7 +332,7 @@ export function LandingPage() {
                 Generated hook
               </div>
               <p className="text-foreground font-semibold text-lg leading-snug">
-                "The mistake that killed our first $10K MRR"
+                &quot;The mistake that killed our first $10K MRR&quot;
               </p>
               <p className="text-muted-foreground text-sm mt-4 leading-relaxed">
                 Directly applies the insight. Opens a curiosity loop the reader
@@ -399,12 +406,17 @@ Here's what I'd do differently —`}
                 }`}
               >
                 {plan.featured && (
-                  <div className="absolute -top-3 left-0 right-0 mx-auto w-max bg-primary text-primary-foreground text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                  <div className="absolute -top-3 left-0 right-0 mx-auto w-max bg-primary text-primary-foreground text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider z-10">
                     MOST POPULAR
                   </div>
                 )}
-                <div className="text-xl font-bold text-foreground mb-2">{plan.name}</div>
-                <div className="mb-2 flex items-baseline gap-1">
+                
+                {!isYearly && (plan.name === 'BASIC' || plan.name === 'PRO') && (
+                  <FoundingStrip plan={plan.name as 'BASIC' | 'PRO'} status={status} claimed={claimed} total={total} />
+                )}
+                
+                <div className="text-xl font-bold text-foreground mb-2 mt-2">{plan.name}</div>
+                <div className="mb-2 flex items-baseline gap-1 flex-wrap">
                   <span className="text-5xl font-bold tracking-tight text-foreground">
                     {isYearly ? plan.price.yearly : plan.price.monthly}
                   </span>
@@ -414,7 +426,7 @@ Here's what I'd do differently —`}
                 </div>
                 {isYearly && plan.yearlySubtext && (
                   <div className="text-xs font-semibold text-emerald-500 mt-1">
-                    {plan.name === 'BASIC' ? 'Save $108 — 2 months free' : 'Save $180 — 3 months free'}
+                    {plan.name === 'BASIC' ? 'Save $60 — 4 months free' : 'Save $108 — 4 months free'}
                   </div>
                 )}
                 <div className="text-sm text-muted-foreground/80 mb-6 h-5 font-medium mt-1">
@@ -463,7 +475,7 @@ Here's what I'd do differently —`}
                 </div>
 
                 <Link
-                  href={plan.name === 'FREE' ? '/register' : '#'}
+                  href="/register"
                   className={`flex w-full items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all ${
                     plan.featured 
                       ? 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-md' 
@@ -481,7 +493,7 @@ Here's what I'd do differently —`}
                         {plan.guaranteeText}
                       </TooltipTrigger>
                       <TooltipContent side="bottom">
-                        <p className="text-xs max-w-[200px] text-center">Lock in today's price — we never raise rates for existing subscribers.</p>
+                        <p className="text-xs max-w-[200px] text-center">Lock in today&apos;s price — we never raise rates for existing subscribers.</p>
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -491,11 +503,8 @@ Here's what I'd do differently —`}
           </div>
 
           <div className="mt-12 text-center space-y-2">
-            <div className="text-sm text-muted-foreground font-medium flex items-center justify-center gap-2">
-              7-day free trial · No credit card required · Cancel anytime
-            </div>
             <div className="text-sm text-muted-foreground/70 font-medium max-w-lg mx-auto leading-relaxed">
-              Deep competitor analysis and Signature Style Engine are launching to Pro members first. You'll be notified the moment they go live.
+              Deep competitor analysis and Signature Style Engine are launching to Pro members first. You&apos;ll be notified the moment they go live.
             </div>
           </div>
         </motion.section>
@@ -504,9 +513,9 @@ Here's what I'd do differently —`}
         <footer className="mt-32 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between text-muted-foreground text-sm font-medium">
           <div>© {new Date().getFullYear()} Stratify OS. All rights reserved.</div>
           <div className="flex gap-8 mt-4 md:mt-0">
-            <Link href="#" className="hover:text-foreground transition-colors">Terms of Service</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-foreground transition-colors">Contact</Link>
+            <Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link>
           </div>
         </footer>
       </div>

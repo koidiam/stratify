@@ -49,7 +49,13 @@ function buildTrendSearchUrl(query: string): string {
 }
 
 function buildTrendQuery(data: OnboardingData): string {
-  return `${data.niche} ${data.target_audience} LinkedIn`;
+  const niche = data.niche.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '');
+  const audience = data.target_audience.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '');
+  return `${niche} ${audience} linkedin`;
+}
+
+function getTrendCacheKey(query: string): string {
+  return `niche-trend:${query.replace(/\s+/g, '-')}`;
 }
 
 function normalizeLinkedInPost(record: ApifyRecord): LinkedInPostSignal | null {
@@ -119,11 +125,12 @@ function pickReferenceUrls(referencePosts: string[]): {
 async function getTrendPosts(
   userId: string,
   trendQuery: string,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  allowScrape: boolean
 ): Promise<LinkedInPostSignal[]> {
   const searchUrl = buildTrendSearchUrl(trendQuery);
   const results = await getCachedOrScrape<ApifyRecord>({
-    cacheKey: `posts:${trendQuery.toLowerCase()}`,
+    cacheKey: getTrendCacheKey(trendQuery),
     actorId: APIFY_ACTORS.trendPosts,
     input: {
       urls: [searchUrl],
@@ -134,6 +141,7 @@ async function getTrendPosts(
     userId,
     supabase,
     maxItems: APIFY_RULES.trendLimitPerSource,
+    allowScrape,
   });
 
   return results
@@ -146,7 +154,8 @@ async function getTrendPosts(
 async function getReferencePosts(
   userId: string,
   referenceUrls: string[],
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  allowScrape: boolean
 ): Promise<LinkedInPostSignal[]> {
   const { profileUrls, postUrls } = pickReferenceUrls(referenceUrls);
   const collected: LinkedInPostSignal[] = [];
@@ -163,6 +172,7 @@ async function getReferencePosts(
       userId,
       supabase,
       maxItems: APIFY_RULES.referenceProfileLimit,
+      allowScrape,
     });
 
     collected.push(
@@ -185,6 +195,7 @@ async function getReferencePosts(
       userId,
       supabase,
       maxItems: APIFY_RULES.referencePostLimit,
+      allowScrape,
     });
 
     collected.push(
@@ -200,18 +211,23 @@ async function getReferencePosts(
 export async function buildLinkedInResearchContext(
   userId: string,
   onboarding: OnboardingData,
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  plan: 'free' | 'basic' | 'pro'
 ): Promise<LinkedInResearchContext | null> {
   if (!process.env.APIFY_API_TOKEN) {
     return null;
   }
 
+  const allowTrendScrape = plan !== 'free';
+  const allowReferenceScrape = plan === 'pro';
+
   const trendQuery = buildTrendQuery(onboarding);
-  const trendPosts = await getTrendPosts(userId, trendQuery, supabase);
+  const trendPosts = await getTrendPosts(userId, trendQuery, supabase, allowTrendScrape);
   const referencePosts = await getReferencePosts(
     userId,
     onboarding.reference_posts ?? [],
-    supabase
+    supabase,
+    allowReferenceScrape
   );
 
   if (trendPosts.length === 0 && referencePosts.length === 0) {
