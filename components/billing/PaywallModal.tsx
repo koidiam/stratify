@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2, Check } from 'lucide-react';
 import { useFoundingStatus } from '@/hooks/useFoundingStatus';
 import { FoundingStrip } from '@/components/billing/FoundingStrip';
+import { PAYWALL_WHY_UPGRADE, PAYWALL_BASIC_FEATURES, PAYWALL_PRO_FEATURES } from '@/lib/constants/plan-copy';
 
 interface PaywallModalProps {
   open: boolean;
@@ -54,7 +55,7 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
         </DialogHeader>
 
         <p className="text-sm text-muted-foreground leading-relaxed mb-4 bg-secondary/50 border border-border rounded-xl px-4 py-3">
-          Your free plan uses cached niche data. Upgrading unlocks live LinkedIn scanning — fresher signals, sharper hooks, better-performing posts.
+          {PAYWALL_WHY_UPGRADE}
         </p>
 
         <div className="grid md:grid-cols-2 gap-4">
@@ -72,9 +73,11 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
               <span className="text-muted-foreground font-normal ml-1">/mo</span>
             </div>
             <ul className="space-y-3 mb-8 flex-1">
-               <li className="flex items-center text-sm font-medium"><Check className="text-primary mr-2 h-4 w-4" /> Generate 3 full strategies per week</li>
-               <li className="flex items-center text-sm text-muted-foreground"><Check className="text-muted-foreground mr-2 h-4 w-4" /> Insights tuned to your specific niche</li>
-               <li className="flex items-center text-sm text-muted-foreground"><Check className="text-muted-foreground mr-2 h-4 w-4" /> Full generation history access</li>
+              {PAYWALL_BASIC_FEATURES.map((feat, i) => (
+                <li key={i} className={`flex items-center text-sm ${i === 0 ? 'font-medium' : 'text-muted-foreground'}`}>
+                  <Check className={`${i === 0 ? 'text-primary' : 'text-muted-foreground'} mr-2 h-4 w-4`} /> {feat}
+                </li>
+              ))}
             </ul>
             <Button
               className="w-full bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
@@ -101,10 +104,11 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
               <span className="text-muted-foreground font-normal ml-1">/mo</span>
             </div>
             <ul className="space-y-3 mb-8 flex-1">
-               <li className="flex items-center text-sm font-medium"><Check className="text-primary mr-2 h-4 w-4" /> Generate up to 50 strategies per week</li>
-               <li className="flex items-center text-sm text-muted-foreground"><Check className="text-muted-foreground mr-2 h-4 w-4" /> Insights powered by live LinkedIn data</li>
-               <li className="flex items-center text-sm text-muted-foreground"><Check className="text-muted-foreground mr-2 h-4 w-4" /> Analyze competitor and reference posts</li>
-               <li className="flex items-center text-sm text-muted-foreground"><Check className="text-muted-foreground mr-2 h-4 w-4" /> Faster generation with priority access</li>
+              {PAYWALL_PRO_FEATURES.map((feat, i) => (
+                <li key={i} className={`flex items-center text-sm ${i === 0 ? 'font-medium' : 'text-muted-foreground'}`}>
+                  <Check className={`${i === 0 ? 'text-primary' : 'text-muted-foreground'} mr-2 h-4 w-4`} /> {feat}
+                </li>
+              ))}
             </ul>
             <Button
               className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md shadow-primary/20"

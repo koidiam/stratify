@@ -3,6 +3,7 @@ import { Compass, PenTool, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Plan } from '@/types';
+import { QUICK_ACTIONS_DESCRIPTION, getQuickActionsUpgradeHint } from '@/lib/constants/plan-copy';
 
 export function QuickActions({ plan = 'free' }: { plan?: Plan }) {
   return (
@@ -16,10 +17,10 @@ export function QuickActions({ plan = 'free' }: { plan?: Plan }) {
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">Generate Strategy</h3>
           <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-            Create data-backed posts tailored to your niche.
-            {plan === 'free' && (
+            {QUICK_ACTIONS_DESCRIPTION}
+            {getQuickActionsUpgradeHint(plan) && (
               <span className="block mt-1.5 text-xs text-muted-foreground/70">
-                Pro users get live LinkedIn research for deeper insights.
+                {getQuickActionsUpgradeHint(plan)}
               </span>
             )}
           </p>

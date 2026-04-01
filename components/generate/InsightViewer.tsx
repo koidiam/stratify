@@ -47,7 +47,7 @@ export function InsightViewer({ insights, onNext }: Props) {
             </div>
             <div className="mt-4 pt-4 border-t border-border flex items-center gap-1.5">
               <span className="text-[10px] font-medium text-muted-foreground/60 uppercase tracking-wider">
-                Based on live signals in your niche
+                Based on patterns in your niche
               </span>
             </div>
           </Card>
