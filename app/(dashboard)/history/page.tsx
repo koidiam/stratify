@@ -89,7 +89,7 @@ export default async function HistoryPage() {
                   {index === 1 && (
                     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm">
                       <div className="text-3xl mb-2">🔒</div>
-                      <p className="text-sm font-semibold text-foreground bg-background px-4 py-2 rounded-full border border-border shadow-sm">Geçmiş haftalara erişmek için Pro'ya geçin</p>
+                      <p className="text-sm font-semibold text-foreground bg-background px-4 py-2 rounded-full border border-border shadow-sm">Upgrade to Pro to access past weeks</p>
                     </div>
                   )}
                 </div>

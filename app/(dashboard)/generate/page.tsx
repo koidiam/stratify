@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Plan } from '@/types';
 import { PaywallModal } from '@/components/billing/PaywallModal';
+import { getLoadingMessages, getGenerateHeaderDescription, getSignalScanDescription, showProLabel } from '@/lib/constants/plan-copy';
 
 const STEPS = [
   { id: 1, label: 'Signal scan' },
@@ -20,29 +21,7 @@ const STEPS = [
   { id: 3, label: 'Final draft' },
 ];
 
-const getLoadingMessages = (plan: Plan) => {
-  if (plan === 'free') {
-    return [
-      "Connecting to Stratify Engine...",
-      "Analyzing your niche and audience.",
-      "Accessing Stratify Matrix (Niche Cache)...",
-      "Designing high-engagement hooks...",
-      "Applying psychological triggers...",
-      "Polishing drafts to your brand tone...",
-      "Finalizing output..."
-    ];
-  }
-  
-  return [
-    "Connecting to Stratify Engine...",
-    "Analyzing your niche and audience...",
-    "Gathering real-time LinkedIn signals...",
-    "Designing high-engagement hooks...",
-    "Applying psychological triggers...",
-    "Polishing drafts to your brand tone...",
-    "Finalizing output..."
-  ];
-};
+
 
 export default function GeneratePage() {
   const [step, setStep] = useState(0);
@@ -171,10 +150,7 @@ export default function GeneratePage() {
               Map your weekly LinkedIn strategy.
             </h1>
             <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
-              {userPlan === 'free'
-                ? 'Your onboarding context and generation limits flow into a single pipeline. First insights, then hooks, then final ready-to-publish drafts.'
-                : 'Your onboarding context, live LinkedIn signals, and generation limits flow into a single pipeline. First insights, then hooks, then final ready-to-publish drafts.'
-              }
+              {getGenerateHeaderDescription(userPlan)}
             </p>
           </div>
 
@@ -235,16 +211,13 @@ export default function GeneratePage() {
                 <div className="rounded-xl border border-border bg-secondary p-5 text-left relative">
                   <div className="flex items-center justify-between mb-2">
                     <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">01</div>
-                    {userPlan === 'free' && (
+                    {showProLabel(userPlan) && (
                       <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50">PRO</span>
                     )}
                   </div>
                   <div className="font-medium text-foreground">Signal scan</div>
                   <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                    {userPlan === 'free'
-                      ? 'Niche patterns analyzed from your Stratify database.'
-                      : 'Real-time signals gathered from live LinkedIn data.'
-                    }
+                    {getSignalScanDescription(userPlan)}
                   </p>
                 </div>
                 <div className="rounded-xl border border-border bg-secondary p-5 text-left">

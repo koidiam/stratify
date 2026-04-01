@@ -1,11 +1,10 @@
 import { Rocket, Sparkles, BookOpen, LineChart, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Plan } from '@/types';
+import { getWelcomeGuideStep1 } from '@/lib/constants/plan-copy';
 
 export function WelcomeGuide({ plan = 'free' }: { plan?: Plan }) {
-  const step1Description = plan === 'free'
-    ? 'Head to the Generate tab. The engine analyzes your niche from the Stratify database to produce insights and drafts. Pro plans include live LinkedIn scanning.'
-    : 'Head to the Generate tab. The engine sweeps LinkedIn for live data to find what works in your niche today.';
+  const step1Description = getWelcomeGuideStep1(plan);
 
   const steps = [
     {
