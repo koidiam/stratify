@@ -36,10 +36,10 @@ export default function ContactPage() {
               </div>
             </div>
             <a 
-              href="mailto:support@stratify.dev" 
+              href="mailto:stratify00@gmail.com" 
               className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-medium transition-colors text-lg"
             >
-              support@stratify.dev
+              stratify00@gmail.com
             </a>
             <p className="mt-4 text-sm">
               We aim to respond within 48 hours during business days.

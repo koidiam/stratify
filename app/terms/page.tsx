@@ -80,7 +80,7 @@ export default function TermsOfService() {
               For support, billing questions, or any concerns about the service, reach us at:
             </p>
             <p className="font-medium text-foreground">
-              support@stratify.dev
+              stratify00@gmail.com
             </p>
             <p className="mt-4">
               We aim to respond to all inquiries within 48 hours during business days.
@@ -94,7 +94,7 @@ export default function TermsOfService() {
               from your Settings page. Cancellation takes effect at the end of the current billing period.
             </p>
             <p className="mb-4">
-              If you wish to delete your account entirely, send a request to support@stratify.dev. Upon confirmation,
+              If you wish to delete your account entirely, send a request to stratify00@gmail.com. Upon confirmation,
               we will permanently remove your profile, onboarding data, generation history, and usage records from
               our database.
             </p>
