@@ -1,4 +1,4 @@
-import { Sparkles, Users, Loader2 } from 'lucide-react';
+import { Sparkles, Users } from 'lucide-react';
 import { FoundingStatusType } from '@/hooks/useFoundingStatus';
 
 interface FoundingStripProps {
@@ -28,7 +28,7 @@ export function FoundingStrip({ plan, status, claimed, total, isYearly = false }
   return (
     <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4 relative overflow-hidden shadow-sm">
       <div 
-        className={`absolute top-0 left-0 bottom-0 bg-primary/10 transition-all duration-1000 ease-in-out ${isSoldOut ? 'opacity-50 grayscale' : ''}`}
+        className={`absolute bottom-0 left-0 top-0 bg-primary/10 transition-[width] duration-700 ease-out ${isSoldOut ? 'opacity-50 grayscale' : ''}`}
         style={{ width: `${percentage}%` }}
       />
       
@@ -41,7 +41,7 @@ export function FoundingStrip({ plan, status, claimed, total, isYearly = false }
             </span>
           </div>
           {!isError && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-background/60 rounded-full px-2.5 py-1 tracking-tight backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs font-semibold tracking-tight text-muted-foreground">
               <Users className="h-3 w-3" />
               {isSoldOut ? `${total} / ${total}` : `${claimed} / ${total}`} Claimed
             </div>

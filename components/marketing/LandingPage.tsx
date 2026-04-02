@@ -108,7 +108,7 @@ export function LandingPage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="mb-12 md:mb-16 flex items-center justify-between py-4 relative"
+          className="relative z-30 mb-12 flex items-center justify-between py-4 md:mb-16"
         >
           <div className="flex flex-1 items-center">
             <span className="text-lg font-medium tracking-tight text-foreground">Stratify</span>
@@ -121,12 +121,12 @@ export function LandingPage() {
           </nav>
 
           <nav className="flex flex-1 items-center justify-end gap-3">
-            <Link href="/login" className="hidden sm:flex text-[10px] font-bold uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition-all h-9 px-4 items-center justify-center rounded-sm">
+            <Link href="/login" className="hidden h-9 items-center justify-center rounded-sm px-4 text-[10px] font-bold uppercase tracking-widest text-white/50 transition-colors duration-200 hover:bg-white/5 hover:text-white sm:flex">
               Login
             </Link>
             <Link
               href="/register"
-              className="inline-flex items-center justify-center rounded-sm bg-white/5 border border-white/10 text-white px-5 py-2 h-9 text-[10px] uppercase font-bold tracking-widest transition-all hover:bg-white/10 hover:-translate-y-px"
+              className="inline-flex h-9 items-center justify-center rounded-sm border border-white/10 bg-white/5 px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-white transition-colors duration-200 hover:bg-white/10"
             >
               Get Started
             </Link>
@@ -137,7 +137,7 @@ export function LandingPage() {
         <motion.section 
           initial="hidden"
           animate="visible"
-          className="relative w-full h-[calc(100vh-100px)] min-h-[600px] flex flex-col items-center justify-center -mt-6"
+          className="relative z-0 flex w-full min-h-[36rem] flex-col items-center justify-center py-8 md:min-h-[40rem] md:py-10 lg:min-h-[calc(100svh-14rem)]"
         >
           {/* Background 3D Perspective Glow */}
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-96 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.15)_0%,transparent_50%)] pointer-events-none" />
@@ -149,15 +149,15 @@ export function LandingPage() {
                animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                style={{ perspective: 1000 }}
-               className="w-full rounded-xl border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-2xl shadow-[0_40px_100px_-20px_rgba(16,185,129,0.25),0_0_0_1px_rgba(255,255,255,0.05)_inset] overflow-hidden"
+               className="w-full overflow-hidden rounded-xl border border-white/10 bg-[#0A0A0A]/95 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.05)_inset]"
              >
                 {/* Simulated Input */}
                 <div className="flex items-center gap-4 border-b border-white/5 px-6 py-5">
-                  <Radar className="w-5 h-5 text-emerald-500 animate-spin-slow opacity-80" />
+                  <Radar className="h-5 w-5 text-emerald-500 opacity-80" />
                   <div className="flex-1 font-mono text-[13px] md:text-sm text-white relative">
                      <span className="opacity-100">Review signals for</span>
                      <span className="text-emerald-500 ml-2">&quot;B2B SaaS Growth&quot;</span>
-                     <span className="w-1.5 h-4 bg-emerald-500 inline-block ml-1 animate-pulse align-middle" />
+                     <span className="ml-1 inline-block h-4 w-1.5 align-middle bg-emerald-500/80" />
                   </div>
                   <div className="hidden sm:inline-flex items-center gap-1.5 rounded-[4px] border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold font-sans text-white/50 tracking-widest">
                     <span>CMD</span> <span>K</span>
@@ -205,9 +205,9 @@ export function LandingPage() {
                  Stratify turns raw network signals into a clear weekly LinkedIn strategy.
                </p>
                <div className="mt-8">
-                 <Link
+                <Link
                  href="/register"
-                 className="inline-flex h-12 items-center justify-center gap-3 rounded-sm bg-white px-8 text-[11px] font-bold text-black shadow-[0_0_20px_rgba(255,255,255,0.08)] transition-all hover:bg-white/90 hover:scale-105 uppercase tracking-widest"
+                 className="inline-flex h-12 items-center justify-center gap-3 rounded-sm bg-white px-8 text-[11px] font-bold uppercase tracking-widest text-black shadow-[0_0_20px_rgba(255,255,255,0.08)] transition-colors duration-200 hover:bg-white/90"
                 >
                   Get Started
                   <ArrowRight size={14} className="opacity-80" />
@@ -472,7 +472,7 @@ Here's my expensive lesson —`}
 
                 <Link
                   href="/register"
-                  className={`flex w-full items-center justify-center gap-2 h-10 rounded-sm text-xs font-medium transition-all ${
+                  className={`flex h-10 w-full items-center justify-center gap-2 rounded-sm text-xs font-medium transition-colors duration-200 ${
                     plan.featured 
                       ? 'bg-white text-black hover:bg-white/90' 
                       : 'bg-white/5 text-white hover:bg-white/10'
