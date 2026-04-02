@@ -135,22 +135,21 @@ export function LandingPage() {
 
         {/* Inverted Command Hero */}
         <motion.section 
-          initial="hidden"
-          animate="visible"
-          className="relative z-0 mt-4 flex w-full min-h-[36rem] flex-col items-center justify-center py-10 md:mt-6 md:min-h-[40rem] md:py-12 lg:min-h-[calc(100svh-12rem)]"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+          className="relative z-0 mt-4 py-6 md:mt-6 md:py-8"
         >
-          {/* Background 3D Perspective Glow */}
-          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-96 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.15)_0%,transparent_50%)] pointer-events-none" />
-          
-          <div className="relative z-10 w-full max-w-2xl px-4 flex flex-col items-center">
-             {/* The Command Palette simulation */}
+          <div className="absolute inset-x-0 top-24 h-[28rem] bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.14)_0%,transparent_60%)] pointer-events-none md:top-32 md:h-[34rem]" />
+
+          <div className="relative z-10 flex flex-col gap-10 md:gap-14">
              <motion.div 
-               initial={{ opacity: 0, y: 30, scale: 0.95, rotateX: 10 }}
-               animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-               style={{ perspective: 1000 }}
-               className="w-full overflow-hidden rounded-xl border border-white/10 bg-[#0A0A0A]/95 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.05)_inset]"
+               initial={{ opacity: 0, y: 20, scale: 0.98 }}
+               animate={{ opacity: 1, y: 0, scale: 1 }}
+               transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+               className="mx-auto w-full max-w-3xl px-4"
              >
+               <div className="w-full overflow-hidden rounded-xl border border-white/10 bg-[#0A0A0A]/95 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.05)_inset]">
                 {/* Simulated Input */}
                 <div className="flex items-center gap-4 border-b border-white/5 px-6 py-5">
                   <Radar className="h-5 w-5 text-emerald-500 opacity-80" />
@@ -190,15 +189,16 @@ export function LandingPage() {
                      </div>
                   </div>
                 </div>
+               </div>
              </motion.div>
 
              <motion.div 
-               initial={{ opacity: 0, y: 10 }}
+               initial={{ opacity: 0, y: 12 }}
                animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: 0.4, duration: 0.8 }}
-               className="mt-14 text-center"
+               transition={{ delay: 0.12, duration: 0.7 }}
+               className="mx-auto w-full max-w-2xl px-4 text-center"
              >
-               <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
+               <h1 className="mb-4 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
                  Data-driven strategy, <br/><span className="text-white/40">compiled instantly.</span>
                </h1>
                <p className="text-sm md:text-base font-light text-white/40 max-w-lg mx-auto">
@@ -213,9 +213,15 @@ export function LandingPage() {
                   <ArrowRight size={14} className="opacity-80" />
                 </Link>
               </div>
+             </motion.div>
 
-              {/* Live Signal Snapshot */}
-              <div className="mt-10 w-full max-w-md mx-auto border border-white/10 rounded-sm bg-white/[0.02] divide-y divide-white/5">
+             <motion.div
+               initial={{ opacity: 0, y: 12 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.2, duration: 0.7 }}
+               className="mx-auto w-full max-w-md px-4"
+             >
+              <div className="w-full border border-white/10 rounded-sm bg-white/[0.02] divide-y divide-white/5">
                 <div className="px-4 py-2.5 flex items-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-emerald-500" />
                   <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Signal Snapshot</span>
@@ -224,12 +230,12 @@ export function LandingPage() {
                  <div className="px-4 py-2.5 text-xs text-white/60">Contrarian takes outperform generic advice</div>
                  <div className="px-4 py-2.5 text-xs text-white/60">Personal proof hooks getting more saves</div>
                </div>
-               <p className="mt-3 text-[10px] text-white/20">Example signals from recent niche activity</p>
+               <p className="mt-3 text-center text-[10px] text-white/20">Example signals from recent niche activity</p>
              </motion.div>
           </div>
         </motion.section>
 
-        <section aria-label="Illustrative system output" className="mt-8 md:mt-10">
+        <section aria-label="Illustrative system output" className="mt-12 md:mt-14">
           <div className="mx-auto w-full max-w-4xl rounded-sm border border-white/10 bg-[#050505]/80">
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
               <div className="flex items-center gap-2">

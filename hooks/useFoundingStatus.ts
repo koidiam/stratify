@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 
 export type FoundingStatusType = 'loading' | 'available' | 'sold_out' | 'error';
+type ResolvedFoundingStatusType = Exclude<FoundingStatusType, 'loading'>;
 
 interface FoundingAvailabilityResponse {
-  status?: FoundingStatusType;
+  status: ResolvedFoundingStatusType;
   remaining?: number;
   claimed?: number;
   total?: number;
