@@ -423,22 +423,27 @@ Here's my expensive lesson —`}
           className="mt-20 md:mt-28 pt-16 md:pt-24 border-t border-border/30"
         >
           <div className="text-center mb-10 md:mb-12">
-            <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">PLANS</div>
+            <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/55 mb-3">PLANS</div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground mb-3">Choose the weekly system that matches your workflow</h2>
-            <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto px-4">Every plan uses the same core engine. Higher tiers increase run capacity, unlock deeper research, and make Stratify a stronger weekly operating system.</p>
+            <p className="text-white/65 text-sm sm:text-base max-w-2xl mx-auto px-4">Every plan uses the same core engine. Higher tiers increase run capacity, unlock deeper research, and make Stratify a stronger weekly operating system.</p>
           </div>
 
           <div className="flex items-center justify-center gap-2.5 mb-10 md:mb-12">
-            <span className={`text-[11px] md:text-xs font-semibold uppercase tracking-wider transition-colors ${!isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>Monthly</span>
-            <button 
-              onClick={() => setIsYearly(!isYearly)}
-              className={`w-9 h-5 rounded-full p-0.5 flex items-center transition-colors ${isYearly ? 'bg-primary' : 'bg-secondary border border-border'}`}
-            >
-               <div className={`w-3.5 h-3.5 rounded-full bg-background shadow-sm transition-transform duration-300 ${isYearly ? 'translate-x-4' : 'translate-x-0'}`} />
-            </button>
-            <span className={`text-[11px] md:text-xs font-semibold uppercase tracking-wider transition-colors ${isYearly ? 'text-foreground' : 'text-muted-foreground'}`}>
-              Annual
-            </span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-[#020202] px-2 py-1.5 shadow-[0_0_0_1px_rgba(255,255,255,0.03)_inset]">
+              <span className={`rounded-full px-3 py-1 text-[11px] md:text-xs font-semibold uppercase tracking-wider transition-all ${!isYearly ? 'bg-white text-black shadow-sm' : 'text-white/65'}`}>
+                Monthly
+              </span>
+              <button 
+                onClick={() => setIsYearly(!isYearly)}
+                className={`w-11 h-6 rounded-full p-0.5 flex items-center border transition-colors ${isYearly ? 'bg-emerald-500/20 border-emerald-400/40' : 'bg-white/8 border-white/20'}`}
+                aria-label="Toggle billing period"
+              >
+                <div className={`w-4.5 h-4.5 rounded-full bg-white border border-white/80 shadow-[0_2px_10px_rgba(255,255,255,0.15)] transition-transform duration-300 ${isYearly ? 'translate-x-5' : 'translate-x-0'}`} />
+              </button>
+              <span className={`rounded-full px-3 py-1 text-[11px] md:text-xs font-semibold uppercase tracking-wider transition-all ${isYearly ? 'bg-white text-black shadow-sm' : 'text-white/65'}`}>
+                Annual
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 max-w-sm md:max-w-5xl mx-auto border border-white/10 bg-[#020202] rounded-sm overflow-hidden shadow-2xl relative">
@@ -465,7 +470,7 @@ Here's my expensive lesson —`}
                   </div>
                 )}
                 
-                <div className="text-[10px] font-bold tracking-widest uppercase text-white/40 mb-3 flex items-center justify-between">
+                <div className="text-[10px] font-bold tracking-widest uppercase text-white/55 mb-3 flex items-center justify-between">
                   {plan.name}
                   {plan.featured && <span className="text-[9px] font-bold text-emerald-500">RECOMMENDED</span>}
                 </div>
@@ -474,17 +479,17 @@ Here's my expensive lesson —`}
                   <span className="text-4xl md:text-5xl font-medium tracking-tight text-white">
                     {isYearly ? plan.price.yearly : plan.price.monthly}
                   </span>
-                  <span className="text-white/40 text-xs font-medium uppercase">
+                  <span className="text-white/55 text-xs font-medium uppercase">
                     {isYearly ? plan.frequency.yearly : plan.frequency.monthly}
                   </span>
                 </div>
                 {isYearly && plan.yearlySubtext && (
-                  <div className="mb-3 text-[11px] text-white/35">
+                  <div className="mb-3 text-[11px] text-white/50">
                     Compare at {plan.yearlySubtext}
                   </div>
                 )}
                 
-                <p className="text-sm text-white/50 mb-8 leading-relaxed flex-grow">{plan.description}</p>
+                <p className="text-sm text-white/65 mb-8 leading-relaxed flex-grow">{plan.description}</p>
                 
                 <div className="border-t border-white/5 pt-6 mb-8 mt-auto">
                   <div className="text-white font-medium text-sm mb-4">
@@ -499,7 +504,7 @@ Here's my expensive lesson —`}
                   
                   <div className="space-y-3.5">
                     {plan.features.map((feature, i) => (
-                      <div key={i} className="flex items-start gap-3 text-xs text-white/60">
+                      <div key={i} className="flex items-start gap-3 text-xs text-white/72">
                         <Check size={14} className="text-emerald-500 shrink-0 mt-[1px]" />
                         <span>{feature}</span>
                       </div>

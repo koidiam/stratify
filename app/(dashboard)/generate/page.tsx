@@ -5,7 +5,7 @@ import { InsightViewer } from '@/components/generate/InsightViewer';
 import { ContentHooks } from '@/components/generate/ContentHooks';
 import { FinalPost } from '@/components/generate/FinalPost';
 import { Button } from '@/components/ui/button';
-import { Loader2, Radar, Zap, AlertCircle, Lock, Check } from 'lucide-react';
+import { Loader2, Radar, Zap, AlertCircle, Lock, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { WeeklyGeneration } from '@/types';
 import { getApiError, getErrorMessage, isWeeklyGeneration } from '@/lib/utils/parsers';
@@ -21,9 +21,9 @@ import {
 } from '@/lib/constants/plan-copy';
 
 const STEPS = [
-  { id: 1, label: 'Signal Extraction', micro: 'Observed shifts are converted into usable strategic signals.' },
-  { id: 2, label: 'Angle Compilation', micro: 'Signals are translated into hook structures and draft paths.' },
-  { id: 3, label: 'Draft Finalization', micro: 'The selected draft is refined into a publishable artifact.' },
+  { id: 1, label: 'Signals', micro: 'Signals extracted from the current source. Next: Strategy Paths.', completeLabel: 'Extracted' },
+  { id: 2, label: 'Strategy Paths', micro: 'Paths compiled from extracted signals. Next: Draft Editor.', completeLabel: 'Compiled' },
+  { id: 3, label: 'Draft Editor', micro: 'Selected draft loaded for refinement.', completeLabel: 'Ready' },
 ];
 
 interface SetupContext {
@@ -44,6 +44,7 @@ export default function GeneratePage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallData, setPaywallData] = useState({ used: 0, limit: 0 });
   const [userPlan, setUserPlan] = useState<Plan>('free');
+  const [showSetupDetails, setShowSetupDetails] = useState(false);
   const [setupContext, setSetupContext] = useState<SetupContext>({
     niche: '',
     targetAudience: '',
@@ -160,15 +161,21 @@ export default function GeneratePage() {
 
   const dataSource = userPlan === 'free' ? 'Cached Niche Signals' : 'Live LinkedIn Signals';
   const sourceSummary = getPlanSourceSummary(userPlan);
+  const currentStepMeta = step > 0 ? STEPS[step - 1] : null;
+  const topBarMeta = loading
+    ? 'Pipeline running'
+    : step === 0
+      ? 'Ready'
+      : `Step ${step} of 3 · ${currentStepMeta?.label ?? ''}`;
   const inspectorStage = loading
     ? getLoadingMessages(userPlan)[loadingMsgIdx]
     : step === 0
-      ? 'Ready for a new weekly strategy pass'
+      ? 'Ready to generate'
       : step === 1
-        ? 'Signals extracted and explained'
+        ? 'Signals extracted'
         : step === 2
-          ? 'Hooks and draft paths compiled'
-          : 'Draft editor active';
+          ? 'Strategy paths compiled'
+          : 'Draft selected for refinement';
   const transformationPreview = [
     {
       label: 'Signal Source',
@@ -188,10 +195,10 @@ export default function GeneratePage() {
   ];
 
   return (
-    <div className="w-full flex flex-col xl:flex-row relative min-h-[calc(100vh-6rem)] items-stretch border border-white/10 bg-white/10 rounded-none shadow-2xl xl:h-[calc(100vh-6rem)] overflow-hidden">
+    <div className="w-full flex flex-col xl:flex-row relative min-h-[calc(100vh-6rem)] items-stretch border border-white/10 bg-white/10 rounded-none shadow-2xl">
       
       {/* LEFT PANE: Context & Tracking Rail (Fixed 280px) */}
-      <div className="w-full xl:w-[280px] shrink-0 flex flex-col bg-[#020202] relative z-10 border-b xl:border-b-0 xl:border-r border-white/5 order-2 xl:order-1 overflow-y-auto hidden md:flex">
+      <div className={`w-full xl:w-[220px] shrink-0 flex-col bg-[#020202] relative z-10 border-b xl:border-b-0 xl:border-r border-white/5 order-2 xl:order-1 overflow-y-auto ${step > 0 ? 'hidden md:flex' : 'hidden'}`}>
         <div className="p-5 border-b border-white/5 bg-[#000000]/40 relative">
           <div className="absolute top-0 right-0 w-full h-full bg-emerald-500/5 blur-[30px] pointer-events-none" />
           <div className="mb-4 inline-flex items-center gap-2 rounded-sm border border-emerald-500/20 bg-emerald-500/5 px-2 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-500 relative z-10">
@@ -237,7 +244,13 @@ export default function GeneratePage() {
                      }`} />
                      
                      <div className="flex flex-col -mt-0.5 w-full pr-4">
-                       <span className={`text-[12px] font-medium tracking-wide transition-colors duration-300 ${
+                       <span className={`text-[9px] font-mono uppercase tracking-widest transition-colors duration-300 ${
+                         isCompleted || isActive ? 'text-white/30' : 'text-white/15'
+                       }`}>
+                         Step 0{item.id}
+                       </span>
+
+                       <span className={`mt-1 text-[12px] font-medium tracking-wide transition-colors duration-300 ${
                          isCompleted || isActive ? 'text-white' : 'text-white/30'
                        }`}>
                          {item.label}
@@ -249,9 +262,10 @@ export default function GeneratePage() {
                              initial={{ opacity: 0, height: 0 }}
                              animate={{ opacity: 1, height: 'auto' }}
                              exit={{ opacity: 0, height: 0 }}
-                             className="overflow-hidden mt-1.5 flex flex-col gap-1 text-[10px] font-mono text-white/40"
+                             className="overflow-hidden mt-1.5 flex flex-col gap-1"
                            >
-                              {item.micro}
+                              <span className="text-[9px] font-mono uppercase tracking-widest text-emerald-500">Current</span>
+                              <span className="text-[10px] font-mono text-white/45">{item.micro}</span>
                            </motion.div>
                          )}
                          {isCompleted && (
@@ -261,7 +275,7 @@ export default function GeneratePage() {
                              className="mt-1.5 flex items-center gap-1.5 text-[9px] font-mono text-emerald-500 uppercase tracking-widest"
                            >
                              <Check size={10} className="stroke-2" />
-                             Complete
+                             {item.completeLabel}
                            </motion.div>
                          )}
                          {!isActive && !isCompleted && (
@@ -270,7 +284,7 @@ export default function GeneratePage() {
                              animate={{ opacity: 1 }}
                              className="mt-1 flex items-center gap-1.5 text-[9px] font-mono text-white/20 uppercase tracking-widest"
                            >
-                             Not Started
+                             Up Next
                            </motion.div>
                          )}
                        </AnimatePresence>
@@ -284,16 +298,21 @@ export default function GeneratePage() {
       </div>
       
       {/* MIDDLE PANE: Main Execution Sandbox (Flexible) */}
-      <div className="flex-grow flex flex-col w-full min-w-0 relative bg-[#000000] order-1 xl:order-2 overflow-y-auto">
-        <div className="sticky top-0 z-20 w-full h-12 bg-[#000000]/80 backdrop-blur-md border-b border-white/5 flex items-center px-6">
-          <div className="text-[10px] font-mono text-white/40 flex items-center gap-3 w-full">
-            <span className="text-emerald-500/80 uppercase tracking-widest font-bold">Generate</span>
-            <span>/</span>
-            <span className={step === 0 ? "text-white" : ""}>Setup</span>
-            {step > 0 && <span>/</span>}
-            {step > 0 && <span className={step === 1 ? "text-white" : ""}>Insights</span>}
-            {step > 1 && <span>/</span>}
-            {step > 1 && <span className={step > 1 ? "text-white" : ""}>Drafts</span>}
+      <div className="flex-grow min-h-0 flex flex-col w-full min-w-0 relative bg-[#000000] order-1 xl:order-2 overflow-y-auto">
+        <div className="sticky top-0 z-20 w-full h-12 bg-[#000000]/80 backdrop-blur-md border-b border-white/5 flex items-center justify-between px-6 gap-4">
+          <div className="text-[10px] font-mono text-white/40 flex items-center gap-3 w-full min-w-0">
+            <span className="text-emerald-500/80 uppercase tracking-widest font-bold shrink-0">Generate</span>
+            <span className="shrink-0">/</span>
+            <span className={`${step === 0 ? "text-white" : ""} shrink-0`}>Setup</span>
+            {step > 0 && <span className="shrink-0">/</span>}
+            {step > 0 && <span className={`${step === 1 ? "text-white" : ""} shrink-0`}>Signals</span>}
+            {step > 1 && <span className="shrink-0">/</span>}
+            {step > 1 && <span className={`${step === 2 ? "text-white" : ""} shrink-0`}>Strategy Paths</span>}
+            {step > 2 && <span className="shrink-0">/</span>}
+            {step > 2 && <span className={`${step === 3 ? "text-white" : ""} shrink-0`}>Draft Editor</span>}
+          </div>
+          <div className="rounded-sm border border-white/10 bg-white/[0.02] px-2.5 py-1 text-[9px] font-mono uppercase tracking-widest text-white/55 shrink-0">
+            {topBarMeta}
           </div>
         </div>
       <AnimatePresence mode="wait">
@@ -305,7 +324,7 @@ export default function GeneratePage() {
             animate={{ opacity: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, filter: 'blur(10px)', scale: 0.98 }}
             transition={{ duration: 0.3 }}
-            className="w-full h-full p-8 md:p-12 relative overflow-hidden flex flex-col items-center justify-center min-h-[500px]"
+            className="w-full min-h-[500px] p-8 md:p-12 relative flex flex-col items-center justify-start md:justify-center"
           >
             <div className="absolute inset-0 bg-[#000000]/60 z-0 pointer-events-none" />
             
@@ -364,77 +383,88 @@ export default function GeneratePage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-center text-center w-full">
-                  <div className="w-16 h-16 mb-6 rounded-sm bg-[#000000]/60 border border-white/5 flex items-center justify-center shadow-inner">
+                <div className="flex flex-col items-center text-center w-full max-w-3xl">
+                  <div className="mb-3 inline-flex items-center gap-2 rounded-sm border border-emerald-500/20 bg-emerald-500/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-500">
+                    Primary Action
+                  </div>
+                  <div className="w-16 h-16 mb-5 rounded-sm bg-[#000000]/60 border border-white/5 flex items-center justify-center shadow-inner">
                     <Zap size={24} className="text-white/80" />
                   </div>
-                  <h2 className="text-2xl font-bold tracking-tight text-white uppercase">
-                    Run Weekly LinkedIn Strategy
+                  <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white uppercase">
+                    Generate Strategy
                   </h2>
-                  <p className="mt-4 mb-8 text-sm text-white/50 max-w-2xl leading-relaxed">
-                    This pass reviews your current content context, extracts the most useful signal shifts, explains the strategic angle, and turns that into hooks and full LinkedIn drafts.
+                  <p className="mt-3 mb-8 text-sm text-white/50 max-w-xl leading-relaxed">
+                    Run this week&apos;s LinkedIn strategy pass from your saved context.
                   </p>
-
-                  <div className="w-full max-w-4xl mb-8 grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-                    <div className="border border-white/10 rounded-sm bg-white/[0.02]">
-                      <div className="px-4 py-3 border-b border-white/5 text-[10px] font-bold uppercase tracking-widest text-white/30">
-                        Run Context
-                      </div>
-                      <div className="divide-y divide-white/5">
-                        <div className="flex items-start justify-between px-4 py-3 gap-4">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Niche</span>
-                          <span className="text-xs text-white/70 text-right leading-snug">{setupContext.niche || 'Loading context...'}</span>
-                        </div>
-                        <div className="flex items-start justify-between px-4 py-3 gap-4">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Audience</span>
-                          <span className="text-xs text-white/70 text-right leading-snug">{setupContext.targetAudience || 'Loading context...'}</span>
-                        </div>
-                        <div className="flex items-start justify-between px-4 py-3 gap-4">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Tone</span>
-                          <span className="text-xs text-white/70 text-right leading-snug">{setupContext.tone || 'Loading context...'}</span>
-                        </div>
-                        <div className="flex items-start justify-between px-4 py-3 gap-4">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Source</span>
-                          <span className="text-xs text-white/70 text-right leading-snug">{sourceSummary.label}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="border border-white/10 rounded-sm bg-white/[0.02]">
-                      <div className="px-4 py-3 border-b border-white/5 text-[10px] font-bold uppercase tracking-widest text-white/30">
-                        Transformation Path
-                      </div>
-                      <div className="divide-y divide-white/5">
-                        {transformationPreview.map((item) => (
-                          <div key={item.label} className="px-4 py-3 text-left">
-                            <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">{item.label}</div>
-                            <div className="mt-2 text-sm font-medium text-white">{item.value}</div>
-                            <p className="mt-2 text-xs leading-relaxed text-white/60">{item.detail}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-white/25 mb-6">1 run produces insights, hook options, and full draft output</p>
 
                   <Button 
                     onClick={handleGenerate} 
-                    className="h-14 w-full max-w-sm rounded-sm bg-white text-black hover:bg-white/90 transition-all font-bold uppercase tracking-widest text-[11px] shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+                    className="h-16 w-full max-w-md rounded-sm bg-white text-black hover:bg-white/90 transition-all font-bold uppercase tracking-[0.22em] text-[12px] shadow-[0_0_30px_rgba(255,255,255,0.08)]"
                   >
                     Generate Strategy
                   </Button>
+
+                  <div className="mt-4 inline-flex items-center justify-center gap-2 text-[10px] text-white/35 border border-white/5 bg-white/[0.02] px-3 py-1.5 rounded-sm">
+                    <span className="w-1 h-1 rounded-full bg-white/30 animate-pulse" />
+                    Typical time: 10-15s
+                  </div>
+
+                  <div className="w-full max-w-3xl mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                    <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4 text-left">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Niche</div>
+                      <p className="mt-2 text-sm text-white/75">{setupContext.niche || 'Loading context...'}</p>
+                    </div>
+                    <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4 text-left">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Audience</div>
+                      <p className="mt-2 text-sm text-white/75">{setupContext.targetAudience || 'Loading context...'}</p>
+                    </div>
+                    <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4 text-left">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Tone</div>
+                      <p className="mt-2 text-sm text-white/75">{setupContext.tone || 'Loading context...'}</p>
+                    </div>
+                    <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4 text-left">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Source</div>
+                      <p className="mt-2 text-sm text-white/75">{sourceSummary.label}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowSetupDetails((prev) => !prev)}
+                    className="mt-5 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/45 transition-colors hover:text-white/70"
+                  >
+                    {showSetupDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    {showSetupDetails ? 'Hide secondary details' : 'Show secondary details'}
+                  </button>
+
+                  <AnimatePresence initial={false}>
+                    {showSetupDetails && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="w-full max-w-3xl overflow-hidden"
+                      >
+                        <div className="mt-4 grid gap-3 md:grid-cols-3">
+                          {transformationPreview.map((item) => (
+                            <div key={item.label} className="rounded-sm border border-white/10 bg-white/[0.02] p-4 text-left">
+                              <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">{item.label}</div>
+                              <div className="mt-2 text-sm font-medium text-white">{item.value}</div>
+                              <p className="mt-2 text-xs leading-relaxed text-white/55">{item.detail}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   
                   {userPlan === 'free' && (
-                    <div className="mt-8 text-[10px] font-mono text-amber-500 border border-amber-500/20 bg-amber-500/5 px-4 py-2 rounded-sm inline-flex items-center gap-2 uppercase tracking-widest">
+                    <div className="mt-6 text-[10px] font-mono text-amber-500 border border-amber-500/20 bg-amber-500/5 px-4 py-2 rounded-sm inline-flex items-center gap-2 uppercase tracking-widest">
                       <Lock size={12} className="opacity-80" />
                       Live signals are unavailable on the free plan
                     </div>
                   )}
-                  
-                  <div className="mt-6 flex items-center justify-center gap-2 text-[10px] text-white/30 border border-white/5 bg-white/[0.02] px-3 py-1.5 rounded-sm">
-                    <span className="w-1 h-1 rounded-full bg-white/30 animate-pulse" />
-                    Typical time: 10–15s
-                  </div>
                 </div>
               )}
             </div>
@@ -517,7 +547,7 @@ export default function GeneratePage() {
       </div>
 
       {/* RIGHT PANE: System Inspector (Fixed 280px) */}
-      <div className="w-full xl:w-[280px] shrink-0 flex flex-col bg-[#020202] relative z-20 border-t xl:border-t-0 xl:border-l border-white/5 order-3 hidden xl:flex overflow-y-auto">
+      <div className={`w-full xl:w-[220px] shrink-0 flex-col bg-[#020202] relative z-20 border-t xl:border-t-0 xl:border-l border-white/5 order-3 overflow-y-auto ${step === 3 ? 'hidden xl:flex' : 'hidden'}`}>
         <div className="p-5 border-b border-white/5 bg-[#000000]/40 flex items-center justify-between">
           <div className="text-[9px] font-bold uppercase tracking-widest text-white/50">Details</div>
         </div>
@@ -533,7 +563,7 @@ export default function GeneratePage() {
                 <div className="bg-[#050505] p-3 text-white/50">STAGE</div>
                 <div className="bg-[#050505] p-3 text-white">{inspectorStage}</div>
                 <div className="bg-[#050505] p-3 text-white/50">FORMAT</div>
-                <div className="bg-[#050505] p-3 text-white">SIGNAL → INSIGHT → DRAFT</div>
+                <div className="bg-[#050505] p-3 text-white">SIGNALS → PATHS → DRAFT EDITOR</div>
              </div>
           </div>
 

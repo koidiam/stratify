@@ -34,8 +34,8 @@ export default async function DashboardLayout({
       <Sidebar email={session.user.email} plan={plan} />
       
       {/* Main Content Area */}
-      <div className="flex-1 md:pl-64 pt-16 md:pt-0 w-full overflow-y-auto relative z-10 flex flex-col h-screen">
-        <div className="w-full flex-1 flex flex-col p-4 md:p-6 lg:p-8">
+      <div className="flex-1 md:pl-64 pt-16 md:pt-0 w-full overflow-y-auto relative z-10 flex flex-col min-h-screen">
+        <div className="w-full flex-1 min-h-0 flex flex-col p-4 md:p-6 lg:p-8">
           {/* Real Metric Strip */}
           <div className="border-b border-white/5 pb-4 mb-6 md:mb-8 shrink-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -60,7 +60,7 @@ export default async function DashboardLayout({
             </div>
           </div>
 
-          <div className="flex-1 w-full relative">
+          <div className="flex-1 min-h-0 w-full relative">
             {children}
           </div>
         </div>

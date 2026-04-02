@@ -15,12 +15,17 @@ function json(body: Record<string, unknown>, status = 200) {
   });
 }
 
+function unavailable(code: string) {
+  return json({
+    status: 'error',
+    code,
+    total: TOTAL_FOUNDING_SLOTS,
+    fallback: true,
+  });
+}
+
 export async function GET() {
   try {
-    const vercelEnv = process.env.VERCEL_ENV;
-    const isStrictProduction =
-      vercelEnv === 'production' || (!vercelEnv && process.env.NODE_ENV === 'production');
-
     const basicFs = process.env.LEMON_SQUEEZY_FOUNDING_BASIC_VARIANT_ID;
     const proFs = process.env.LEMON_SQUEEZY_FOUNDING_PRO_VARIANT_ID;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -42,26 +47,10 @@ export async function GET() {
         hasProVariant: Boolean(proFs),
         hasServiceRole: Boolean(serviceRoleKey),
         hasSupabaseUrl: Boolean(supabaseUrl),
-        vercelEnv: vercelEnv ?? 'local',
+        vercelEnv: process.env.VERCEL_ENV ?? 'local',
       });
 
-      if (isStrictProduction) {
-        return json({
-          status: 'error',
-          code,
-          error: 'Missing founding availability configuration',
-          total: TOTAL_FOUNDING_SLOTS,
-        }, 500);
-      }
-
-      return json({
-        status: 'available',
-        remaining: TOTAL_FOUNDING_SLOTS,
-        claimed: 0,
-        total: TOTAL_FOUNDING_SLOTS,
-        fallback: true,
-        code,
-      });
+      return unavailable(code);
     }
 
     const supabase = await createAdminClient();
@@ -74,24 +63,7 @@ export async function GET() {
       
     if (error) {
       console.error('[Availability API] DB lookup failed:', error);
-
-      if (!isStrictProduction) {
-        return json({
-          status: 'available',
-          remaining: TOTAL_FOUNDING_SLOTS,
-          claimed: 0,
-          total: TOTAL_FOUNDING_SLOTS,
-          fallback: true,
-          code: 'preview_db_fallback',
-        });
-      }
-
-      return json({
-        status: 'error',
-        code: 'database_query_error',
-        error: 'Database querying error',
-        total: TOTAL_FOUNDING_SLOTS,
-      }, 500);
+      return unavailable('database_query_error');
     }
 
     const claimed = Math.min(count || 0, TOTAL_FOUNDING_SLOTS);

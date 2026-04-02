@@ -109,34 +109,28 @@ export function FeedbackDialog({ open, onOpenChange, historyId, postIndex }: Pro
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-2xl str-panel bg-[#050505] p-0 text-white shadow-2xl overflow-y-auto max-h-[90vh] rounded-sm">
-        <div className="border-b border-emerald-500/20 bg-emerald-500/5 px-6 py-6 relative overflow-hidden">
-          <div className="absolute right-0 top-0 h-full w-32 bg-gradient-to-r from-transparent to-emerald-500/5 mix-blend-overlay pointer-events-none" />
-          <DialogHeader className="relative z-10">
-            <div className="mb-2 inline-flex items-center gap-1.5 rounded-sm border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-emerald-500 w-max">
-              <TrendingUp className="h-3 w-3" />
-              SYSTEM METRICS
-            </div>
-             <DialogTitle className="text-sm font-bold text-white uppercase tracking-widest mt-2">
-              Performance Telemetry
+        <div className="border-b border-emerald-500/20 bg-emerald-500/5 px-6 py-6">
+          <DialogHeader>
+             <DialogTitle className="text-sm font-bold text-white uppercase tracking-widest">
+              Log Results
              </DialogTitle>
-            <DialogDescription className="max-w-xl text-[11px] font-light leading-relaxed text-white/50 mt-2 font-mono">
-              Entering historical metrics locks them into your AI model&apos;s training loop database. 
-              The computational engine parses impressions and engagement velocity to optimize strategy arrays iteratively.
+            <DialogDescription className="max-w-xl text-[11px] leading-relaxed text-white/50 mt-2 font-mono">
+              Save observed post performance for this draft.
             </DialogDescription>
           </DialogHeader>
         </div>
 
         <div className="space-y-6 px-6 py-6 border-x border-x-white/5">
           {isSuccess ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <div className="rounded-sm border border-emerald-500/30 bg-emerald-500/10 p-6 text-center mb-6 w-full max-w-sm">
-                <div className="text-emerald-500 font-mono text-sm mb-2 font-bold uppercase tracking-widest">
-                  Metrics Logged
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="rounded-sm border border-emerald-500/30 bg-emerald-500/10 p-6 text-center mb-6 w-full max-w-sm">
+                  <div className="text-emerald-500 font-mono text-sm mb-2 font-bold uppercase tracking-widest">
+                  Results Saved
+                  </div>
+                  <p className="text-xs text-white/50 font-mono">
+                  Stored for future comparison.
+                  </p>
                 </div>
-                <p className="text-xs text-white/50 font-mono">
-                  Future generation cycles will adapt based on this data.
-                </p>
-              </div>
               <Button onClick={() => handleOpenChange(false)} className="rounded-sm bg-white text-black h-10 px-8 font-bold text-[9px] uppercase tracking-widest shadow-none">
                 Close
               </Button>
@@ -211,26 +205,20 @@ export function FeedbackDialog({ open, onOpenChange, historyId, postIndex }: Pro
 
               <div className="rounded-sm border border-white/5 bg-white/[0.02] p-4">
                 <Label htmlFor="notes" className="mb-3 text-[10px] uppercase font-bold tracking-widest text-white/40 block">
-                  Operator Context Notes
+                  Notes
                 </Label>
                 <Textarea
                   id="notes"
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
-                  placeholder="e.g. The first sentence hook worked extremely well..."
+                  placeholder="Optional context"
                   className="min-h-[100px] rounded-sm border-white/10 bg-[#000000]/40 p-3 text-[11px] font-mono text-white placeholder:text-white/20 focus-visible:ring-1 focus-visible:ring-emerald-500 shadow-none resize-y hover:bg-white/5 transition-colors"
                 />
               </div>
 
-              <div className="flex flex-col gap-4 rounded-sm border border-white/5 bg-white/[0.02] p-5 text-sm md:flex-row md:items-center md:justify-between">
-                <div>
-                  <div className="text-[9px] uppercase font-bold tracking-widest text-emerald-500/80">
-                    Calculated Vector
-                  </div>
-                  <p className="mt-1.5 max-w-xl text-[10px] font-mono leading-relaxed text-white/50">
-                    Telemetry mapped to artifact F_0{postIndex + 1}.
-                    {engagementRate ? ` Estimated conversion velocity: ${engagementRate}%.` : ' Rate derived intrinsically from impressions.'}
-                  </p>
+              <div className="flex flex-col gap-3 rounded-sm border border-white/5 bg-white/[0.02] p-5 md:flex-row md:items-center md:justify-between">
+                <div className="text-[10px] font-mono text-white/45">
+                  {engagementRate ? `Engagement rate: ${engagementRate}%` : `Draft F_0${postIndex + 1}`}
                 </div>
 
                 <div className="flex gap-3">
@@ -246,7 +234,7 @@ export function FeedbackDialog({ open, onOpenChange, historyId, postIndex }: Pro
                     disabled={submitting}
                     className="h-9 rounded-sm text-[9px] font-bold uppercase tracking-widest bg-white text-black hover:bg-white/90 shadow-none"
                   >
-                    {submitting ? 'Saving...' : 'Save Metrics'}
+                    {submitting ? 'Saving...' : 'Save Results'}
                   </Button>
                 </div>
               </div>

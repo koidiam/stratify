@@ -1,6 +1,6 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, CheckCircle2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 interface Insight {
   insight: string;
@@ -16,26 +16,113 @@ interface Props {
   dataSource?: string;
 }
 
-function getDecisionSupport(trigger: string, insight: string): { bestFor: string; useWhen: string } {
+function normalizeSystemTone(text: string): string {
+  return text
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\bThis works because\b/gi, '')
+    .replace(/\bThis pattern emerges when\b/gi, 'Emerges when ')
+    .replace(/\bThis is great for\b/gi, '')
+    .replace(/\bThis is best for\b/gi, '')
+    .replace(/\bThis means\b/gi, '')
+    .replace(/\bThis indicates that\b/gi, '')
+    .replace(/\bYou should\b/gi, '')
+    .replace(/\bYou can\b/gi, '')
+    .replace(/\bUse when\b/gi, 'Rises when ')
+    .replace(/\bhelps build trust by\b/gi, 'trust rises from ')
+    .replace(/\bbuilds trust by\b/gi, 'trust rises from ')
+    .replace(/\bpeople\b/gi, 'audience')
+    .trim();
+}
+
+function getSupportingNote(why: string): string | null {
+  const normalized = normalizeSystemTone(why);
+  const lower = normalized.toLowerCase();
+
+  if (!normalized) return null;
+  if (/(proof|result|evidence|example|case|experience)/.test(lower)) return 'Proof load is visible.';
+  if (/(data|metric|number|specific|concrete)/.test(lower)) return 'Concrete detail carries weight.';
+  if (/(recent|current|now|shift|trend|timing)/.test(lower)) return 'Usually tied to recent movement.';
+  if (/(story|personal|relatable|authentic|familiar)/.test(lower)) return 'Identity match is present.';
+  if (/(question|gap|unknown|curiosity)/.test(lower)) return 'Open loop remains active.';
+  if (/(contrast|contrarian|wrong|default|myth)/.test(lower)) return 'Contrast load is high.';
+
+  const firstSentence = normalized.split(/[.!?]/)[0]?.trim();
+  if (!firstSentence) return null;
+
+  const compact = firstSentence
+    .replace(/^(Emerges when|Rises when)\s+/i, '')
+    .replace(/^that\s+/i, '')
+    .trim();
+
+  if (!compact) return null;
+  return `${compact.charAt(0).toUpperCase()}${compact.slice(1)}.`;
+}
+
+function getSignalInterpretation(trigger: string, why: string): string {
+  const t = trigger.toLowerCase();
+  const detail = getSupportingNote(why);
+  const parts: string[] = [];
+
+  if (t.includes('curiosity')) {
+    parts.push('Signals preference for unresolved gaps.');
+  } else if (t.includes('social proof')) {
+    parts.push('Signals preference for visible proof.');
+  } else if (t.includes('scarcity')) {
+    parts.push('Signals response to constrained access or timing.');
+  } else if (t.includes('contrast')) {
+    parts.push('Signals response to position contrast.');
+  } else if (t.includes('relatability')) {
+    parts.push('Signals self-recognition in the audience.');
+  } else if (t.includes('progress')) {
+    parts.push('Signals preference for visible progress.');
+  } else {
+    parts.push('Signals emerging audience preference.');
+  }
+
+  if (detail) parts.push(detail);
+  return parts.join(' ');
+}
+
+function getExecutionConstraints(trigger: string, insight: string): { performsWhen: string; breaksWhen: string } {
   const t = trigger.toLowerCase();
   const i = insight.toLowerCase();
 
   if (t.includes('curiosity') || i.includes('question')) {
-    return { bestFor: 'Higher saves and shares', useWhen: 'You want a sharper opening' };
+    return {
+      performsWhen: 'open loops stay unresolved at the start.',
+      breaksWhen: 'resolution lands too early.',
+    };
   }
   if (t.includes('social proof') || i.includes('proof') || i.includes('personal')) {
-    return { bestFor: 'Trust building', useWhen: 'You can share a real result or experience' };
+    return {
+      performsWhen: 'proof is firsthand and visible.',
+      breaksWhen: 'proof is implied or generic.',
+    };
   }
   if (t.includes('scarcity') || t.includes('contrast') || i.includes('contrarian')) {
-    return { bestFor: 'Contrarian positioning', useWhen: 'You have a strong opinion backed by proof' };
+    return {
+      performsWhen: 'category framing deviates from the default.',
+      breaksWhen: 'contrast lacks support.',
+    };
   }
   if (t.includes('relatability') || i.includes('story') || i.includes('authentic')) {
-    return { bestFor: 'Story-led posts', useWhen: 'You want a more personal, trust-building post' };
+    return {
+      performsWhen: 'self-recognition is immediate.',
+      breaksWhen: 'story weight exceeds signal value.',
+    };
   }
   if (t.includes('progress') || i.includes('data') || i.includes('metric')) {
-    return { bestFor: 'Authority building', useWhen: 'You can support the claim with data' };
+    return {
+      performsWhen: 'movement is concrete and recent.',
+      breaksWhen: 'progress stays abstract.',
+    };
   }
-  return { bestFor: 'Authority building', useWhen: 'You want to establish credibility' };
+
+  return {
+    performsWhen: 'the shift is already visible in-market.',
+    breaksWhen: 'the observation stays generic.',
+  };
 }
 
 export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }: Props) {
@@ -45,104 +132,87 @@ export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }
   const timeLabel = weekNumber && year ? `Week ${weekNumber}, ${year}` : 'This week';
 
   return (
-    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="str-panel rounded-sm p-6 lg:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-emerald-500">
+    <div className="space-y-5 animate-in slide-in-from-bottom-4 duration-500">
+      <div className="str-panel rounded-sm p-5 lg:p-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-l-4 border-l-emerald-500">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-white">Extracted Signals</h2>
-          <p className="mt-2 text-sm text-white/50 max-w-xl font-light">
-            This is the reasoning layer for the weekly pass: each signal is captured, matched to a trigger, and explained before hooks or drafts are compiled.
+          <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-500/80">Step 1 of 3 · Signals</div>
+          <h2 className="mt-2 text-xl font-bold tracking-tight text-white">Signals</h2>
+          <p className="mt-2 max-w-xl text-sm text-white/65">
+            Signals extracted from the current run. Next: Strategy Paths.
           </p>
         </div>
-        <div className="flex flex-col items-start md:items-end gap-1.5">
-          <div className="str-mono text-emerald-500/80 uppercase">
-            <CheckCircle2 className="inline-block h-3 w-3 mr-1 mb-0.5" />
-            Analysis Complete
-          </div>
-          <div className="str-mono text-white/40">
-            {insights.length} {insights.length === 1 ? 'PATTERN' : 'PATTERNS'} IDENTIFIED
-          </div>
-        </div>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4">
-          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Observed Shift</div>
-          <p className="mt-2 text-sm text-white/70">What changed in the niche that is worth paying attention to this week.</p>
-        </div>
-        <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4">
-          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Trigger Logic</div>
-          <p className="mt-2 text-sm text-white/70">The psychological mechanism explaining why the signal should perform.</p>
-        </div>
-        <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4">
-          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Strategic Use</div>
-          <p className="mt-2 text-sm text-white/70">When to apply that signal in hooks and final drafts.</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {insights.map((item, idx) => {
-          const decision = getDecisionSupport(item.trigger, item.insight);
-          return (
-          <Card 
-            key={idx} 
-            className="flex flex-col rounded-sm str-panel p-5 transition-colors hover:border-white/20 hover:bg-white/[0.02]"
+        <div className="flex flex-col items-start gap-3 md:items-end">
+          <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-widest">
+            <span className="rounded-sm border border-white/10 bg-white/[0.02] px-2.5 py-1 text-white/65">
+              {sourceLabel}
+            </span>
+            <span className="rounded-sm border border-white/10 bg-white/[0.02] px-2.5 py-1 text-white/65">
+              {timeLabel}
+            </span>
+          </div>
+          <Button
+            onClick={onNext}
+            className="rounded-sm bg-white text-black hover:bg-white/90 transition-all font-bold text-[11px] uppercase tracking-widest px-6 h-10"
           >
-            <div className="flex-1 space-y-5">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="str-mono text-white/60">SIGNAL_{String(idx + 1).padStart(2, '0')}</div>
-                <div className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm bg-white/5 text-white/50">
-                  Pattern {String.fromCharCode(65 + idx)}
-                </div>
-              </div>
+            Continue to Strategy Paths
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
+      </div>
 
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/35">Observed Shift</div>
-                <h3 className="mt-2 text-base font-semibold text-white/90 leading-snug">{item.insight}</h3>
-              </div>
-              
-              <div className="space-y-1.5 pt-3 border-t border-white/5">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Trigger Logic</div>
-                <div className="flex items-center justify-between">
-                  <div className="text-sm font-medium text-white/80">{item.trigger}</div>
-                </div>
-                <p className="text-xs text-white/50 leading-relaxed font-light mt-2">{item.why}</p>
-              </div>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {insights.map((item, idx) => {
+          const interpretation = getSignalInterpretation(item.trigger, item.why);
+          const constraints = getExecutionConstraints(item.trigger, item.insight);
+          const patternLabel = `Pattern ${String.fromCharCode(65 + idx)}`;
 
-              {/* Decision Support */}
-              <div className="pt-3 border-t border-white/5 space-y-2.5">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-white/20">Strategic use</div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-px">Best for</span>
-                  <span className="text-xs text-white/60">{decision.bestFor}</span>
+          return (
+            <Card key={idx} className="flex flex-col rounded-sm str-panel p-5 transition-colors hover:border-white/20">
+              <div className="flex-1 space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div className="str-mono text-white/65">SIGNAL_{String(idx + 1).padStart(2, '0')}</div>
+                  <div className="rounded-sm border border-white/10 bg-white/[0.02] px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-white/45">
+                    {item.trigger}
+                  </div>
                 </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-px">Use when</span>
-                  <span className="text-xs text-white/60">{decision.useWhen}</span>
-                </div>
-              </div>
-            </div>
 
-            <div className="mt-5 pt-4 border-t border-white/10 flex flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <span className="str-mono">DATA SOURCE:</span>
-                <span className="str-mono text-white/70">{sourceLabel}</span>
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Pattern</div>
+                  <div className="mt-2 text-sm font-medium text-white/84">{patternLabel}</div>
+                </div>
+
+                <div className="border-t border-white/5 pt-3">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Observed Shift</div>
+                  <h3 className="mt-2 text-base font-semibold leading-snug text-white/92">{item.insight}</h3>
+                </div>
+
+                <div className="space-y-1.5 border-t border-white/5 pt-3">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Signal Interpretation</div>
+                  <p className="mt-2 text-sm leading-relaxed text-white/68">{interpretation}</p>
+                </div>
+
+                <div className="space-y-2.5 border-t border-white/5 pt-3">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Execution Constraints</div>
+                  <p className="text-xs leading-relaxed text-white/72">
+                    Rises when {constraints.performsWhen}
+                  </p>
+                  <p className="text-xs leading-relaxed text-white/55">
+                    Breaks when {constraints.breaksWhen}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="str-mono">TIME WINDOW:</span>
-                <span className="str-mono text-white/70">{timeLabel}</span>
-              </div>
-            </div>
-          </Card>
+            </Card>
           );
         })}
       </div>
 
-      <div className="flex justify-end pt-4">
-        <Button 
+      <div className="flex justify-end pt-2">
+        <Button
           onClick={onNext}
           className="rounded-sm bg-white text-black hover:bg-white/90 transition-all font-bold text-[11px] uppercase tracking-widest px-8 h-11"
         >
-          View Compiled Hooks & Drafts
+          Continue to Strategy Paths
           <ArrowRight className="ml-2 w-4 h-4" />
         </Button>
       </div>

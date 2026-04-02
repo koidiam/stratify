@@ -21,7 +21,7 @@ export function FoundingStrip({
   if (status === 'loading') {
     // Silent height-matched skeleton instead of "Checking availability" UI
     return (
-      <div className="mb-6 rounded-xl border border-border/10 bg-muted/5 p-4 flex flex-col justify-center min-h-[110px] opacity-50 animate-pulse" />
+      <div className="mb-6 rounded-xl border border-white/10 bg-white/[0.02] p-4 flex flex-col justify-center min-h-[110px] opacity-50 animate-pulse" />
     );
   }
 
@@ -29,10 +29,10 @@ export function FoundingStrip({
   const isAvailable = status === 'available';
   const isSoldOut = status === 'sold_out';
   const isError = status === 'error';
-  const isPreviewFallback = isFallback && !isError;
+  const isUnavailable = isError || isFallback;
 
-  // If sold out, force max fill. If error or preview fallback, don't imply live scarcity.
-  const percentage = isSoldOut ? 100 : isError || isPreviewFallback ? 0 : (claimed / total) * 100;
+  // If sold out, force max fill. If unavailable, don't imply live scarcity.
+  const percentage = isSoldOut ? 100 : isUnavailable ? 0 : (claimed / total) * 100;
 
   return (
     <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4 relative overflow-hidden shadow-sm">
@@ -44,40 +44,36 @@ export function FoundingStrip({
       <div className="relative z-10 flex flex-col h-full">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5">
-            <Sparkles className={`h-4 w-4 ${isAvailable || isError ? 'text-primary' : 'text-muted-foreground'}`} />
-            <span className={`text-xs font-bold uppercase tracking-wider ${isAvailable || isError ? 'text-primary' : 'text-muted-foreground'}`}>
+            <Sparkles className={`h-4 w-4 ${isAvailable || isUnavailable ? 'text-primary' : 'text-muted-foreground'}`} />
+            <span className={`text-xs font-bold uppercase tracking-wider ${isAvailable || isUnavailable ? 'text-primary' : 'text-white/60'}`}>
               {isSoldOut ? 'Founding Offer Sold Out' : 'Founding Member Access'}
             </span>
           </div>
-          {!isError && (
-            <div className="flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs font-semibold tracking-tight text-muted-foreground">
+          <div className="flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs font-semibold tracking-tight text-white/65">
               <Users className="h-3 w-3" />
-              {isPreviewFallback ? `-- / ${total}` : isSoldOut ? `${total} / ${total}` : `${claimed} / ${total}`} Claimed
+              {isUnavailable ? 'Availability unavailable' : isSoldOut ? `${total} / ${total} claimed` : `${claimed} / ${total} claimed`}
             </div>
-          )}
         </div>
         
-        <p className="text-[13px] text-muted-foreground mb-3 font-medium">
+        <p className="text-[13px] text-white/72 mb-3 font-medium">
           {isSoldOut 
             ? `All ${total} spots have been claimed. Regular pricing applies.`
-            : isError 
-            ? `Founding availability temporarily unavailable.`
-            : isPreviewFallback
-            ? `Availability will appear here once founding access is configured.`
+            : isUnavailable
+            ? `Founding availability is not available right now. The strip stays visible, but live founding counts are hidden until configuration is ready.`
             : `Only ${Math.max(0, total - claimed)} spots left. Lock in early-adopter pricing for the full weekly Stratify workflow.`}
         </p>
 
-        {isPreviewFallback && (
-          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-            Preview data
+        {isUnavailable && (
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+            Neutral placeholder
           </p>
         )}
         
         <div className="flex items-baseline gap-2 mt-auto">
-          <span className={`text-2xl font-bold tracking-tight ${isAvailable || isError ? 'text-foreground' : 'text-muted-foreground line-through opacity-70'}`}>
+          <span className={`text-2xl font-bold tracking-tight ${isAvailable || isUnavailable ? 'text-foreground' : 'text-muted-foreground line-through opacity-70'}`}>
             {foundingPrice}
           </span>
-          <span className={`text-sm font-medium ${isAvailable || isError ? 'text-muted-foreground' : 'text-muted-foreground/50 line-through'}`}>
+          <span className={`text-sm font-medium ${isAvailable || isUnavailable ? 'text-white/60' : 'text-muted-foreground/50 line-through'}`}>
             {isYearly ? '/yr forever' : '/mo forever'}
           </span>
         </div>

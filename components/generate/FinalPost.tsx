@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Copy, Check, ArrowLeft, Lightbulb, Lock } from 'lucide-react';
+import { Copy, Check, ArrowLeft, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { FeedbackDialog } from '@/components/generate/FeedbackDialog';
 
@@ -17,6 +17,55 @@ interface Props {
   hook?: string;
   idea?: string;
   explanation?: string;
+}
+
+function formatPathType(type?: string): string | null {
+  if (!type) return null;
+  if (type === 'Personal') return 'Firsthand';
+  if (type === 'Contrarian') return 'Contrast';
+  if (type === 'Soft Sell') return 'Offer';
+  if (type === 'How-to') return 'How-To';
+  return type;
+}
+
+function getHookEntryLabel(text?: string): string | null {
+  const lower = text?.toLowerCase() ?? '';
+
+  if (!lower) return null;
+  if (/\?|how |why |what /.test(lower)) return 'Open-loop entry.';
+  if (/\d|%|\dx/.test(lower)) return 'Data-led entry.';
+  if (/\bi |\bmy |\bwe /.test(lower)) return 'Firsthand entry.';
+  if (/stop|never|don't|quit|wrong/.test(lower)) return 'Contrast entry.';
+
+  return 'Authority entry.';
+}
+
+function getExplanationSignal(explanation?: string): string | null {
+  const lower = explanation?.toLowerCase() ?? '';
+
+  if (!lower) return null;
+  if (/(proof|result|evidence|example|case|experience)/.test(lower)) return 'Proof-backed.';
+  if (/(data|metric|number|specific|concrete)/.test(lower)) return 'Concrete detail retained.';
+  if (/(contrast|contrarian|wrong|default|myth)/.test(lower)) return 'Contrast retained.';
+  if (/(story|personal|authentic|relatable|identity)/.test(lower)) return 'Identity match preserved.';
+  if (/(authority|credibility|expertise)/.test(lower)) return 'Authority frame intact.';
+  if (/(curiosity|question|gap|unknown)/.test(lower)) return 'Open loop preserved.';
+
+  return null;
+}
+
+function getPathInterpretation(hook?: string, idea?: string, explanation?: string): string {
+  const parts: string[] = [];
+  const hookEntry = getHookEntryLabel(hook);
+
+  if (hookEntry) parts.push(hookEntry);
+  if (idea) parts.push(`${idea} direction.`);
+
+  const explanationSignal = getExplanationSignal(explanation);
+  if (explanationSignal) parts.push(explanationSignal);
+
+  if (parts.length === 0) return 'Signal alignment intact.';
+  return parts.join(' ');
 }
 
 export function FinalPost({
@@ -46,7 +95,8 @@ export function FinalPost({
 
   const timeLabel = weekNumber && year ? `Week ${weekNumber}, ${year}` : 'Current strategy cycle';
   const contextParts: string[] = [];
-  if (postType) contextParts.push(`${postType} format`);
+  const displayPostType = formatPathType(postType);
+  if (displayPostType) contextParts.push(displayPostType);
   contextParts.push(timeLabel);
   const contextLine = contextParts.join(' · ');
 
@@ -54,10 +104,10 @@ export function FinalPost({
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
-      toast.success("Post copied! Ready for LinkedIn.");
+      toast.success('Draft copied.');
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy.");
+      toast.error('Failed to copy.');
     }
   };
 
@@ -69,10 +119,10 @@ export function FinalPost({
             <ArrowLeft size={18} />
           </Button>
           <div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-500/80">Step 3 of 3 · Draft Editor</div>
             <h2 className="text-xl font-bold tracking-tight text-white uppercase">
-              Artifact Editor
+              Draft Editor
             </h2>
-            <p className="text-white/50 text-sm mt-1 font-light">Refine the final output while keeping the strategy path visible.</p>
             <p className="str-mono text-emerald-500/80 mt-2 tracking-widest">
               {contextLine}
             </p>
@@ -80,12 +130,12 @@ export function FinalPost({
         </div>
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
           {userPlan === 'pro' ? (
-            <Button
-              onClick={() => setFeedbackOpen(true)}
-              variant="outline"
-              className="border-white/10 bg-transparent text-white/80 hover:bg-white/5 hover:text-white rounded-sm text-xs font-mono uppercase tracking-wider h-10"
-            >
-              Metrics
+          <Button
+            onClick={() => setFeedbackOpen(true)}
+            variant="outline"
+            className="border-white/10 bg-transparent text-white/80 hover:bg-white/5 hover:text-white rounded-sm text-xs font-mono uppercase tracking-wider h-10"
+          >
+              Log Results
             </Button>
           ) : (
              <Button
@@ -94,7 +144,7 @@ export function FinalPost({
                className="border-amber-500/30 bg-amber-500/5 text-amber-500 hover:bg-amber-500/10 rounded-sm text-xs font-mono uppercase tracking-wider h-10"
              >
                <Lock className="mr-2 h-3.5 w-3.5 opacity-70" />
-               Metrics (Pro)
+               Log Results (Pro)
              </Button>
           )}
           <Button 
@@ -102,7 +152,7 @@ export function FinalPost({
             className="rounded-sm bg-white text-black hover:bg-white/90 transition-all font-bold text-xs uppercase tracking-widest h-10"
           >
             {copied ? <Check className="mr-2 w-3.5 h-3.5" /> : <Copy className="mr-2 w-3.5 h-3.5" />}
-            {copied ? 'Copied' : 'Copy Payload'}
+            {copied ? 'Copied' : 'Copy Draft'}
           </Button>
         </div>
       </div>
@@ -128,30 +178,25 @@ export function FinalPost({
       </div>
 
       <div className="grid gap-4 md:grid-cols-[1.3fr_0.9fr]">
-        <div className="space-y-4">
-          <div className="str-panel rounded-sm p-5 text-sm text-emerald-500/80 flex items-start gap-4">
-            <Lightbulb className="max-h-5 max-w-5 shrink-0 text-emerald-500/60" />
-            <p className="leading-relaxed font-light text-white/80">Formatting retained. Output structured for optimal mobile parsing while staying connected to the original strategy path.</p>
-          </div>
-
+        <div>
           <div className="str-panel rounded-sm p-5">
-            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">Selected Strategy Path</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">Selected Path</div>
             {hook && (
               <div className="mt-4">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Hook</div>
-                <p className="mt-2 text-sm leading-relaxed text-white/80">{hook}</p>
+                <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Entry Point</div>
+                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-white/80">{hook}</p>
               </div>
             )}
             {idea && (
               <div className="mt-4">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Angle</div>
-                <p className="mt-2 text-sm leading-relaxed text-white/70">{idea}</p>
+                <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Direction</div>
+                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/70">{idea}</p>
               </div>
             )}
             {explanation && (
               <div className="mt-4">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Why this path fits</div>
-                <p className="mt-2 text-sm leading-relaxed text-white/70">{explanation}</p>
+                <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Path Interpretation</div>
+                <p className="mt-2 text-sm leading-relaxed text-white/70">{getPathInterpretation(hook, idea, explanation)}</p>
               </div>
             )}
           </div>
