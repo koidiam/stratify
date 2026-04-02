@@ -86,9 +86,6 @@ export function AuthForm({ type }: { type: 'login' | 'register' }) {
       >
         {/* Left Side: Strategic Output Preview (High Trust) */}
         <div className="hidden border-r border-white/5 bg-gradient-to-b from-[#0A0A0A] to-[#040404] p-10 md:flex md:w-1/2 flex-col justify-center relative overflow-hidden">
-          {/* Subtle noise / grid */}
-          <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none bg-[url('/noise.png')]" />
-          
           <div className="relative z-10 w-full max-w-sm mx-auto flex flex-col gap-6 scale-95 origin-left">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
