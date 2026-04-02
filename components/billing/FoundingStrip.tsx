@@ -64,7 +64,7 @@ export function FoundingStrip({
             ? `Founding availability temporarily unavailable.`
             : isPreviewFallback
             ? `Availability will appear here once founding access is configured.`
-            : `Only ${Math.max(0, total - claimed)} spots left. Lock in early-adopter pricing forever.`}
+            : `Only ${Math.max(0, total - claimed)} spots left. Lock in early-adopter pricing for the full weekly Stratify workflow.`}
         </p>
 
         {isPreviewFallback && (

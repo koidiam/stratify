@@ -13,15 +13,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { createClient } from '@/lib/supabase/client';
 import { Plan } from '@/types';
 import { PaywallModal } from '@/components/billing/PaywallModal';
-import { getLoadingMessages, getGenerateHeaderDescription } from '@/lib/constants/plan-copy';
+import {
+  getLoadingMessages,
+  getGenerateHeaderDescription,
+  getPlanSourceSummary,
+  getSignalScanDescription,
+} from '@/lib/constants/plan-copy';
 
 const STEPS = [
-  { id: 1, label: 'Signal Review', micro: 'Reviewing current traction patterns.' },
-  { id: 2, label: 'Hook Options', micro: 'Comparing a few strong structures.' },
-  { id: 3, label: 'Draft Preparation', micro: 'Shaping the final draft.' },
+  { id: 1, label: 'Signal Extraction', micro: 'Observed shifts are converted into usable strategic signals.' },
+  { id: 2, label: 'Angle Compilation', micro: 'Signals are translated into hook structures and draft paths.' },
+  { id: 3, label: 'Draft Finalization', micro: 'The selected draft is refined into a publishable artifact.' },
 ];
 
-
+interface SetupContext {
+  niche: string;
+  targetAudience: string;
+  tone: string;
+}
 
 export default function GeneratePage() {
   const [step, setStep] = useState(0);
@@ -35,9 +44,14 @@ export default function GeneratePage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallData, setPaywallData] = useState({ used: 0, limit: 0 });
   const [userPlan, setUserPlan] = useState<Plan>('free');
+  const [setupContext, setSetupContext] = useState<SetupContext>({
+    niche: '',
+    targetAudience: '',
+    tone: '',
+  });
 
   useEffect(() => {
-    const fetchPlan = async () => {
+    const fetchSetup = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -51,8 +65,20 @@ export default function GeneratePage() {
       if (data?.plan) {
         setUserPlan(data.plan as Plan);
       }
+
+      const { data: onboarding } = await supabase
+        .from('onboarding')
+        .select('niche, target_audience, tone')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      setSetupContext({
+        niche: onboarding?.niche ?? '',
+        targetAudience: onboarding?.target_audience ?? '',
+        tone: onboarding?.tone ?? '',
+      });
     };
-    fetchPlan();
+    fetchSetup();
   }, []);
 
   useEffect(() => {
@@ -133,6 +159,33 @@ export default function GeneratePage() {
   };
 
   const dataSource = userPlan === 'free' ? 'Cached Niche Signals' : 'Live LinkedIn Signals';
+  const sourceSummary = getPlanSourceSummary(userPlan);
+  const inspectorStage = loading
+    ? getLoadingMessages(userPlan)[loadingMsgIdx]
+    : step === 0
+      ? 'Ready for a new weekly strategy pass'
+      : step === 1
+        ? 'Signals extracted and explained'
+        : step === 2
+          ? 'Hooks and draft paths compiled'
+          : 'Draft editor active';
+  const transformationPreview = [
+    {
+      label: 'Signal Source',
+      value: sourceSummary.label,
+      detail: getSignalScanDescription(userPlan),
+    },
+    {
+      label: 'Pattern Logic',
+      value: 'Observed shift + trigger',
+      detail: 'Each signal is explained before it is carried into hooks and draft directions.',
+    },
+    {
+      label: 'Weekly Output',
+      value: 'Hooks + full drafts',
+      detail: 'One strategy pass produces openings, draft directions, and editable LinkedIn posts.',
+    },
+  ];
 
   return (
     <div className="w-full flex flex-col xl:flex-row relative min-h-[calc(100vh-6rem)] items-stretch border border-white/10 bg-white/10 rounded-none shadow-2xl xl:h-[calc(100vh-6rem)] overflow-hidden">
@@ -316,28 +369,53 @@ export default function GeneratePage() {
                     <Zap size={24} className="text-white/80" />
                   </div>
                   <h2 className="text-2xl font-bold tracking-tight text-white uppercase">
-                    Create Weekly Strategy
+                    Run Weekly LinkedIn Strategy
                   </h2>
-                  <p className="mt-4 mb-8 text-sm text-white/50 max-w-sm leading-relaxed">
-                    This uses 1 credit to review current signals in your niche.
+                  <p className="mt-4 mb-8 text-sm text-white/50 max-w-2xl leading-relaxed">
+                    This pass reviews your current content context, extracts the most useful signal shifts, explains the strategic angle, and turns that into hooks and full LinkedIn drafts.
                   </p>
 
-                  {/* Pre-Generation Intelligence Preview */}
-                  <div className="w-full max-w-sm mb-8 border border-white/10 rounded-sm bg-white/[0.02] divide-y divide-white/5">
-                    <div className="flex items-start justify-between px-4 py-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Current Pattern</span>
-                      <span className="text-xs text-white/70 text-right leading-snug ml-4">Authority-driven storytelling outperforms list posts this week</span>
+                  <div className="w-full max-w-4xl mb-8 grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
+                    <div className="border border-white/10 rounded-sm bg-white/[0.02]">
+                      <div className="px-4 py-3 border-b border-white/5 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                        Run Context
+                      </div>
+                      <div className="divide-y divide-white/5">
+                        <div className="flex items-start justify-between px-4 py-3 gap-4">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Niche</span>
+                          <span className="text-xs text-white/70 text-right leading-snug">{setupContext.niche || 'Loading context...'}</span>
+                        </div>
+                        <div className="flex items-start justify-between px-4 py-3 gap-4">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Audience</span>
+                          <span className="text-xs text-white/70 text-right leading-snug">{setupContext.targetAudience || 'Loading context...'}</span>
+                        </div>
+                        <div className="flex items-start justify-between px-4 py-3 gap-4">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Tone</span>
+                          <span className="text-xs text-white/70 text-right leading-snug">{setupContext.tone || 'Loading context...'}</span>
+                        </div>
+                        <div className="flex items-start justify-between px-4 py-3 gap-4">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Source</span>
+                          <span className="text-xs text-white/70 text-right leading-snug">{sourceSummary.label}</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-start justify-between px-4 py-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Suggested Structure</span>
-                      <span className="text-xs text-white/70 text-right leading-snug ml-4">Contrarian + personal proof hybrid</span>
-                    </div>
-                    <div className="flex items-start justify-between px-4 py-3">
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-0.5">Likely Outcome</span>
-                      <span className="text-xs text-white/70 text-right leading-snug ml-4">Higher saves and profile clicks</span>
+
+                    <div className="border border-white/10 rounded-sm bg-white/[0.02]">
+                      <div className="px-4 py-3 border-b border-white/5 text-[10px] font-bold uppercase tracking-widest text-white/30">
+                        Transformation Path
+                      </div>
+                      <div className="divide-y divide-white/5">
+                        {transformationPreview.map((item) => (
+                          <div key={item.label} className="px-4 py-3 text-left">
+                            <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">{item.label}</div>
+                            <div className="mt-2 text-sm font-medium text-white">{item.value}</div>
+                            <p className="mt-2 text-xs leading-relaxed text-white/60">{item.detail}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <p className="text-[10px] text-white/25 mb-6">Based on recent niche activity</p>
+                  <p className="text-[10px] text-white/25 mb-6">1 run produces insights, hook options, and full draft output</p>
 
                   <Button 
                     onClick={handleGenerate} 
@@ -429,6 +507,9 @@ export default function GeneratePage() {
               weekNumber={data.week_number}
               year={data.year}
               postType={data.posts[selectedPostIndex]?.type}
+              hook={data.hooks[selectedPostIndex] ?? data.hooks[0]}
+              idea={data.ideas[selectedPostIndex]?.idea}
+              explanation={data.posts[selectedPostIndex]?.explanation}
             />
           </motion.div>
         )}
@@ -447,12 +528,12 @@ export default function GeneratePage() {
           <div>
              <div className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-3">Run Details</div>
              <div className="grid grid-cols-2 gap-px bg-white/5 border border-white/5 rounded-sm overflow-hidden text-[9px] font-mono">
-                <div className="bg-[#050505] p-3 text-white/50">MODEL</div>
-                <div className="bg-[#050505] p-3 text-white">LLAMA 3.3 70B</div>
-                <div className="bg-[#050505] p-3 text-white/50">TEMP</div>
-                <div className="bg-[#050505] p-3 text-white">0.7</div>
+                <div className="bg-[#050505] p-3 text-white/50">STATUS</div>
+                <div className="bg-[#050505] p-3 text-white">{loading ? 'RUNNING' : step === 0 ? 'READY' : 'ACTIVE'}</div>
+                <div className="bg-[#050505] p-3 text-white/50">STAGE</div>
+                <div className="bg-[#050505] p-3 text-white">{inspectorStage}</div>
                 <div className="bg-[#050505] p-3 text-white/50">FORMAT</div>
-                <div className="bg-[#050505] p-3 text-white">JSON SCHEMA</div>
+                <div className="bg-[#050505] p-3 text-white">SIGNAL → INSIGHT → DRAFT</div>
              </div>
           </div>
 
@@ -465,25 +546,52 @@ export default function GeneratePage() {
                </div>
                <div className="flex flex-col">
                   <span className="text-[10px] font-bold text-white uppercase">{dataSource}</span>
-                  <span className="text-[9px] text-white/40 font-mono mt-1">Using recent signal inputs for this pass.</span>
+                  <span className="text-[9px] text-white/40 font-mono mt-1">{sourceSummary.detail}</span>
                </div>
             </div>
           </div>
 
-          {/* Token Est */}
-          <div className="mt-max pt-6 border-t border-white/5">
-            <div className="flex justify-between items-end">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Est. Tokens</span>
-              <span className="text-xl font-mono text-white/80">~8.4k</span>
-            </div>
-            <div className="w-full h-1 bg-white/5 mt-3 rounded-full overflow-hidden">
-               <div className="h-full bg-white/20 w-1/3" />
+          <div className="pt-6 border-t border-white/5">
+            <div className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-3">Context</div>
+            <div className="space-y-3">
+              <div className="rounded-sm border border-white/5 bg-[#050505] p-3">
+                <div className="text-[9px] uppercase tracking-widest text-white/30">Niche</div>
+                <p className="mt-1 text-[11px] text-white/75">{setupContext.niche || 'Loading context...'}</p>
+              </div>
+              <div className="rounded-sm border border-white/5 bg-[#050505] p-3">
+                <div className="text-[9px] uppercase tracking-widest text-white/30">Audience</div>
+                <p className="mt-1 text-[11px] text-white/75">{setupContext.targetAudience || 'Loading context...'}</p>
+              </div>
+              <div className="rounded-sm border border-white/5 bg-[#050505] p-3">
+                <div className="text-[9px] uppercase tracking-widest text-white/30">Tone</div>
+                <p className="mt-1 text-[11px] text-white/75">{setupContext.tone || 'Loading context...'}</p>
+              </div>
             </div>
           </div>
+
+          {data && (
+            <div className="pt-6 border-t border-white/5">
+              <div className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-3">Output Snapshot</div>
+              <div className="space-y-3">
+                <div className="rounded-sm border border-white/5 bg-[#050505] p-3 text-[11px] text-white/75">
+                  <span className="text-[9px] uppercase tracking-widest text-white/30">Signals</span>
+                  <p className="mt-2">{data.insights.length} extracted for this run.</p>
+                </div>
+                <div className="rounded-sm border border-white/5 bg-[#050505] p-3 text-[11px] text-white/75">
+                  <span className="text-[9px] uppercase tracking-widest text-white/30">Primary Trigger</span>
+                  <p className="mt-2">{data.insights[0]?.trigger ?? 'Not available yet.'}</p>
+                </div>
+                <div className="rounded-sm border border-white/5 bg-[#050505] p-3 text-[11px] text-white/75">
+                  <span className="text-[9px] uppercase tracking-widest text-white/30">Draft Output</span>
+                  <p className="mt-2">{data.posts.length} drafts compiled and ready for refinement.</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
-      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} used={paywallData.used} limit={paywallData.limit} />
+      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} used={paywallData.used} limit={paywallData.limit} plan={userPlan} />
     </div>
   );
 }

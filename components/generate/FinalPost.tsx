@@ -14,9 +14,24 @@ interface Props {
   weekNumber?: number;
   year?: number;
   postType?: string;
+  hook?: string;
+  idea?: string;
+  explanation?: string;
 }
 
-export function FinalPost({ initialContent, historyId, postIndex, onBack, userPlan, weekNumber, year, postType }: Props) {
+export function FinalPost({
+  initialContent,
+  historyId,
+  postIndex,
+  onBack,
+  userPlan,
+  weekNumber,
+  year,
+  postType,
+  hook,
+  idea,
+  explanation,
+}: Props) {
   const [content, setContent] = useState(initialContent);
   const [copied, setCopied] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -57,13 +72,13 @@ export function FinalPost({ initialContent, historyId, postIndex, onBack, userPl
             <h2 className="text-xl font-bold tracking-tight text-white uppercase">
               Artifact Editor
             </h2>
-            <p className="text-white/50 text-sm mt-1 font-light">Modify format or duplicate to system clipboard.</p>
+            <p className="text-white/50 text-sm mt-1 font-light">Refine the final output while keeping the strategy path visible.</p>
             <p className="str-mono text-emerald-500/80 mt-2 tracking-widest">
               {contextLine}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 pl-12 md:pl-0">
+        <div className="flex flex-wrap items-center gap-2 md:justify-end">
           {userPlan === 'pro' ? (
             <Button
               onClick={() => setFeedbackOpen(true)}
@@ -113,9 +128,33 @@ export function FinalPost({ initialContent, historyId, postIndex, onBack, userPl
       </div>
 
       <div className="grid gap-4 md:grid-cols-[1.3fr_0.9fr]">
-        <div className="str-panel rounded-sm p-5 text-sm text-emerald-500/80 flex items-start gap-4">
-          <Lightbulb className="max-h-5 max-w-5 shrink-0 text-emerald-500/60" />
-          <p className="leading-relaxed font-light text-white/80">Formatting retained. Output structured for optimal mobile parsing (avoiding unreadable paragraph density).</p>
+        <div className="space-y-4">
+          <div className="str-panel rounded-sm p-5 text-sm text-emerald-500/80 flex items-start gap-4">
+            <Lightbulb className="max-h-5 max-w-5 shrink-0 text-emerald-500/60" />
+            <p className="leading-relaxed font-light text-white/80">Formatting retained. Output structured for optimal mobile parsing while staying connected to the original strategy path.</p>
+          </div>
+
+          <div className="str-panel rounded-sm p-5">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/30">Selected Strategy Path</div>
+            {hook && (
+              <div className="mt-4">
+                <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Hook</div>
+                <p className="mt-2 text-sm leading-relaxed text-white/80">{hook}</p>
+              </div>
+            )}
+            {idea && (
+              <div className="mt-4">
+                <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Angle</div>
+                <p className="mt-2 text-sm leading-relaxed text-white/70">{idea}</p>
+              </div>
+            )}
+            {explanation && (
+              <div className="mt-4">
+                <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Why this path fits</div>
+                <p className="mt-2 text-sm leading-relaxed text-white/70">{explanation}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {userPlan !== 'pro' && (

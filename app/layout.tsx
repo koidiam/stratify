@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
@@ -20,6 +20,11 @@ export const metadata: Metadata = {
     title: 'Stratify | Growth & Strategy Engine',
     description: 'Stop guessing what to post. Generate weekly LinkedIn strategies powered by AI.',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

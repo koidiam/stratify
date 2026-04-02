@@ -26,12 +26,12 @@ const PLANS: Plan[] = [
     price: { monthly: '$0', yearly: '$0' },
     yearlySubtext: null,
     frequency: { monthly: '/mo', yearly: '/yr' },
-    description: 'Experience the baseline pipeline without committing.',
+    description: 'Try the weekly engine before you commit to a full content system.',
     capacity: '1 strategy run / week',
     features: [
-      '1 validated insight',
-      '1 final post draft',
-      'Basic hook generation'
+      '1 weekly strategy pass',
+      'Signal-backed hooks and draft output',
+      'Best for evaluating product fit'
     ],
     buttonText: 'Start Free',
     featured: false,
@@ -41,12 +41,12 @@ const PLANS: Plan[] = [
     price: { monthly: '$15', yearly: '$120' },
     yearlySubtext: '$180/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
-    description: 'Consistent, data-backed weekly presence.',
+    description: 'Run Stratify as your weekly LinkedIn content system.',
     capacity: '3 strategy runs / week',
-    unlocksText: 'Unlocks full week coverage & saved history',
+    unlocksText: 'Unlocks full weekly history and more room to test angles',
     features: [
-      '3 full post drafts',
-      'Automated tone matching',
+      '3 full strategy runs each week',
+      'Tone-aware drafts aligned to your niche',
       'Full history vault access'
     ],
     buttonText: 'Choose Basic',
@@ -57,13 +57,13 @@ const PLANS: Plan[] = [
     price: { monthly: '$29', yearly: '$240' },
     yearlySubtext: '$348/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
-    description: 'For scaling revenue through audience building.',
+    description: 'For teams and operators who want live market inputs in every run.',
     capacity: '50 strategy runs / week',
-    unlocksText: 'Unlocks competitor tracking & deeper signal review',
+    unlocksText: 'Unlocks live signal scanning and deeper strategic research',
     features: [
-      'Deep psychological mapping',
-      'Competitor signal tracking',
-      'Priority draft synthesis'
+      'Live LinkedIn signal research',
+      'Competitor and reference signal review',
+      'High-frequency weekly strategy capacity'
     ],
     buttonText: 'Choose Pro',
     featured: true, // Pro gets the focus
@@ -72,16 +72,16 @@ const PLANS: Plan[] = [
 
 const PROOF_ITEMS = [
   {
-    label: 'Signal',
-    value: 'Authority storytelling gaining traction',
+    label: 'Input',
+    value: 'Niche signals, references, and audience context',
   },
   {
-    label: 'Strategy Direction',
-    value: 'Contrarian + personal proof structure',
+    label: 'Engine Decision',
+    value: 'Pattern + trigger + strategic angle for this week',
   },
   {
-    label: 'Likely Outcome',
-    value: 'Higher saves and profile clicks',
+    label: 'Output',
+    value: 'Hooks and drafts built for a weekly posting cycle',
   },
 ] as const;
 
@@ -108,7 +108,7 @@ export function LandingPage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative z-30 mb-12 flex items-center justify-between py-4 md:mb-16"
+          className="relative z-30 mb-12 flex items-center justify-between gap-3 py-4 md:mb-16"
         >
           <div className="flex flex-1 items-center">
             <span className="text-lg font-medium tracking-tight text-foreground">Stratify</span>
@@ -126,9 +126,10 @@ export function LandingPage() {
             </Link>
             <Link
               href="/register"
-              className="inline-flex h-9 items-center justify-center rounded-sm border border-white/10 bg-white/5 px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-white transition-colors duration-200 hover:bg-white/10"
+              className="inline-flex h-9 items-center justify-center rounded-sm border border-white/10 bg-white/5 px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-white transition-colors duration-200 hover:bg-white/10 sm:px-5 sm:text-[10px]"
             >
-              Get Started
+              <span className="sm:hidden">Start</span>
+              <span className="hidden sm:inline">Get Started</span>
             </Link>
           </nav>
         </motion.header>
@@ -147,15 +148,15 @@ export function LandingPage() {
                initial={{ opacity: 0, y: 20, scale: 0.98 }}
                animate={{ opacity: 1, y: 0, scale: 1 }}
                transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-               className="mx-auto w-full max-w-3xl px-4"
+               className="mx-auto w-full max-w-[20rem] px-4 sm:max-w-3xl"
              >
                <div className="w-full overflow-hidden rounded-xl border border-white/10 bg-[#0A0A0A]/95 shadow-[0_24px_80px_-40px_rgba(0,0,0,0.9),0_0_0_1px_rgba(255,255,255,0.05)_inset]">
                 {/* Simulated Input */}
-                <div className="flex items-center gap-4 border-b border-white/5 px-6 py-5">
+                  <div className="flex items-center gap-3 border-b border-white/5 px-4 py-4 sm:gap-4 sm:px-6 sm:py-5">
                   <Radar className="h-5 w-5 text-emerald-500 opacity-80" />
-                  <div className="flex-1 font-mono text-[13px] md:text-sm text-white relative">
+                  <div className="min-w-0 flex-1 font-mono text-[12px] md:text-sm text-white relative">
                      <span className="opacity-100">Review signals for</span>
-                     <span className="text-emerald-500 ml-2">&quot;B2B SaaS Growth&quot;</span>
+                     <span className="text-emerald-500 ml-2 break-all sm:break-normal">&quot;B2B SaaS Growth&quot;</span>
                      <span className="ml-1 inline-block h-4 w-1.5 align-middle bg-emerald-500/80" />
                   </div>
                   <div className="hidden sm:inline-flex items-center gap-1.5 rounded-[4px] border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold font-sans text-white/50 tracking-widest">
@@ -196,14 +197,32 @@ export function LandingPage() {
                initial={{ opacity: 0, y: 12 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: 0.12, duration: 0.7 }}
-               className="mx-auto w-full max-w-2xl px-4 text-center"
+               className="mx-auto w-full max-w-[20rem] px-4 text-center sm:max-w-2xl"
              >
-               <h1 className="mb-4 text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
-                 Data-driven strategy, <br/><span className="text-white/40">compiled instantly.</span>
+               <div className="mb-4 inline-flex items-center gap-2 rounded-sm border border-emerald-500/20 bg-emerald-500/5 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-500">
+                 LinkedIn Strategy Engine
+               </div>
+               <h1 className="mb-4 text-[1.95rem] font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl">
+                 <span className="block">The weekly LinkedIn content system</span>
+                 <span className="block text-white/40">for people who need strategy, not just copy.</span>
                </h1>
-               <p className="text-sm md:text-base font-light text-white/40 max-w-lg mx-auto">
-                 Stratify turns raw network signals into a clear weekly LinkedIn strategy.
+               <p className="text-sm md:text-base font-light text-white/40 max-w-2xl mx-auto break-words">
+                 Stratify is built for founders, operators, consultants, and subject-matter experts who want a repeatable weekly LinkedIn system. It studies niche signals, explains the opportunity, and turns that into hooks and drafts without feeling like another AI writing tool.
                </p>
+               <div className="mt-6 grid grid-cols-1 gap-2 text-left sm:grid-cols-3">
+                 <div className="rounded-sm border border-white/10 bg-white/[0.02] px-4 py-3">
+                   <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">What It Is</div>
+                   <p className="mt-2 text-sm text-white/80">A LinkedIn Strategy Engine that turns signals into a weekly plan.</p>
+                 </div>
+                 <div className="rounded-sm border border-white/10 bg-white/[0.02] px-4 py-3">
+                   <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Who It&apos;s For</div>
+                   <p className="mt-2 text-sm text-white/80">Teams and individuals building authority with a consistent weekly publishing rhythm.</p>
+                 </div>
+                 <div className="rounded-sm border border-white/10 bg-white/[0.02] px-4 py-3">
+                   <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Why It&apos;s Different</div>
+                   <p className="mt-2 text-sm text-white/80">It starts from signal analysis and strategy logic, not a blank prompt in an AI writer.</p>
+                 </div>
+               </div>
                <div className="mt-8">
                 <Link
                  href="/register"
@@ -219,18 +238,18 @@ export function LandingPage() {
                initial={{ opacity: 0, y: 12 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: 0.2, duration: 0.7 }}
-               className="mx-auto w-full max-w-md px-4"
+               className="mx-auto w-full max-w-[20rem] px-4 sm:max-w-md"
              >
               <div className="w-full border border-white/10 rounded-sm bg-white/[0.02] divide-y divide-white/5">
                 <div className="px-4 py-2.5 flex items-center gap-2">
                   <span className="w-1 h-1 rounded-full bg-emerald-500" />
                   <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Signal Snapshot</span>
                 </div>
-                 <div className="px-4 py-2.5 text-xs text-white/60">AI fatigue → authentic builder stories ↑</div>
-                 <div className="px-4 py-2.5 text-xs text-white/60">Contrarian takes outperform generic advice</div>
-                 <div className="px-4 py-2.5 text-xs text-white/60">Personal proof hooks getting more saves</div>
+                 <div className="px-4 py-2.5 text-xs text-white/60">LinkedIn Strategy Engine: extracts a pattern before it suggests a post</div>
+                 <div className="px-4 py-2.5 text-xs text-white/60">Weekly content system: strategy, hook, and draft in one pass</div>
+                 <div className="px-4 py-2.5 text-xs text-white/60">Not an AI writer: the output is grounded in niche-specific signal review</div>
                </div>
-               <p className="mt-3 text-center text-[10px] text-white/20">Example signals from recent niche activity</p>
+               <p className="mt-3 text-center text-[10px] text-white/20">What Stratify is designed to do, every week</p>
              </motion.div>
           </div>
         </motion.section>
@@ -275,9 +294,9 @@ export function LandingPage() {
         >
           <div className="text-center mb-10 md:mb-16">
             <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">SYSTEM MECHANISMS</div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-3">How the system replaces guesswork</h2>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-3">Why this feels different from an AI writing tool</h2>
             <p className="text-muted-foreground text-sm sm:text-base max-w-xl mx-auto px-4">
-              Generic prompts get ignored. Stratify grounds every word in reality.
+              Generic writing tools start with a prompt box. Stratify starts with signal review, strategic reasoning, and weekly execution.
             </p>
           </div>
 
@@ -288,7 +307,7 @@ export function LandingPage() {
               </div>
               <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">1. Signal Extraction</h3>
               <p className="text-white/50 text-[11px] font-mono leading-relaxed flex-grow">
-                The engine scans your matrix to isolate underlying psychological triggers, ignoring the noise.
+                The engine reviews niche-level signal inputs to find the shifts actually worth writing about this week.
               </p>
               <div className="pt-4 mt-6 border-t border-white/5">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-white/50"><span className="text-emerald-500 mr-1">Outcome:</span> Authority around validated topics.</p>
@@ -301,7 +320,7 @@ export function LandingPage() {
               </div>
               <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">2. Tone Calibration</h3>
               <p className="text-white/50 text-[11px] font-mono leading-relaxed flex-grow">
-                Your profile constraints and references act as borders. The signal is applied purely through your lens.
+                Each pattern is translated into a usable angle with trigger logic, so the output feels intentional instead of generic.
               </p>
               <div className="pt-4 mt-6 border-t border-white/5">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-white/50"><span className="text-emerald-500 mr-1">Outcome:</span> Drafts that inherit your natural voice.</p>
@@ -314,7 +333,7 @@ export function LandingPage() {
               </div>
               <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">3. Weekly Batching</h3>
               <p className="text-white/50 text-[11px] font-mono leading-relaxed flex-grow">
-                The pipeline synthesizes insights, hooks, and drafts in one sequence. Run once on Monday and close the tab.
+                Insights, hook structures, and full drafts are compiled into one weekly operating loop instead of separate prompt sessions.
               </p>
               <div className="pt-4 mt-6 border-t border-white/5">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-white/50"><span className="text-emerald-500 mr-1">Outcome:</span> Consistent posting without daily panic.</p>
@@ -335,10 +354,10 @@ export function LandingPage() {
           <div className="text-center mb-10 md:mb-16">
             <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">WORKFLOW OUTPUT</div>
             <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground mb-3 flex items-center justify-center gap-2 md:gap-3">
-              Insight <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground/50" /> Hook <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground/50" /> Draft
+              Signal <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground/50" /> Insight <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground/50" /> Hook <ArrowRight className="w-4 h-4 md:w-5 md:h-5 text-muted-foreground/50" /> Draft
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base max-w-xl mx-auto px-4">
-              Observe how raw data transforms into a published strategy.
+              This is the product loop: signal review becomes a strategy angle, then a hook, then a post draft you can ship.
             </p>
           </div>
 
@@ -350,7 +369,7 @@ export function LandingPage() {
                 <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/50">The Raw Signal</div>
               </div>
               <p className="text-white text-[11px] leading-relaxed mb-6 flex-grow font-mono">
-                Sharing failures builds stronger trust metrics than success stories. Readers connect with vulnerability.
+                Personal proof is outperforming generic advice in this niche because the audience wants real operator experience.
               </p>
               <div className="inline-flex items-center gap-2 rounded-sm bg-emerald-500/10 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-500 border border-emerald-500/20 w-max">
                 <Zap size={10} className="text-emerald-500" /> Trigger: Relatability
@@ -364,10 +383,10 @@ export function LandingPage() {
                 <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/50">The Hook</div>
               </div>
               <p className="text-white font-bold text-sm md:text-base leading-snug flex-grow font-serif italic">
-                &quot;The mistake that killed our first $10K MRR&quot;
+                &quot;The lesson that hurt our growth more than any competitor did&quot;
               </p>
               <p className="text-white/40 text-[10px] font-mono leading-relaxed border-t border-white/5 pt-4 mt-4">
-                Applies the signal directly. Opens a curiosity loop to drive views.
+                Converts the signal into a strategic opening with tension, proof, and a clear angle.
               </p>
             </div>
 
@@ -404,9 +423,9 @@ Here's my expensive lesson —`}
           className="mt-20 md:mt-28 pt-16 md:pt-24 border-t border-border/30"
         >
           <div className="text-center mb-10 md:mb-12">
-            <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">PLAN CONFIGURATION</div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground mb-3">Select system capacity</h2>
-            <p className="text-muted-foreground text-sm sm:text-base max-w-xl mx-auto px-4">Align the extraction engine with your weekly needs.</p>
+            <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">PLANS</div>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-foreground mb-3">Choose the weekly system that matches your workflow</h2>
+            <p className="text-muted-foreground text-sm sm:text-base max-w-2xl mx-auto px-4">Every plan uses the same core engine. Higher tiers increase run capacity, unlock deeper research, and make Stratify a stronger weekly operating system.</p>
           </div>
 
           <div className="flex items-center justify-center gap-2.5 mb-10 md:mb-12">
@@ -459,6 +478,11 @@ Here's my expensive lesson —`}
                     {isYearly ? plan.frequency.yearly : plan.frequency.monthly}
                   </span>
                 </div>
+                {isYearly && plan.yearlySubtext && (
+                  <div className="mb-3 text-[11px] text-white/35">
+                    Compare at {plan.yearlySubtext}
+                  </div>
+                )}
                 
                 <p className="text-sm text-white/50 mb-8 leading-relaxed flex-grow">{plan.description}</p>
                 

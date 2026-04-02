@@ -32,14 +32,6 @@ interface Props {
   dataSource?: string;
 }
 
-const HOOK_TYPE_STYLES: Record<string, string> = {
-  'Curiosity': 'bg-blue-500/10 text-blue-600 border-blue-500/15',
-  'Data-driven': 'bg-emerald-500/10 text-emerald-600 border-emerald-500/15',
-  'Personal': 'bg-amber-500/10 text-amber-600 border-amber-500/15',
-  'Contrarian': 'bg-red-500/10 text-red-600 border-red-500/15',
-  'Authority': 'bg-purple-500/10 text-purple-600 border-purple-500/15',
-};
-
 function classifyHookType(text: string): string {
   const lower = text.toLowerCase();
   if (/\?|how |why |what /.test(lower)) return 'Curiosity';
@@ -62,6 +54,12 @@ function assessHookStrength(text: string): 'High' | 'Medium' | 'Low' {
 }
 
 const STRENGTH_BARS: Record<string, number> = { 'High': 3, 'Medium': 2, 'Low': 1 };
+
+function getSelectionReason(hook: string, idea?: Idea): string {
+  const hookType = classifyHookType(hook);
+  const ideaType = idea?.type ? `${idea.type} angle` : 'draft angle';
+  return `This path stays closest to the observed pattern because the ${hookType.toLowerCase()} hook structure and ${ideaType.toLowerCase()} both follow the same behavior described in the signal notes.`;
+}
 
 export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onRefine, onBack, userPlan, weekNumber, year, dataSource }: Props) {
   const [copiedHookIndex, setCopiedHookIndex] = useState<number | null>(null);
@@ -101,8 +99,7 @@ export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onR
         <div>
           <h2 className="text-xl font-bold tracking-tight text-white">Generation Workbench</h2>
           <p className="mt-2 text-sm text-white/50 max-w-xl font-light">
-            Hook structures and draft bodies synthesized from extracted signals. 
-            Proceed with sequence or initiate automated refinement.
+            Observed patterns are now being turned into working angles, hooks, and draft directions. Each path below shows how the same signal logic carries through the output.
           </p>
         </div>
         <div className="flex flex-col items-start md:items-end gap-1.5 focus:outline-none">
@@ -193,9 +190,9 @@ export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onR
       </div>
 
       <div className="pt-4 border-t border-white/10">
-        <h2 className="mb-2 text-sm font-bold uppercase tracking-widest text-white">Draft Sequences</h2>
+        <h2 className="mb-2 text-sm font-bold uppercase tracking-widest text-white">Strategy Paths</h2>
         <p className="mb-6 text-sm leading-relaxed text-white/50 font-light max-w-2xl">
-          Select a draft block to enter editor mode, duplicate to clipboard, or track published trajectory.
+          Each path combines a strategic opening, the draft direction, and the explanation for why it should work.
         </p>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -203,16 +200,36 @@ export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onR
             <Card key={index} className="flex flex-col justify-between rounded-sm str-panel p-5 transition-colors hover:border-white/20 group">
               <div>
                 <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
-                  <span className="str-mono text-white/60">Draft Set 0{index + 1}</span>
+                  <span className="str-mono text-white/60">Path 0{index + 1}</span>
                   <span className="str-mono text-emerald-500/80 bg-emerald-500/10 px-2 py-0.5 rounded-sm">
                     {post.type}
                   </span>
+                </div>
+                <div className="mb-4 space-y-3">
+                  <div className="rounded-sm border border-white/10 bg-black/30 p-3">
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Opening Hook</div>
+                    <p className="mt-2 text-sm leading-relaxed text-white/85">
+                      {hooks[index] ?? hooks[0] ?? 'Hook not available.'}
+                    </p>
+                  </div>
+                  {ideas[index]?.idea && (
+                    <div className="rounded-sm border border-white/10 bg-black/30 p-3">
+                      <div className="text-[9px] font-bold uppercase tracking-widest text-white/35">Draft Angle</div>
+                      <p className="mt-2 text-sm leading-relaxed text-white/70">{ideas[index]?.idea}</p>
+                    </div>
+                  )}
+                  <div className="rounded-sm border border-emerald-500/15 bg-emerald-500/5 p-3">
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-emerald-500/70">Why this path fits</div>
+                    <p className="mt-2 text-sm leading-relaxed text-white/75">
+                      {getSelectionReason(hooks[index] ?? hooks[0] ?? '', ideas[index])}
+                    </p>
+                  </div>
                 </div>
                 <div className="mb-6 line-clamp-6 whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-white/90">
                   {post.content}
                 </div>
                 <div className="mb-4 pt-3 border-t border-white/5">
-                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-white/40">Why this works</span>
+                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-white/40">Observed pattern match</span>
                   <div className="text-xs leading-relaxed text-white/60 font-light">
                     {post.explanation}
                   </div>

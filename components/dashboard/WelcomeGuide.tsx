@@ -1,30 +1,49 @@
-import { RefreshCw, ArrowRight } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { Plan } from '@/types';
+import { getPlanSourceSummary } from '@/lib/constants/plan-copy';
 
-export function WelcomeGuide({ plan = 'free' }: { plan?: Plan }) {
-  const steps = [
-    'Scan Signals', 
-    'Review Hooks', 
-    'Shape Drafts', 
-    'Track Performance'
-  ];
+interface WelcomeGuideProps {
+  plan?: Plan;
+  stateLabel: string;
+  stateDescription: string;
+  nextActionLabel: string;
+  nextActionDescription: string;
+}
+
+export function WelcomeGuide({
+  plan = 'free',
+  stateLabel,
+  stateDescription,
+  nextActionLabel,
+  nextActionDescription,
+}: WelcomeGuideProps) {
+  const sourceSummary = getPlanSourceSummary(plan);
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-4 bg-white/[0.02] border border-white/5 rounded-sm px-5 py-4 w-full mt-4">
+    <div className="w-full mt-4 rounded-sm border border-white/5 bg-white/[0.02] p-5">
       <div className="flex items-center gap-2 text-emerald-500 font-bold uppercase tracking-widest text-[10px]">
         <RefreshCw size={14} className="hidden sm:block" />
-        <span>System Loop:</span>
+        <span>Weekly System State</span>
       </div>
-      
-      <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-2 text-white/50 w-full flex-grow text-[11px] font-mono uppercase tracking-wider">
-        {steps.map((step, idx) => (
-          <div key={idx} className="flex items-center gap-4">
-            <span className="text-white/80">{step}</span>
-            {idx < steps.length - 1 && (
-              <ArrowRight size={10} className="text-white/20" />
-            )}
-          </div>
-        ))}
+
+      <div className="mt-4 space-y-4">
+        <div className="rounded-sm border border-white/10 bg-black/30 p-4">
+          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Current Week</div>
+          <p className="mt-2 text-sm font-medium text-white">{stateLabel}</p>
+          <p className="mt-2 text-xs leading-relaxed text-white/55">{stateDescription}</p>
+        </div>
+
+        <div className="rounded-sm border border-white/10 bg-black/30 p-4">
+          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Next Action</div>
+          <p className="mt-2 text-sm font-medium text-white">{nextActionLabel}</p>
+          <p className="mt-2 text-xs leading-relaxed text-white/55">{nextActionDescription}</p>
+        </div>
+
+        <div className="rounded-sm border border-white/10 bg-black/30 p-4">
+          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Signal Source</div>
+          <p className="mt-2 text-sm font-medium text-white">{sourceSummary.label}</p>
+          <p className="mt-2 text-xs leading-relaxed text-white/55">{sourceSummary.detail}</p>
+        </div>
       </div>
     </div>
   );

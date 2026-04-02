@@ -14,16 +14,16 @@ import { Plan } from '@/types';
 
 export function getGenerateHeaderDescription(plan: Plan): string {
   if (plan === 'pro') {
-    return 'Your onboarding context, live LinkedIn signals, and generation limits flow into a single pipeline. First insights, then hooks, then final ready-to-publish drafts.';
+    return 'Your onboarding context and live LinkedIn signals are compiled into one weekly strategy pass. The engine extracts patterns, explains the angle, then converts them into hooks and ready-to-publish drafts.';
   }
-  return 'Your onboarding context and generation limits flow into a single pipeline. First insights, then hooks, then final ready-to-publish drafts.';
+  return 'Your onboarding context and cached niche signals are compiled into one weekly strategy pass. The engine extracts patterns, explains the angle, then converts them into hooks and ready-to-publish drafts.';
 }
 
 export function getSignalScanDescription(plan: Plan): string {
   if (plan === 'pro') {
-    return 'Real-time signals gathered from live LinkedIn data.';
+    return 'Live LinkedIn signals gathered from current posts, references, and market activity.';
   }
-  return 'Niche patterns analyzed from your Stratify database.';
+  return 'Cached niche patterns analyzed from Stratify signal history.';
 }
 
 export function showProLabel(plan: Plan): boolean {
@@ -35,23 +35,23 @@ export function showProLabel(plan: Plan): boolean {
 export function getLoadingMessages(plan: Plan): string[] {
   if (plan === 'pro') {
     return [
-      'Connecting to Strategy Engine...',
-      'Analyzing your niche and audience...',
-      'Gathering real-time LinkedIn signals...',
-      'Designing high-engagement hooks...',
-      'Applying psychological triggers...',
-      'Polishing drafts to your brand tone...',
-      'Finalizing output...',
+      'Connecting to strategy engine...',
+      'Loading audience and tone context...',
+      'Scanning live LinkedIn signals...',
+      'Extracting repeatable patterns...',
+      'Translating patterns into hook angles...',
+      'Compiling full LinkedIn drafts...',
+      'Preparing structured output...',
     ];
   }
   return [
-    'Connecting to Strategy Engine...',
-    'Analyzing your niche and audience...',
-    'Accessing Stratify Matrix (Niche Cache)...',
-    'Designing high-engagement hooks...',
-    'Applying psychological triggers...',
-    'Polishing drafts to your brand tone...',
-    'Finalizing output...',
+    'Connecting to strategy engine...',
+    'Loading audience and tone context...',
+    'Scanning cached niche signals...',
+    'Extracting repeatable patterns...',
+    'Translating patterns into hook angles...',
+    'Compiling full LinkedIn drafts...',
+    'Preparing structured output...',
   ];
 }
 
@@ -103,3 +103,46 @@ export const PAYWALL_PRO_FEATURES = [
   'Analyze competitor and reference posts',
   'Faster generation with priority access',
 ];
+
+export function getPlanSourceSummary(plan: Plan): { label: string; detail: string } {
+  if (plan === 'pro') {
+    return {
+      label: 'Live LinkedIn signals',
+      detail: 'Current LinkedIn research is folded into each weekly strategy pass.',
+    };
+  }
+
+  return {
+    label: 'Cached niche signals',
+    detail: 'Recent niche patterns from Stratify history are used to shape each weekly pass.',
+  };
+}
+
+export function getImmediateUnlocks(plan: Plan): string[] {
+  if (plan === 'free') return PAYWALL_BASIC_FEATURES;
+  if (plan === 'basic') return PAYWALL_PRO_FEATURES;
+  return [];
+}
+
+export function getMissingCapabilities(plan: Plan): string[] {
+  if (plan === 'free') {
+    return [
+      'Only 1 strategy run per week',
+      'No full weekly history archive',
+      'No live LinkedIn signal scanning',
+    ];
+  }
+
+  if (plan === 'basic') {
+    return [
+      'No live LinkedIn signal scanning',
+      'No competitor or reference post analysis',
+      'Lower weekly strategy capacity',
+    ];
+  }
+
+  return [
+    'Current weekly capacity reached',
+    'Run access resumes next week unless capacity changes',
+  ];
+}

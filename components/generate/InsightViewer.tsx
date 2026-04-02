@@ -50,7 +50,7 @@ export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }
         <div>
           <h2 className="text-xl font-bold tracking-tight text-white">Extracted Signals</h2>
           <p className="mt-2 text-sm text-white/50 max-w-xl font-light">
-            Psychological patterns validated for your niche to guide strategy creation.
+            This is the reasoning layer for the weekly pass: each signal is captured, matched to a trigger, and explained before hooks or drafts are compiled.
           </p>
         </div>
         <div className="flex flex-col items-start md:items-end gap-1.5">
@@ -61,6 +61,21 @@ export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }
           <div className="str-mono text-white/40">
             {insights.length} {insights.length === 1 ? 'PATTERN' : 'PATTERNS'} IDENTIFIED
           </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4">
+          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Observed Shift</div>
+          <p className="mt-2 text-sm text-white/70">What changed in the niche that is worth paying attention to this week.</p>
+        </div>
+        <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4">
+          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Trigger Logic</div>
+          <p className="mt-2 text-sm text-white/70">The psychological mechanism explaining why the signal should perform.</p>
+        </div>
+        <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4">
+          <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Strategic Use</div>
+          <p className="mt-2 text-sm text-white/70">When to apply that signal in hooks and final drafts.</p>
         </div>
       </div>
 
@@ -81,11 +96,12 @@ export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }
               </div>
 
               <div>
-                <h3 className="text-base font-semibold text-white/90 leading-snug">{item.insight}</h3>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-white/35">Observed Shift</div>
+                <h3 className="mt-2 text-base font-semibold text-white/90 leading-snug">{item.insight}</h3>
               </div>
               
               <div className="space-y-1.5 pt-3 border-t border-white/5">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Underlying Mechanism</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Trigger Logic</div>
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-medium text-white/80">{item.trigger}</div>
                 </div>
@@ -94,7 +110,7 @@ export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }
 
               {/* Decision Support */}
               <div className="pt-3 border-t border-white/5 space-y-2.5">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-white/20">Decision support</div>
+                <div className="text-[9px] font-bold uppercase tracking-widest text-white/20">Strategic use</div>
                 <div className="flex items-start gap-2">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-white/30 shrink-0 pt-px">Best for</span>
                   <span className="text-xs text-white/60">{decision.bestFor}</span>
@@ -126,7 +142,7 @@ export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }
           onClick={onNext}
           className="rounded-sm bg-white text-black hover:bg-white/90 transition-all font-bold text-[11px] uppercase tracking-widest px-8 h-11"
         >
-          View Strategy & Drafts
+          View Compiled Hooks & Drafts
           <ArrowRight className="ml-2 w-4 h-4" />
         </Button>
       </div>
