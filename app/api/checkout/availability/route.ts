@@ -6,8 +6,9 @@ export const runtime = 'nodejs';
 
 const TOTAL_FOUNDING_SLOTS = 15;
 
-function json(body: Record<string, unknown>) {
+function json(body: Record<string, unknown>, status = 200) {
   return NextResponse.json(body, {
+    status,
     headers: {
       'Cache-Control': 'no-store, max-age=0',
     },
@@ -50,7 +51,7 @@ export async function GET() {
           code,
           error: 'Missing founding availability configuration',
           total: TOTAL_FOUNDING_SLOTS,
-        });
+        }, 500);
       }
 
       return json({
@@ -90,7 +91,7 @@ export async function GET() {
         code: 'database_query_error',
         error: 'Database querying error',
         total: TOTAL_FOUNDING_SLOTS,
-      });
+      }, 500);
     }
 
     const claimed = Math.min(count || 0, TOTAL_FOUNDING_SLOTS);
@@ -110,6 +111,6 @@ export async function GET() {
       code: 'server_crash',
       error: 'Server Crash',
       total: TOTAL_FOUNDING_SLOTS,
-    });
+    }, 500);
   }
 }

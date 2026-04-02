@@ -87,7 +87,7 @@ const PROOF_ITEMS = [
 
 export function LandingPage() {
   const [isYearly, setIsYearly] = useState(false);
-  const { status, claimed, total } = useFoundingStatus();
+  const { status, claimed, total, isFallback } = useFoundingStatus();
 
   return (
     <main className="dark-premium min-h-screen text-foreground bg-background relative selection:bg-primary/20 font-sans overflow-x-hidden">
@@ -137,7 +137,7 @@ export function LandingPage() {
         <motion.section 
           initial="hidden"
           animate="visible"
-          className="relative z-0 flex w-full min-h-[36rem] flex-col items-center justify-center py-8 md:min-h-[40rem] md:py-10 lg:min-h-[calc(100svh-14rem)]"
+          className="relative z-0 mt-4 flex w-full min-h-[36rem] flex-col items-center justify-center py-10 md:mt-6 md:min-h-[40rem] md:py-12 lg:min-h-[calc(100svh-12rem)]"
         >
           {/* Background 3D Perspective Glow */}
           <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-96 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.15)_0%,transparent_50%)] pointer-events-none" />
@@ -229,7 +229,7 @@ export function LandingPage() {
           </div>
         </motion.section>
 
-        <section aria-label="Illustrative system output" className="-mt-2 md:-mt-4">
+        <section aria-label="Illustrative system output" className="mt-8 md:mt-10">
           <div className="mx-auto w-full max-w-4xl rounded-sm border border-white/10 bg-[#050505]/80">
             <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
               <div className="flex items-center gap-2">
@@ -371,7 +371,7 @@ export function LandingPage() {
                 <div className="w-6 h-6 rounded-sm bg-white/5 text-white/50 font-mono text-[9px] flex items-center justify-center border border-white/10">03</div>
                 <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/50">The Draft</div>
               </div>
-              <div className="p-4 bg-[url('/noise.png')] bg-white/[0.02] border border-white/5 rounded-sm flex-grow">
+              <div className="rounded-sm border border-white/5 bg-white/[0.02] p-4 flex-grow">
                 <p className="text-white/80 text-[10px] leading-relaxed whitespace-pre-line font-mono">
                   {`We hit $8K MRR in month 3.
 
@@ -429,7 +429,14 @@ Here's my expensive lesson —`}
 
                 {(plan.name === 'BASIC' || plan.name === 'PRO') && (
                   <div className="-mx-8 -mt-8 mb-6">
-                    <FoundingStrip plan={plan.name as 'BASIC' | 'PRO'} status={status} claimed={claimed} total={total} isYearly={isYearly} />
+                    <FoundingStrip
+                      plan={plan.name as 'BASIC' | 'PRO'}
+                      status={status}
+                      claimed={claimed}
+                      total={total}
+                      isYearly={isYearly}
+                      isFallback={isFallback}
+                    />
                   </div>
                 )}
                 

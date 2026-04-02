@@ -17,6 +17,8 @@ export interface FoundingStatus {
   remaining: number;
   claimed: number;
   total: number;
+  isFallback: boolean;
+  fallbackCode?: string;
 }
 
 const DEFAULT_TOTAL = 15;
@@ -40,6 +42,7 @@ export function useFoundingStatus() {
     remaining: 0,
     claimed: 0,
     total: DEFAULT_TOTAL,
+    isFallback: false,
   });
 
   useEffect(() => {
@@ -54,7 +57,7 @@ export function useFoundingStatus() {
 
         const payload: unknown = await response.json();
 
-        if (!response.ok || !isValidStatusResponse(payload)) {
+        if (!isValidStatusResponse(payload)) {
           throw new Error('Invalid founding availability response');
         }
 
@@ -70,8 +73,14 @@ export function useFoundingStatus() {
             remaining: 0,
             claimed: 0,
             total: payload.total ?? DEFAULT_TOTAL,
+            isFallback: Boolean(payload.fallback),
+            fallbackCode: payload.code,
           });
           return;
+        }
+
+        if (!response.ok) {
+          throw new Error('Unexpected founding availability HTTP status');
         }
 
         setData({
@@ -80,6 +89,8 @@ export function useFoundingStatus() {
           remaining: payload.remaining ?? 0,
           claimed: payload.claimed ?? 0,
           total: payload.total ?? DEFAULT_TOTAL,
+          isFallback: Boolean(payload.fallback),
+          fallbackCode: payload.code,
         });
       } catch (err) {
         if (controller.signal.aborted) return;
@@ -91,6 +102,7 @@ export function useFoundingStatus() {
           remaining: 0,
           claimed: 0,
           total: DEFAULT_TOTAL,
+          isFallback: false,
         });
       }
     }
