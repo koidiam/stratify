@@ -27,13 +27,13 @@ const PLANS: Plan[] = [
     yearlySubtext: null,
     frequency: { monthly: '/mo', yearly: '/yr' },
     description: 'Experience the baseline pipeline without committing.',
-    capacity: '1 extraction cycle / week',
+    capacity: '1 strategy run / week',
     features: [
       '1 validated insight',
       '1 final post draft',
       'Basic hook generation'
     ],
-    buttonText: 'Initialize Sandbox',
+    buttonText: 'Start Free',
     featured: false,
   },
   {
@@ -42,14 +42,14 @@ const PLANS: Plan[] = [
     yearlySubtext: '$180/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
     description: 'Consistent, data-backed weekly presence.',
-    capacity: '3 extraction cycles / week',
-    unlocksText: 'Unlocks full week coverage & history vault',
+    capacity: '3 strategy runs / week',
+    unlocksText: 'Unlocks full week coverage & saved history',
     features: [
       '3 full post drafts',
       'Automated tone matching',
       'Full history vault access'
     ],
-    buttonText: 'Configure Basic',
+    buttonText: 'Choose Basic',
     featured: false,
   },
   {
@@ -58,53 +58,47 @@ const PLANS: Plan[] = [
     yearlySubtext: '$348/yr',
     frequency: { monthly: '/mo', yearly: '/yr' },
     description: 'For scaling revenue through audience building.',
-    capacity: '50 extraction cycles / week',
-    unlocksText: 'Unlocks competitor tracking & deep psychology',
+    capacity: '50 strategy runs / week',
+    unlocksText: 'Unlocks competitor tracking & deeper signal review',
     features: [
       'Deep psychological mapping',
       'Competitor signal tracking',
       'Priority draft synthesis'
     ],
-    buttonText: 'Configure Pro',
+    buttonText: 'Choose Pro',
     featured: true, // Pro gets the focus
   },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+const PROOF_ITEMS = [
+  {
+    label: 'Signal',
+    value: 'Authority storytelling gaining traction',
   },
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-};
+  {
+    label: 'Strategy Direction',
+    value: 'Contrarian + personal proof structure',
+  },
+  {
+    label: 'Likely Outcome',
+    value: 'Higher saves and profile clicks',
+  },
+] as const;
 
 export function LandingPage() {
   const [isYearly, setIsYearly] = useState(false);
   const { status, claimed, total } = useFoundingStatus();
 
   return (
-    <main className="min-h-screen text-foreground bg-background relative selection:bg-primary/20 font-sans overflow-x-hidden">
+    <main className="dark-premium min-h-screen text-foreground bg-background relative selection:bg-primary/20 font-sans overflow-x-hidden">
       
       {/* Refined Background Gradients */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-[#000000]">
         {/* Subtle grid */}
         <div 
-          className="absolute inset-0 bg-[linear-gradient(to_right,#e5e7eb_1px,transparent_1px),linear-gradient(to_bottom,#e5e7eb_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20"
-          style={{ maskImage: 'radial-gradient(circle at 50% 0%, black 20%, transparent 80%)', WebkitMaskImage: 'radial-gradient(circle at 50% 0%, black 20%, transparent 80%)' }}
+          className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]"
         />
-        {/* Top Glow - Toned Down */}
-        <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-2xl sm:-top-80">
-           <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-secondary/30 to-muted/10 opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
-        </div>
-        {/* Second Lower Glow */}
-        <div className="absolute inset-x-0 top-[40rem] -z-10 transform-gpu overflow-hidden blur-2xl flex justify-center">
-           <div className="relative aspect-[1155/678] w-[36.125rem] rotate-[15deg] bg-gradient-to-tr from-primary/5 to-transparent opacity-30 sm:w-[50rem]" />
-        </div>
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       </div>
 
       <div className="relative z-10 mx-auto flex flex-col w-full max-w-5xl px-5 pb-20 pt-6 md:px-8">
@@ -116,140 +110,153 @@ export function LandingPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="mb-12 md:mb-16 flex items-center justify-between py-4 relative"
         >
-          <div className="flex flex-1 items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground text-background text-xs font-bold">
-              S
-            </div>
-            <div>
-              <div className="text-sm font-semibold tracking-tight text-foreground">Stratify</div>
-            </div>
+          <div className="flex flex-1 items-center">
+            <span className="text-lg font-medium tracking-tight text-foreground">Stratify</span>
           </div>
 
           <nav className="hidden items-center gap-8 md:flex">
-            <a href="#mechanisms" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Mechanisms</a>
-            <a href="#pipeline" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Pipeline</a>
-            <a href="#pricing" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Configuration</a>
+            <a href="#mechanisms" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
+            <a href="#pipeline" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Output</a>
+            <a href="#pricing" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors">Plans</a>
           </nav>
 
           <nav className="flex flex-1 items-center justify-end gap-3">
-            <Link href="/login" className="hidden sm:block text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-              Log in
+            <Link href="/login" className="hidden sm:flex text-[10px] font-bold uppercase tracking-widest text-white/50 hover:text-white hover:bg-white/5 transition-all h-9 px-4 items-center justify-center rounded-sm">
+              Login
             </Link>
             <Link
               href="/register"
-              className="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium transition-transform hover:bg-primary/90 active:scale-95"
+              className="inline-flex items-center justify-center rounded-sm bg-white/5 border border-white/10 text-white px-5 py-2 h-9 text-[10px] uppercase font-bold tracking-widest transition-all hover:bg-white/10 hover:-translate-y-px"
             >
-              Access System
+              Get Started
             </Link>
           </nav>
         </motion.header>
 
-        {/* Hero Section */}
+        {/* Inverted Command Hero */}
         <motion.section 
-          variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="flex flex-col items-center text-center mt-2 md:mt-8"
+          className="relative w-full h-[calc(100vh-100px)] min-h-[600px] flex flex-col items-center justify-center -mt-6"
         >
-          {/* Depth Container Setup */}
-          <motion.div className="w-full max-w-4xl rounded-[20px] md:rounded-[24px] border border-border/40 bg-card/20 backdrop-blur-md p-6 sm:p-10 md:p-14 shadow-sm relative overflow-hidden flex flex-col items-center">
-            
-            {/* Inner faint grid for structural feel */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+          {/* Background 3D Perspective Glow */}
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-96 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.15)_0%,transparent_50%)] pointer-events-none" />
+          
+          <div className="relative z-10 w-full max-w-2xl px-4 flex flex-col items-center">
+             {/* The Command Palette simulation */}
+             <motion.div 
+               initial={{ opacity: 0, y: 30, scale: 0.95, rotateX: 10 }}
+               animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+               transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+               style={{ perspective: 1000 }}
+               className="w-full rounded-xl border border-white/10 bg-[#0A0A0A]/90 backdrop-blur-2xl shadow-[0_40px_100px_-20px_rgba(16,185,129,0.25),0_0_0_1px_rgba(255,255,255,0.05)_inset] overflow-hidden"
+             >
+                {/* Simulated Input */}
+                <div className="flex items-center gap-4 border-b border-white/5 px-6 py-5">
+                  <Radar className="w-5 h-5 text-emerald-500 animate-spin-slow opacity-80" />
+                  <div className="flex-1 font-mono text-[13px] md:text-sm text-white relative">
+                     <span className="opacity-100">Review signals for</span>
+                     <span className="text-emerald-500 ml-2">&quot;B2B SaaS Growth&quot;</span>
+                     <span className="w-1.5 h-4 bg-emerald-500 inline-block ml-1 animate-pulse align-middle" />
+                  </div>
+                  <div className="hidden sm:inline-flex items-center gap-1.5 rounded-[4px] border border-white/10 bg-white/5 px-2 py-1 text-[10px] font-bold font-sans text-white/50 tracking-widest">
+                    <span>CMD</span> <span>K</span>
+                  </div>
+                </div>
 
-            <motion.div variants={itemVariants} className="relative z-10 mb-6 inline-flex items-center self-center gap-2 rounded-md bg-secondary/60 border border-border/50 px-2.5 py-1 text-[9px] md:text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-none">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              Signal-Driven Content System
-            </motion.div>
-            
-            <motion.h1 variants={itemVariants} className="relative z-10 max-w-3xl text-center text-4xl sm:text-5xl font-extrabold leading-[1.1] tracking-tight text-foreground md:text-6xl">
-              Stop posting into the void. <br className="hidden sm:block" />
-              Let data write your strategy.
-            </motion.h1>
+                {/* Simulated Quick Action Results */}
+                <div className="p-2">
+                  <div className="px-4 py-3 text-[9px] font-bold uppercase tracking-widest text-white/30">Suggested Actions</div>
+                  
+                  <Link href="/register" className="flex items-center justify-between p-3 rounded-md bg-white/[0.04] text-white cursor-pointer transition-colors border-l-2 border-emerald-500 group group">
+                     <div className="flex items-center gap-3">
+                       <Zap className="w-4 h-4 text-emerald-500" />
+                       <span className="text-[12px] font-mono tracking-wide">Start analysis</span>
+                     </div>
+                     <span className="text-[9px] uppercase font-bold tracking-widest text-white/50 group-hover:text-white transition-colors">Run</span>
+                  </Link>
 
-            <motion.p variants={itemVariants} className="relative z-10 mt-5 md:mt-6 max-w-xl text-sm sm:text-base md:text-lg text-muted-foreground/90 leading-relaxed">
-              For founders and creators tired of guesswork. Stratify scans your niche, extracts psychological triggers, and synthesizes your weekly LinkedIn drafts.
-            </motion.p>
+                  <div className="flex items-center justify-between p-3 rounded-md hover:bg-white/[0.02] text-white/40 hover:text-white/80 cursor-pointer transition-colors border-l-2 border-transparent">
+                     <div className="flex items-center gap-3">
+                       <Settings2 className="w-4 h-4" />
+                       <span className="text-[12px] font-mono tracking-wide">Review niche focus</span>
+                     </div>
+                  </div>
 
-            <motion.div variants={itemVariants} className="relative z-10 mt-8 md:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
-              {/* Primary High Contrast */}
-              <Link
-                href="/register"
-                className="w-full sm:w-auto inline-flex h-11 md:h-12 items-center justify-center gap-2 rounded-md bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
-              >
-                Start Free
-                <ArrowRight size={16} />
-              </Link>
-              {/* Secondary Ghost/Outline */}
-              <a
-                href="#mechanisms"
-                className="w-full sm:w-auto inline-flex h-11 md:h-12 items-center justify-center gap-2 rounded-md border border-border/60 bg-transparent px-8 text-sm font-medium text-foreground transition-all hover:bg-secondary/50"
-              >
-                View Mechanisms
-              </a>
-            </motion.div>
-          </motion.div>
+                  <div className="flex items-center justify-between p-3 rounded-md hover:bg-white/[0.02] text-white/40 hover:text-white/80 cursor-pointer transition-colors border-l-2 border-transparent">
+                     <div className="flex items-center gap-3">
+                       <BarChart3 className="w-4 h-4" />
+                       <span className="text-[12px] font-mono tracking-wide">Review past signals</span>
+                     </div>
+                  </div>
+                </div>
+             </motion.div>
+
+             <motion.div 
+               initial={{ opacity: 0, y: 10 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: 0.4, duration: 0.8 }}
+               className="mt-14 text-center"
+             >
+               <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
+                 Data-driven strategy, <br/><span className="text-white/40">compiled instantly.</span>
+               </h1>
+               <p className="text-sm md:text-base font-light text-white/40 max-w-lg mx-auto">
+                 Stratify turns raw network signals into a clear weekly LinkedIn strategy.
+               </p>
+               <div className="mt-8">
+                 <Link
+                 href="/register"
+                 className="inline-flex h-12 items-center justify-center gap-3 rounded-sm bg-white px-8 text-[11px] font-bold text-black shadow-[0_0_20px_rgba(255,255,255,0.08)] transition-all hover:bg-white/90 hover:scale-105 uppercase tracking-widest"
+                >
+                  Get Started
+                  <ArrowRight size={14} className="opacity-80" />
+                </Link>
+              </div>
+
+              {/* Live Signal Snapshot */}
+              <div className="mt-10 w-full max-w-md mx-auto border border-white/10 rounded-sm bg-white/[0.02] divide-y divide-white/5">
+                <div className="px-4 py-2.5 flex items-center gap-2">
+                  <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-white/30">Signal Snapshot</span>
+                </div>
+                 <div className="px-4 py-2.5 text-xs text-white/60">AI fatigue → authentic builder stories ↑</div>
+                 <div className="px-4 py-2.5 text-xs text-white/60">Contrarian takes outperform generic advice</div>
+                 <div className="px-4 py-2.5 text-xs text-white/60">Personal proof hooks getting more saves</div>
+               </div>
+               <p className="mt-3 text-[10px] text-white/20">Example signals from recent niche activity</p>
+             </motion.div>
+          </div>
         </motion.section>
 
-        {/* Interface Proof - The Visual Evidence */}
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="w-full max-w-4xl mx-auto mt-12 md:mt-16 pointer-events-none select-none px-2 sm:px-0"
-        >
-          {/* Abstracted Product UI Composition */}
-          <div className="rounded-[20px] md:rounded-[24px] border border-border/50 bg-card/40 p-4 sm:p-6 md:p-8 backdrop-blur-md shadow-2xl relative overflow-hidden flex flex-col gap-4 md:gap-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-50" />
-            
-            {/* 1. Generate Step Strip */}
-            <div className="relative z-10 grid grid-cols-3 gap-2 md:gap-4">
-              {['Signal scan', 'Hook design', 'Final draft'].map((step, i) => (
-                <div key={step} className={`rounded-[12px] border px-2.5 py-2 md:px-3 md:py-2.5 text-xs md:text-sm transition-all duration-150 ${i === 2 ? 'border-primary/30 bg-primary/10 text-primary font-medium' : 'border-border/60 bg-card/50 text-muted-foreground'}`}>
-                  <div className="text-[8px] md:text-[10px] font-bold uppercase tracking-wider opacity-60 mb-1">Step 0{i+1}</div>
-                  <div className="font-medium tracking-wide truncate">{step}</div>
+        <section aria-label="Illustrative system output" className="-mt-2 md:-mt-4">
+          <div className="mx-auto w-full max-w-4xl rounded-sm border border-white/10 bg-[#050505]/80">
+            <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <span className="h-1 w-1 rounded-full bg-white/40" />
+                <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                  Example Output
+                </span>
+              </div>
+              <span className="text-[9px] uppercase tracking-[0.18em] text-white/20">
+                From a typical strategy pass
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 divide-y divide-white/10 md:grid-cols-3 md:divide-x md:divide-y-0">
+              {PROOF_ITEMS.map((item) => (
+                <div key={item.label} className="px-4 py-4 md:px-5 md:py-5">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                    {item.label}
+                  </div>
+                  <p className="mt-2 text-sm font-medium tracking-tight text-white">
+                    {item.value}
+                  </p>
                 </div>
               ))}
             </div>
-
-            {/* 2. State Cards */}
-            <div className="relative z-10 grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2">
-              <div className="rounded-[16px] border border-border/50 bg-background/60 p-4 md:p-5 flex flex-col justify-between">
-                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-3">Latest Extraction</div>
-                <div>
-                  <p className="text-base md:text-lg font-semibold text-foreground tracking-tight">Week 14, 2026</p>
-                  <div className="mt-2.5 flex flex-wrap gap-2">
-                    <span className="text-[11px] md:text-xs font-medium text-foreground bg-secondary/80 rounded-md px-2 py-1 border border-border/30">3 insights</span>
-                    <span className="text-[11px] md:text-xs font-medium text-foreground bg-secondary/80 rounded-md px-2 py-1 border border-border/30">3 drafts</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="rounded-[16px] border border-border/50 bg-background/60 p-4 md:p-5 flex flex-col justify-center items-start">
-                 <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-primary mb-2">
-                   <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                   Engine Ready
-                 </div>
-                 <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">System calibrated for active niche. Awaiting next cycle command.</p>
-              </div>
-            </div>
-
-            {/* 3. Inline Action Bar */}
-            <div className="relative z-10 flex items-center justify-between rounded-full border border-border/50 bg-background/80 p-1.5 md:p-2.5 shadow-sm">
-              <div className="flex items-center">
-                <div className="rounded-full bg-primary px-4 md:px-5 py-2 md:py-2.5 text-[11px] md:text-xs font-bold text-primary-foreground flex items-center gap-1.5 uppercase tracking-wide">
-                   <Zap size={14} className="opacity-80" />
-                   <span>Run Engine</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 md:gap-5 pr-4 md:pr-5 text-[11px] md:text-xs font-medium text-muted-foreground uppercase tracking-widest">
-                <div className="flex items-center gap-1.5"><BarChart3 size={14} /> <span className="hidden xs:inline">History</span></div>
-                <div className="w-px h-3 bg-border" />
-                <div className="flex items-center gap-1.5"><Settings2 size={14} /> <span className="hidden xs:inline">Config</span></div>
-              </div>
-            </div>
           </div>
-        </motion.div>
+        </section>
 
         {/* Core System Mechanisms */}
         <motion.section 
@@ -269,42 +276,42 @@ export function LandingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <div className="rounded-[16px] border border-border/50 bg-card/40 p-5 md:p-6 flex flex-col">
-              <div className="mb-3 text-muted-foreground">
-                <Radar size={18} />
+            <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8 flex flex-col hover:-translate-y-1 transition-transform duration-300">
+              <div className="mb-4 text-emerald-500 bg-emerald-500/10 w-8 h-8 rounded-sm flex items-center justify-center border border-emerald-500/20">
+                <Radar size={16} />
               </div>
-              <h3 className="text-sm md:text-base font-semibold text-foreground mb-2">1. Signal Extraction</h3>
-              <p className="text-muted-foreground text-xs md:text-sm leading-relaxed flex-grow">
+              <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">1. Signal Extraction</h3>
+              <p className="text-white/50 text-[11px] font-mono leading-relaxed flex-grow">
                 The engine scans your matrix to isolate underlying psychological triggers, ignoring the noise.
               </p>
-              <div className="pt-3 mt-4 border-t border-border/40">
-                <p className="text-[11px] md:text-xs font-medium text-foreground"><span className="text-primary font-semibold mr-1">Outcome:</span> Authority around validated topics.</p>
+              <div className="pt-4 mt-6 border-t border-white/5">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/50"><span className="text-emerald-500 mr-1">Outcome:</span> Authority around validated topics.</p>
               </div>
             </div>
 
-            <div className="rounded-[16px] border border-border/50 bg-card/40 p-5 md:p-6 flex flex-col">
-              <div className="mb-3 text-muted-foreground">
-                <Fingerprint size={18} />
+            <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8 flex flex-col hover:-translate-y-1 transition-transform duration-300">
+              <div className="mb-4 text-emerald-500 bg-emerald-500/10 w-8 h-8 rounded-sm flex items-center justify-center border border-emerald-500/20">
+                <Fingerprint size={16} />
               </div>
-              <h3 className="text-sm md:text-base font-semibold text-foreground mb-2">2. Tone Calibration</h3>
-              <p className="text-muted-foreground text-xs md:text-sm leading-relaxed flex-grow">
+              <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">2. Tone Calibration</h3>
+              <p className="text-white/50 text-[11px] font-mono leading-relaxed flex-grow">
                 Your profile constraints and references act as borders. The signal is applied purely through your lens.
               </p>
-              <div className="pt-3 mt-4 border-t border-border/40">
-                <p className="text-[11px] md:text-xs font-medium text-foreground"><span className="text-primary font-semibold mr-1">Outcome:</span> Drafts that inherit your natural voice.</p>
+              <div className="pt-4 mt-6 border-t border-white/5">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/50"><span className="text-emerald-500 mr-1">Outcome:</span> Drafts that inherit your natural voice.</p>
               </div>
             </div>
 
-            <div className="rounded-[16px] border border-border/50 bg-card/40 p-5 md:p-6 flex flex-col">
-              <div className="mb-3 text-muted-foreground">
-                <Settings2 size={18} />
+            <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8 flex flex-col hover:-translate-y-1 transition-transform duration-300">
+              <div className="mb-4 text-emerald-500 bg-emerald-500/10 w-8 h-8 rounded-sm flex items-center justify-center border border-emerald-500/20">
+                <Settings2 size={16} />
               </div>
-              <h3 className="text-sm md:text-base font-semibold text-foreground mb-2">3. Weekly Batching</h3>
-              <p className="text-muted-foreground text-xs md:text-sm leading-relaxed flex-grow">
+              <h3 className="text-sm font-bold text-white mb-2 uppercase tracking-wide">3. Weekly Batching</h3>
+              <p className="text-white/50 text-[11px] font-mono leading-relaxed flex-grow">
                 The pipeline synthesizes insights, hooks, and drafts in one sequence. Run once on Monday and close the tab.
               </p>
-              <div className="pt-3 mt-4 border-t border-border/40">
-                <p className="text-[11px] md:text-xs font-medium text-foreground"><span className="text-primary font-semibold mr-1">Outcome:</span> Consistent posting without daily panic.</p>
+              <div className="pt-4 mt-6 border-t border-white/5">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/50"><span className="text-emerald-500 mr-1">Outcome:</span> Consistent posting without daily panic.</p>
               </div>
             </div>
           </div>
@@ -331,41 +338,41 @@ export function LandingPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative cursor-default">
             {/* Step 1 */}
-            <div className="rounded-[16px] border border-border/50 bg-card/40 p-5 md:p-6 flex flex-col">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-5 h-5 rounded bg-secondary text-muted-foreground font-mono text-[10px] flex items-center justify-center border border-border">01</div>
-                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">The Raw Signal</div>
+            <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8 flex flex-col hover:-translate-y-1 transition-transform duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-6 rounded-sm bg-white/5 text-white/50 font-mono text-[9px] flex items-center justify-center border border-white/10">01</div>
+                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/50">The Raw Signal</div>
               </div>
-              <p className="text-foreground text-xs md:text-sm leading-relaxed mb-4 flex-grow">
+              <p className="text-white text-[11px] leading-relaxed mb-6 flex-grow font-mono">
                 Sharing failures builds stronger trust metrics than success stories. Readers connect with vulnerability.
               </p>
-              <div className="inline-flex items-center gap-1.5 rounded bg-secondary/60 px-2 py-1 text-[10px] md:text-[11px] font-semibold text-foreground border border-border/50 w-max">
-                <Zap size={10} className="text-primary" /> Trigger: Relatability
+              <div className="inline-flex items-center gap-2 rounded-sm bg-emerald-500/10 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-500 border border-emerald-500/20 w-max">
+                <Zap size={10} className="text-emerald-500" /> Trigger: Relatability
               </div>
             </div>
 
             {/* Step 2 */}
-            <div className="rounded-[16px] border border-border/50 bg-card/40 p-5 md:p-6 flex flex-col">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-5 h-5 rounded bg-secondary text-muted-foreground font-mono text-[10px] flex items-center justify-center border border-border">02</div>
-                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">The Hook</div>
+            <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8 flex flex-col hover:-translate-y-1 transition-transform duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-6 rounded-sm bg-white/5 text-white/50 font-mono text-[9px] flex items-center justify-center border border-white/10">02</div>
+                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/50">The Hook</div>
               </div>
-              <p className="text-foreground font-semibold text-sm md:text-base leading-snug flex-grow">
+              <p className="text-white font-bold text-sm md:text-base leading-snug flex-grow font-serif italic">
                 &quot;The mistake that killed our first $10K MRR&quot;
               </p>
-              <p className="text-muted-foreground text-[11px] md:text-xs leading-relaxed border-t border-border/40 pt-3 mt-3">
+              <p className="text-white/40 text-[10px] font-mono leading-relaxed border-t border-white/5 pt-4 mt-4">
                 Applies the signal directly. Opens a curiosity loop to drive views.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="rounded-[16px] border border-border/50 bg-card/40 p-5 md:p-6 flex flex-col">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-5 h-5 rounded bg-secondary text-muted-foreground font-mono text-[10px] flex items-center justify-center border border-border">03</div>
-                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-muted-foreground">The Draft</div>
+            <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8 flex flex-col hover:-translate-y-1 transition-transform duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-6 rounded-sm bg-white/5 text-white/50 font-mono text-[9px] flex items-center justify-center border border-white/10">03</div>
+                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/50">The Draft</div>
               </div>
-              <div className="p-3 bg-background/50 border border-border/30 rounded-lg flex-grow">
-                <p className="text-foreground/90 text-[11px] md:text-xs leading-relaxed whitespace-pre-line font-mono">
+              <div className="p-4 bg-[url('/noise.png')] bg-white/[0.02] border border-white/5 rounded-sm flex-grow">
+                <p className="text-white/80 text-[10px] leading-relaxed whitespace-pre-line font-mono">
                   {`We hit $8K MRR in month 3.
 
 Then we tried to scale too fast.
@@ -409,58 +416,66 @@ Here's my expensive lesson —`}
             </span>
           </div>
 
-          <div className="grid gap-4 md:gap-6 lg:grid-cols-3 items-stretch max-w-sm md:max-w-5xl mx-auto">
-            {PLANS.map((plan) => (
+          <div className="grid grid-cols-1 lg:grid-cols-3 max-w-sm md:max-w-5xl mx-auto border border-white/10 bg-[#020202] rounded-sm overflow-hidden shadow-2xl relative">
+            {PLANS.map((plan, index) => (
               <div
                 key={plan.name}
-                className={`flex flex-col rounded-[16px] md:rounded-[20px] p-5 md:p-6 transition-all duration-300 ${
-                  plan.featured
-                    ? 'border border-primary/40 bg-primary/5 shadow-sm'
-                    : 'border border-border/50 bg-card/40'
-                }`}
+                className={`relative flex flex-col p-8 transition-colors duration-300
+                  ${index !== 0 ? 'border-t lg:border-t-0 lg:border-l border-white/10' : ''}
+                  ${plan.featured ? 'bg-white/[0.02]' : 'hover:bg-white/[0.01]'}
+                `}
               >
+                {/* Emphasis handled by RECOMMENDED label below */}
+
                 {(plan.name === 'BASIC' || plan.name === 'PRO') && (
-                  <FoundingStrip plan={plan.name as 'BASIC' | 'PRO'} status={status} claimed={claimed} total={total} isYearly={isYearly} />
+                  <div className="-mx-8 -mt-8 mb-6">
+                    <FoundingStrip plan={plan.name as 'BASIC' | 'PRO'} status={status} claimed={claimed} total={total} isYearly={isYearly} />
+                  </div>
                 )}
                 
-                <div className="text-[9px] md:text-[10px] font-bold tracking-widest uppercase text-muted-foreground mb-2 mt-1">{plan.name}</div>
-                <div className="mb-3 flex items-baseline gap-1 flex-wrap">
-                  <span className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">
+                <div className="text-[10px] font-bold tracking-widest uppercase text-white/40 mb-3 flex items-center justify-between">
+                  {plan.name}
+                  {plan.featured && <span className="text-[9px] font-bold text-emerald-500">RECOMMENDED</span>}
+                </div>
+                
+                <div className="mb-4 flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-4xl md:text-5xl font-medium tracking-tight text-white">
                     {isYearly ? plan.price.yearly : plan.price.monthly}
                   </span>
-                  <span className="text-muted-foreground text-[10px] md:text-xs font-medium uppercase tracking-wider">
+                  <span className="text-white/40 text-xs font-medium uppercase">
                     {isYearly ? plan.frequency.yearly : plan.frequency.monthly}
                   </span>
                 </div>
                 
-                <p className="text-xs md:text-sm text-foreground/80 mb-5 leading-relaxed flex-grow pr-2">{plan.description}</p>
+                <p className="text-sm text-white/50 mb-8 leading-relaxed flex-grow">{plan.description}</p>
                 
-                <div className="bg-background/50 border border-border/40 rounded-lg p-2.5 mb-5 md:mb-6">
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">CAPACITY</div>
-                  <div className="text-xs md:text-sm font-mono font-medium text-foreground">{plan.capacity}</div>
-                </div>
-
-                {plan.unlocksText && (
-                  <div className="mb-5 md:mb-6 mb-auto text-[11px] md:text-xs font-medium text-primary">
-                    + {plan.unlocksText}
+                <div className="border-t border-white/5 pt-6 mb-8 mt-auto">
+                  <div className="text-white font-medium text-sm mb-4">
+                    {plan.capacity}
                   </div>
-                )}
-                
-                <div className="space-y-2.5 border-t border-border/40 pt-5 mb-6 md:mb-8 mt-auto">
-                  {plan.features.map((feature, i) => (
-                    <div key={i} className="flex items-start gap-2 md:gap-3 text-[11px] md:text-xs text-muted-foreground">
-                      <Check size={12} className="text-foreground shrink-0 mt-0.5 md:mt-1" />
-                      <span>{feature}</span>
+
+                  {plan.unlocksText && (
+                    <div className="mb-4 text-xs font-medium text-emerald-500/90">
+                      + {plan.unlocksText}
                     </div>
-                  ))}
+                  )}
+                  
+                  <div className="space-y-3.5">
+                    {plan.features.map((feature, i) => (
+                      <div key={i} className="flex items-start gap-3 text-xs text-white/60">
+                        <Check size={14} className="text-emerald-500 shrink-0 mt-[1px]" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <Link
                   href="/register"
-                  className={`flex w-full items-center justify-center gap-2 py-2.5 rounded-md text-xs md:text-sm font-semibold transition-all ${
+                  className={`flex w-full items-center justify-center gap-2 h-10 rounded-sm text-xs font-medium transition-all ${
                     plan.featured 
-                      ? 'bg-primary text-primary-foreground hover:bg-primary/90' 
-                      : 'bg-secondary text-foreground hover:bg-secondary/80 border border-border/50'
+                      ? 'bg-white text-black hover:bg-white/90' 
+                      : 'bg-white/5 text-white hover:bg-white/10'
                   }`}
                 >
                   {plan.buttonText}
@@ -472,7 +487,7 @@ Here's my expensive lesson —`}
         
         {/* Footer */}
         <footer className="mt-16 md:mt-24 pt-6 md:pt-8 border-t border-border/30 flex flex-col md:flex-row items-center justify-between text-muted-foreground text-[10px] md:text-xs font-medium pb-8 md:pb-0">
-          <div>© {new Date().getFullYear()} Stratify. All rights reserved.</div>
+          <div>© 2026 Stratify. All rights reserved.</div>
           <div className="flex gap-4 md:gap-6 mt-4 md:mt-0">
             <Link href="/terms" className="hover:text-foreground transition-colors uppercase tracking-wider">Terms</Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors uppercase tracking-wider">Privacy</Link>

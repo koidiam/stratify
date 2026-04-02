@@ -32,7 +32,7 @@ export default async function OnboardingPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col pt-20 pb-10 px-4">
       <div className="w-full max-w-2xl mx-auto mb-10 text-center relative z-10">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">Welcome to Stratify.</h1>
-        <p className="text-muted-foreground mt-2 text-lg">Let's map out your profile so the strategy engine can work perfectly for you.</p>
+        <p className="text-muted-foreground mt-2 text-lg">Let&apos;s map out your profile so the strategy engine can work perfectly for you.</p>
       </div>
       <OnboardingWizard />
     </div>

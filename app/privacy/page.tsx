@@ -38,7 +38,7 @@ export default function PrivacyPolicy() {
             </p>
             <ul className="list-disc pl-5 space-y-2">
               <li>Provide and improve the Strategy Engine logic.</li>
-              <li>"Calibrate" the AI specifically for your brand voice.</li>
+              <li>&quot;Calibrate&quot; the AI specifically for your brand voice.</li>
               <li>Authenticate your account and maintain security constraints.</li>
             </ul>
             <p className="mt-4">

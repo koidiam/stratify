@@ -18,11 +18,11 @@ export function GoalStep({ value, onChange }: GoalStepProps) {
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          What's your main goal on LinkedIn?
+        <h2 className="text-xl font-bold text-white mb-2 uppercase tracking-widest text-sm">
+          Primary Objective Vector
         </h2>
-        <p className="text-muted-foreground text-sm">
-          This shapes every insight and post we generate for you.
+        <p className="text-white/50 text-[11px] font-mono max-w-md">
+          This directs the final output orientation for every computation.
         </p>
       </div>
 
@@ -32,15 +32,15 @@ export function GoalStep({ value, onChange }: GoalStepProps) {
             key={goal.value}
             type="button"
             onClick={() => onChange(goal.value)}
-            className={`flex items-start gap-4 rounded-xl border p-4 text-left transition-all ${
+            className={`flex items-start gap-4 rounded-sm border p-4 text-left transition-colors ${
               value === goal.value
-                ? 'border-primary bg-primary/10 text-foreground'
-                : 'border-border bg-card text-muted-foreground hover:border-primary/40'
+                ? 'border-emerald-500/50 bg-emerald-500/5'
+                : 'border-white/5 bg-[#000000]/40 hover:border-white/20'
             }`}
           >
             <div>
-              <div className="font-semibold text-sm text-foreground">{goal.label}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">{goal.description}</div>
+              <div className={`font-bold text-[11px] uppercase tracking-widest mb-1.5 ${value === goal.value ? 'text-emerald-500' : 'text-white/80'}`}>{goal.label}</div>
+              <div className="text-[10px] font-mono text-white/40">{goal.description}</div>
             </div>
           </button>
         ))}

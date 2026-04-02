@@ -110,44 +110,52 @@
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-card/60 backdrop-blur-xl border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)];
+  .str-panel {
+    @apply bg-[#0a0a0a] text-white border border-white/10 shadow-[0_4px_24px_-4px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.05)];
   }
   
-  .glass-panel {
-    @apply bg-card/40 backdrop-blur-2xl border border-white/5 shadow-2xl;
-  }
-  
-  .glow-text {
-    text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
-  }
-  
-  .glow-box {
-    box-shadow: 0 0 30px rgba(29, 78, 216, 0.15), inset 0 0 20px rgba(29, 78, 216, 0.05);
-  }
-  
-  .animated-gradient-border {
-    position: relative;
-    background: var(--card);
-    background-clip: padding-box;
-    border: 1px solid transparent;
+  .str-mono {
+    @apply font-mono text-[11px] uppercase tracking-wider text-white/50;
   }
 
-  .animated-gradient-border::before {
-    content: '';
-    position: absolute;
-    top: 0; right: 0; bottom: 0; left: 0;
-    z-index: -1;
-    margin: -1px;
-    border-radius: inherit;
-    background: linear-gradient(135deg, rgba(59,130,246,0.5) 0%, rgba(29,78,216,0.1) 50%, rgba(16,185,129,0.3) 100%);
-    background-size: 200% 200%;
-    animation: gradientShift 4s ease infinite;
+  .str-glow {
+    box-shadow: 0 0 40px rgba(255, 255, 255, 0.03), inset 0 0 20px rgba(255, 255, 255, 0.02);
   }
+
+  .animate-spin-slow {
+    animation: spin-slow 4s linear infinite;
+  }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.dark-premium {
+  --background: #000000;
+  --foreground: #FAFAFA;
+  --card: #0A0A0A;
+  --card-foreground: #FAFAFA;
+  --popover: #0A0A0A;
+  --popover-foreground: #FAFAFA;
   
-  @keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
+  --primary: #FAFAFA; 
+  --primary-foreground: #000000;
+  
+  --secondary: #171717; 
+  --secondary-foreground: #FAFAFA;
+  --muted: #171717;
+  --muted-foreground: #A1A1AA;
+  --accent: #171717;
+  --accent-foreground: #FAFAFA;
+  --destructive: #7F1D1D;
+  --sidebar: #050505;
+  --sidebar-foreground: #FAFAFA;
+  --sidebar-primary: #FAFAFA;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #171717;
+  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-border: #27272A;
+  --sidebar-ring: #A1A1AA;
 }

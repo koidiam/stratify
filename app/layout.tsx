@@ -29,8 +29,8 @@ export default function RootLayout({
 }>) {
   return (
     // Light mode default for clean SaaS look
-    <html lang="en">
-      <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-background text-foreground`} suppressHydrationWarning>
         <TooltipProvider>
           {children}
           <Toaster position="top-center" />
