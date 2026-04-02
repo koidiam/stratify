@@ -50,15 +50,15 @@ export function FinalPost({ initialContent, historyId, postIndex, onBack, userPl
     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 max-w-3xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-2">
         <div className="flex items-start gap-4">
-          <Button onClick={onBack} variant="ghost" size="icon" className="text-muted-foreground mt-1 hover:bg-secondary hover:text-foreground transition-colors">
+          <Button onClick={onBack} variant="ghost" size="icon" className="text-white/50 mt-1 hover:bg-white/5 hover:text-white transition-colors rounded-sm">
             <ArrowLeft size={18} />
           </Button>
           <div>
-            <h2 className="text-xl font-semibold text-foreground tracking-tight">
-              Draft Review
+            <h2 className="text-xl font-bold tracking-tight text-white uppercase">
+              Artifact Editor
             </h2>
-            <p className="text-muted-foreground text-sm mt-1">Review and edit before publishing.</p>
-            <p className="text-[11px] text-muted-foreground/60 font-medium mt-1.5">
+            <p className="text-white/50 text-sm mt-1 font-light">Modify format or duplicate to system clipboard.</p>
+            <p className="str-mono text-emerald-500/80 mt-2 tracking-widest">
               {contextLine}
             </p>
           </div>
@@ -68,75 +68,75 @@ export function FinalPost({ initialContent, historyId, postIndex, onBack, userPl
             <Button
               onClick={() => setFeedbackOpen(true)}
               variant="outline"
-              className="border-border bg-transparent text-foreground hover:bg-secondary font-medium"
+              className="border-white/10 bg-transparent text-white/80 hover:bg-white/5 hover:text-white rounded-sm text-xs font-mono uppercase tracking-wider h-10"
             >
               Metrics
             </Button>
           ) : (
-            <Button
-              onClick={() => setFeedbackOpen(true)}
-              variant="outline"
-              className="border-amber-500/30 bg-amber-500/5 text-amber-600 hover:bg-amber-500/10 font-medium"
-            >
-              <Lock className="mr-2 h-4 w-4 opacity-70" />
-              Metrics (Pro)
-            </Button>
+             <Button
+               onClick={() => setFeedbackOpen(true)}
+               variant="outline"
+               className="border-amber-500/30 bg-amber-500/5 text-amber-500 hover:bg-amber-500/10 rounded-sm text-xs font-mono uppercase tracking-wider h-10"
+             >
+               <Lock className="mr-2 h-3.5 w-3.5 opacity-70" />
+               Metrics (Pro)
+             </Button>
           )}
           <Button 
             onClick={handleCopy} 
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+            className="rounded-sm bg-white text-black hover:bg-white/90 transition-all font-bold text-xs uppercase tracking-widest h-10"
           >
-            {copied ? <Check className="mr-2 w-4 h-4" /> : <Copy className="mr-2 w-4 h-4" />}
-            {copied ? 'Copied!' : 'Copy Text'}
+            {copied ? <Check className="mr-2 w-3.5 h-3.5" /> : <Copy className="mr-2 w-3.5 h-3.5" />}
+            {copied ? 'Copied' : 'Copy Payload'}
           </Button>
         </div>
       </div>
 
-      <div className="relative rounded-[20px] overflow-hidden border border-border bg-card shadow-sm">
-        <div className="bg-secondary flex items-center gap-2 px-4 py-3 border-b border-border">
-           <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
-           <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
-           <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
-           <span className="ml-3 text-[11px] font-mono text-muted-foreground/60 tracking-wider">stratify-draft-{String(postIndex + 1).padStart(2, '0')}.txt</span>
+      <div className="relative str-panel rounded-sm">
+        <div className="bg-white/5 flex items-center gap-2 px-6 py-3 border-b border-white/10">
+           <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
+           <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
+           <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
+           <span className="ml-3 str-mono">ARTIFACT_FILE_0{postIndex + 1}.TXT</span>
         </div>
         <Textarea 
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="min-h-[350px] w-full bg-transparent border-none text-foreground text-[15px] font-medium resize-y p-6 focus-visible:ring-0 leading-relaxed font-mono"
+          className="min-h-[350px] w-full bg-transparent border-none text-white/90 text-[15px] font-medium resize-y p-6 focus-visible:ring-0 leading-relaxed font-mono"
           style={{ whiteSpace: 'pre-wrap' }}
         />
-        <div className="px-6 py-2.5 border-t border-border bg-secondary/30 flex items-center gap-4 text-[11px] text-muted-foreground/50 font-mono">
-          <span>{wordCount} words</span>
-          <span className="text-muted-foreground/20">·</span>
-          <span>~{readingTime} sec read</span>
+        <div className="px-6 py-3 border-t border-white/10 bg-white/[0.02] flex items-center gap-4 text-[11px] text-white/50 font-mono">
+          <span>LEN: {wordCount} W</span>
+          <span className="text-white/20">|</span>
+          <span>EST_READ: {readingTime} S</span>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-[1.3fr_0.9fr]">
-        <div className="rounded-[16px] bg-primary/5 border border-primary/20 p-5 text-sm text-primary/90 flex items-start gap-4">
-          <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-primary/80" />
-          <p className="leading-relaxed">We left line breaks because over 80% of readers are on mobile. Avoid falling into thick blocks of paragraph text.</p>
+        <div className="str-panel rounded-sm p-5 text-sm text-emerald-500/80 flex items-start gap-4">
+          <Lightbulb className="max-h-5 max-w-5 shrink-0 text-emerald-500/60" />
+          <p className="leading-relaxed font-light text-white/80">Formatting retained. Output structured for optimal mobile parsing (avoiding unreadable paragraph density).</p>
         </div>
 
         {userPlan !== 'pro' && (
-          <div className="rounded-[16px] border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent shadow-sm p-5 relative overflow-hidden">
+           <div className="str-panel border-amber-500/30 bg-amber-500/5 rounded-sm p-5 relative overflow-hidden">
             <div className="absolute -right-4 -top-4 opacity-[0.03] pointer-events-none">
               <Lock size={120} />
             </div>
-            <p className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-600">
-              <Lock size={10} /> Pro Feature
+            <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest text-amber-500/80">
+              <Lock size={10} /> REQUIRED_UPGRADE
             </p>
-            <h3 className="mt-2 text-sm font-semibold text-foreground">AI Learning Loop</h3>
-            <p className="mt-2 text-xs leading-relaxed text-muted-foreground max-w-[90%]">
-              Entering post metrics here trains your specific Generation Model on what works best for your audience.
+            <h3 className="mt-2 text-sm font-bold text-white tracking-wide">METRICS PIPELINE</h3>
+            <p className="mt-2 text-xs leading-relaxed text-white/50 font-light max-w-[90%]">
+              Feeding publication metrics back into the system calibrates future generations specifically to your audience graph.
             </p>
             <Button
               onClick={() => setFeedbackOpen(true)}
               variant="outline"
               size="sm"
-              className="mt-4 border-amber-500/30 bg-card text-amber-600 hover:bg-amber-500/10 transition-colors"
+              className="mt-4 border-amber-500/30 bg-black text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 transition-colors rounded-sm text-[10px] font-bold uppercase tracking-widest"
             >
-              Open Performance Panel
+              Unlock Analytics
             </Button>
           </div>
         )}

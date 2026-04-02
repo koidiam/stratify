@@ -17,62 +17,61 @@ export function UsageCard({ plan = 'free', usage = 0 }: Props) {
   const percentage = limit > 0 ? Math.min((usage / limit) * 100, 100) : 0;
   
   const getBadgeColor = () => {
-    if (plan === 'pro') return 'bg-primary text-primary-foreground border-none';
+    if (plan === 'pro') return 'bg-white text-black border-none';
     if (plan === 'basic') return 'bg-emerald-500 text-white border-none';
-    return 'bg-secondary text-secondary-foreground border-border border';
+    return 'bg-white/5 text-white/80 border-white/20 border';
   };
 
   return (
-    <Card className="bg-card border-border p-6 shadow-sm relative overflow-hidden rounded-[16px]">
+    <div className="flex flex-col h-full relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 relative z-10">
         <div>
-          <h2 className="text-xl font-semibold text-foreground mb-1">Weekly Allowance</h2>
-          <p className="text-sm text-muted-foreground">Limits reset every Monday.</p>
+          <h2 className="text-xs font-bold text-white/40 uppercase tracking-widest mb-1">Credits</h2>
         </div>
-        <Badge className={`mt-2 sm:mt-0 ${getBadgeColor()}`}>
-          {plan.toUpperCase()} PLAN
-        </Badge>
+        <div className={`mt-2 sm:mt-0 px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase tracking-widest ${getBadgeColor()}`}>
+          {plan}
+        </div>
       </div>
 
-      <div className="space-y-4 relative z-10">
-         <div className="flex justify-between items-end text-sm">
-          <span className="text-muted-foreground font-medium">Generation Limit</span>
-          <span className="text-foreground font-semibold text-lg">
-            {usage} <span className="text-muted-foreground/60 text-sm font-normal">/ {limit}</span>
+      <div className="space-y-4 relative z-10 flex-grow flex flex-col justify-end">
+         <div className="flex justify-between items-end">
+          <span className="text-[11px] font-mono text-white/50 uppercase tracking-widest">Generations</span>
+          <span className="text-white font-bold text-lg leading-none">
+            {usage} <span className="text-white/30 text-sm font-normal">/ {limit}</span>
           </span>
         </div>
 
-        <div className="h-2 w-full overflow-hidden rounded-full bg-secondary border border-border">
+        <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full bg-primary transition-[width] duration-300"
+            className="h-full bg-emerald-500 transition-[width] duration-300"
             style={{ width: `${percentage}%` }}
           />
         </div>
         
         {percentage >= 100 && (
-          <p className="text-destructive/90 text-xs mt-2 font-medium">Weekly limit reached. Upgrade your plan to unlock more generations.</p>
+          <p className="text-red-500 text-[10px] uppercase font-bold tracking-widest mt-2">Limit reached. Upgrade to unlock runs.</p>
         )}
         
         {percentage >= 80 && percentage < 100 && (
-          <p className="text-amber-500/90 text-xs mt-2 font-medium">You are approaching your weekly limit.</p>
+          <p className="text-amber-500 text-[10px] uppercase font-bold tracking-widest mt-2">Almost at limit.</p>
         )}
 
         {plan === 'free' && percentage < 100 && (
-          <div className="text-[11px] text-muted-foreground mt-2 border border-border/50 bg-secondary/50 px-2 py-1.5 rounded-md flex items-center justify-between w-full">
-            <span>Live scraping locked.</span>
-            <Link href="/settings" className="text-primary hover:underline font-medium">Upgrade</Link>
+          <div className="text-[9px] font-bold tracking-widest uppercase text-white/40 mt-2 border border-white/5 bg-white/[0.02] px-3 py-2 rounded-sm flex items-center justify-between w-full">
+            <span>Web Extraction Limited</span>
+            <Link href="/settings" className="text-white hover:text-white/80 transition-colors">Upgrade</Link>
           </div>
         )}
 
         <Link href="/generate" className="block mt-4">
           <Button
             disabled={percentage >= 100}
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-medium disabled:bg-secondary disabled:text-muted-foreground"
+            className="w-full rounded-sm bg-white text-black hover:bg-white/90 transition-all font-bold text-[11px] uppercase tracking-widest h-10 disabled:bg-white/10 disabled:text-white/30"
           >
-            {percentage >= 100 ? 'Limit Reached' : 'Run Stratify Engine'}
+            {percentage >= 100 ? 'Limit Reached' : 'Generate Strategy'}
           </Button>
         </Link>
       </div>
-    </Card>
+    </div>
   );
 }

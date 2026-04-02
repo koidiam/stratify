@@ -1,6 +1,16 @@
 import { useState, useEffect } from 'react';
 
 export type FoundingStatusType = 'loading' | 'available' | 'sold_out' | 'error';
+type ResolvedFoundingStatusType = Exclude<FoundingStatusType, 'loading'>;
+
+interface FoundingAvailabilityResponse {
+  status: ResolvedFoundingStatusType;
+  remaining?: number;
+  claimed?: number;
+  total?: number;
+  code?: string;
+  fallback?: boolean;
+}
 
 export interface FoundingStatus {
   loaded: boolean;
@@ -8,6 +18,22 @@ export interface FoundingStatus {
   remaining: number;
   claimed: number;
   total: number;
+  isFallback: boolean;
+  fallbackCode?: string;
+}
+
+const DEFAULT_TOTAL = 15;
+
+function isValidStatusResponse(data: unknown): data is FoundingAvailabilityResponse {
+  if (!data || typeof data !== 'object') return false;
+
+  const candidate = data as FoundingAvailabilityResponse;
+
+  return (
+    candidate.status === 'available' ||
+    candidate.status === 'sold_out' ||
+    candidate.status === 'error'
+  );
 }
 
 export function useFoundingStatus() {
@@ -16,29 +42,75 @@ export function useFoundingStatus() {
     status: 'loading',
     remaining: 0,
     claimed: 0,
-    total: 15,
+    total: DEFAULT_TOTAL,
+    isFallback: false,
   });
 
   useEffect(() => {
-    fetch('/api/checkout/availability')
-      .then(res => res.json())
-      .then(d => {
-        if (d.status === 'error' || !d.status) {
-           setData({ loaded: true, status: 'error', remaining: 0, claimed: 0, total: 15 });
-        } else {
-           setData({
-             loaded: true,
-             status: d.status, // 'available' | 'sold_out'
-             remaining: d.remaining ?? 0,
-             claimed: d.claimed ?? 0,
-             total: d.total ?? 15,
-           });
+    const controller = new AbortController();
+
+    async function loadFoundingStatus() {
+      try {
+        const response = await fetch('/api/checkout/availability', {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+
+        const payload: unknown = await response.json();
+
+        if (!isValidStatusResponse(payload)) {
+          throw new Error('Invalid founding availability response');
         }
-      })
-      .catch((err) => {
+
+        if (payload.fallback) {
+          console.warn('[FoundingStatus] Using fallback founding availability response.', payload.code ?? 'unknown');
+        }
+
+        if (payload.status === 'error') {
+          console.warn('[FoundingStatus] Founding availability unavailable.', payload.code ?? 'unknown');
+          setData({
+            loaded: true,
+            status: 'error',
+            remaining: 0,
+            claimed: 0,
+            total: payload.total ?? DEFAULT_TOTAL,
+            isFallback: Boolean(payload.fallback),
+            fallbackCode: payload.code,
+          });
+          return;
+        }
+
+        if (!response.ok) {
+          throw new Error('Unexpected founding availability HTTP status');
+        }
+
+        setData({
+          loaded: true,
+          status: payload.status,
+          remaining: payload.remaining ?? 0,
+          claimed: payload.claimed ?? 0,
+          total: payload.total ?? DEFAULT_TOTAL,
+          isFallback: Boolean(payload.fallback),
+          fallbackCode: payload.code,
+        });
+      } catch (err) {
+        if (controller.signal.aborted) return;
+
         console.error('Failed to load founding status:', err);
-        setData({ loaded: true, status: 'error', remaining: 0, claimed: 0, total: 15 });
-      });
+        setData({
+          loaded: true,
+          status: 'error',
+          remaining: 0,
+          claimed: 0,
+          total: DEFAULT_TOTAL,
+          isFallback: false,
+        });
+      }
+    }
+
+    void loadFoundingStatus();
+
+    return () => controller.abort();
   }, []);
 
   return data;

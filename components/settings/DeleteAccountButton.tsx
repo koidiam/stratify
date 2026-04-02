@@ -27,10 +27,10 @@ function DeleteSubmitButton() {
     <AlertDialogAction
       type="submit"
       form="delete-account-form"
-      variant="destructive"
+      className="rounded-sm bg-red-500 text-white hover:bg-red-600 font-bold uppercase tracking-widest text-[11px] h-10 border-none shadow-none"
       disabled={pending}
     >
-      {pending ? 'Siliniyor...' : 'Hesabi Sil'}
+      {pending ? 'Deleting...' : 'Confirm Deletion'}
     </AlertDialogAction>
   );
 }
@@ -40,25 +40,26 @@ export function DeleteAccountButton({ action }: Props) {
     <AlertDialog>
       <AlertDialogTrigger
         render={(
-          <Button variant="destructive" className="w-full justify-center bg-red-500/10 text-red-200 hover:bg-red-500/20" />
+          <Button className="w-full justify-center rounded-sm bg-red-500/5 text-red-500 hover:bg-red-500/10 border border-red-500/20 font-bold uppercase tracking-widest text-[11px] h-10 shadow-none transition-colors" />
         )}
       >
-        Hesabi Sil
+        Delete Account
       </AlertDialogTrigger>
-      <AlertDialogContent className="border-destructive/20 bg-background text-foreground shadow-2xl">
-        <AlertDialogHeader>
-          <AlertDialogMedia className="bg-destructive/10 text-destructive">
-            <AlertTriangle className="h-5 w-5" />
-          </AlertDialogMedia>
-          <AlertDialogTitle className="text-foreground">Hesabı Kalıcı Olarak Sil</AlertDialogTitle>
-          <AlertDialogDescription className="text-muted-foreground">
-            Bu işlem geri alınamaz. Profilin, onboarding verin, içerik geçmişin ve feedback
-            kayıtların tamamen silinir.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="border-t border-border bg-secondary/30 mt-4 -mx-6 -mb-6 px-6 py-4">
-          <AlertDialogCancel className="border-border bg-transparent text-foreground hover:bg-secondary">
-            Vazgec
+      <AlertDialogContent className="str-panel rounded-sm !border-red-500/30 bg-[#050505] text-white shadow-2xl p-0 overflow-hidden">
+        <div className="p-6">
+          <AlertDialogHeader>
+            <AlertDialogMedia className="bg-red-500/10 text-red-500 rounded-sm w-12 h-12 flex items-center justify-center mb-4">
+              <AlertTriangle className="h-5 w-5" />
+            </AlertDialogMedia>
+            <AlertDialogTitle className="text-white uppercase tracking-widest text-sm font-bold">Permanent Deletion Warning</AlertDialogTitle>
+            <AlertDialogDescription className="text-red-500/70 text-xs font-light leading-relaxed mt-2">
+              This action cannot be undone. Your profile, settings, and generated history will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+        </div>
+        <AlertDialogFooter className="border-t border-red-500/10 bg-[#000000]/40 px-6 py-4">
+          <AlertDialogCancel className="rounded-sm border-white/10 bg-transparent text-white/50 hover:text-white hover:bg-white/5 font-bold uppercase tracking-widest text-[11px] h-10 shadow-none">
+            Cancel
           </AlertDialogCancel>
           <form id="delete-account-form" action={action}>
             <DeleteSubmitButton />

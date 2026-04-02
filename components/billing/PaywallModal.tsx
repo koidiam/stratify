@@ -28,48 +28,49 @@ export function PaywallModal({ open, onOpenChange, used, limit }: PaywallModalPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-card border-border rounded-[20px] p-6 shadow-lg">
-        <DialogHeader className="mb-6">
-          <DialogTitle className="text-xl font-semibold flex items-center gap-2">
-            <AlertCircle className="text-muted-foreground w-5 h-5" />
-            Weekly Limit Reached
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground pt-2 leading-relaxed">
-            You have used {used} of {limit} available weekly generations. Processing is currently paused.
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="max-w-md str-panel bg-[#050505] !border-amber-500/20 rounded-sm p-0 shadow-2xl overflow-hidden">
+        <div className="p-6">
+          <DialogHeader className="mb-6">
+            <DialogTitle className="text-sm font-bold tracking-widest uppercase text-amber-500 flex items-center gap-3">
+              <AlertCircle className="w-4 h-4" />
+              Usage Limit Reached
+            </DialogTitle>
+            <DialogDescription className="text-[11px] text-white/50 pt-2 leading-relaxed font-mono">
+              Paused: {used} / {limit} weekly queries used.<br/>Generation pipeline is currently locked.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="bg-secondary/40 border border-border/50 rounded-xl p-4 mb-6">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-            Paused Operations
+          <div className="border border-white/5 bg-white/[0.02] rounded-sm p-4 mb-6">
+            <div className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-4">
+              Paused Operations
+            </div>
+            <ul className="space-y-3">
+              {blockedStages.map((stage, i) => (
+                <li key={i} className="flex items-center text-[10px] font-mono text-white/50 uppercase tracking-widest">
+                  <Lock className="w-3 h-3 mr-3 text-amber-500/50" />
+                  {stage}
+                </li>
+              ))}
+            </ul>
           </div>
-          <ul className="space-y-2.5">
-            {blockedStages.map((stage, i) => (
-              <li key={i} className="flex items-center text-sm text-muted-foreground/80">
-                <Lock className="w-3.5 h-3.5 mr-2.5 opacity-60" />
-                {stage}
-              </li>
-            ))}
-          </ul>
+
+          <p className="text-[10px] font-mono text-emerald-500/80 uppercase tracking-widest mb-2">
+            To resume access, expand your license tier in Settings.
+          </p>
         </div>
 
-        <p className="text-sm text-muted-foreground mb-6">
-          To continue this week, review your plan options in Settings.
-        </p>
-
-        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 pt-4 border-t border-border/50">
+        <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-3 px-6 py-4 border-t border-white/5 bg-[#000000]/40">
           <Button
-            variant="ghost"
-            className="w-full sm:w-auto text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+            className="w-full sm:w-auto text-[9px] uppercase tracking-widest font-bold h-9 rounded-sm bg-transparent border border-transparent text-white/40 hover:text-white hover:bg-white/5 shadow-none"
             onClick={() => onOpenChange(false)}
           >
             Close
           </Button>
           <Button
-            className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+            className="w-full sm:w-auto text-[9px] uppercase tracking-widest font-bold h-9 rounded-sm bg-white text-black hover:bg-white/90 shadow-none border border-transparent"
             onClick={handleUpgradeNavigation}
           >
-            Go to Settings
+            View Settings
           </Button>
         </div>
       </DialogContent>

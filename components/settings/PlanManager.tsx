@@ -40,9 +40,9 @@ export function PlanManager({ currentPlan }: { currentPlan: string }) {
        <Button 
          onClick={() => handleCheckout('basic')} 
          disabled={loading !== null || currentPlan === 'basic' || currentPlan === 'pro'}
-         className={`font-medium ${currentPlan === 'basic' ? 'bg-primary/50 text-white cursor-default' : 'bg-primary hover:bg-primary/90 text-primary-foreground'}`}
+         className={`h-10 rounded-sm font-bold uppercase tracking-widest text-[11px] shadow-none transition-all ${currentPlan === 'basic' ? 'bg-white/5 text-white/40 cursor-default' : 'bg-white hover:bg-white/90 text-black'}`}
        >
-         {loading === 'basic' ? 'Redirecting...' : currentPlan === 'basic' ? 'Current Plan: Basic' : 'Upgrade to Basic'}
+         {loading === 'basic' ? 'Processing...' : currentPlan === 'basic' ? 'Current: Basic' : 'Select Basic'}
        </Button>
 
        {/* PRO CHECKOUT BUTTON */}
@@ -50,9 +50,9 @@ export function PlanManager({ currentPlan }: { currentPlan: string }) {
          onClick={() => handleCheckout('pro')} 
          disabled={loading !== null || currentPlan === 'pro'} 
          variant="outline" 
-         className={`border-border font-medium ${currentPlan === 'pro' ? 'cursor-default text-primary border-primary/50' : 'text-foreground hover:bg-secondary'}`}
+         className={`h-10 rounded-sm font-bold uppercase tracking-widest text-[11px] shadow-none border border-white/10 transition-colors ${currentPlan === 'pro' ? 'cursor-default text-emerald-500 border-emerald-500/20 bg-emerald-500/5' : 'text-white hover:bg-white/5 bg-transparent'}`}
        >
-         {loading === 'pro' ? 'Redirecting...' : currentPlan === 'pro' ? 'Current Plan: Pro' : 'Upgrade to Pro'}
+         {loading === 'pro' ? 'Processing...' : currentPlan === 'pro' ? 'Current: Pro' : 'Select Pro'}
        </Button>
     </div>
   );

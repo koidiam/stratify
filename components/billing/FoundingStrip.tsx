@@ -1,4 +1,4 @@
-import { Sparkles, Users, Loader2 } from 'lucide-react';
+import { Sparkles, Users } from 'lucide-react';
 import { FoundingStatusType } from '@/hooks/useFoundingStatus';
 
 interface FoundingStripProps {
@@ -7,9 +7,17 @@ interface FoundingStripProps {
   claimed: number;
   total: number;
   isYearly?: boolean;
+  isFallback?: boolean;
 }
 
-export function FoundingStrip({ plan, status, claimed, total, isYearly = false }: FoundingStripProps) {
+export function FoundingStrip({
+  plan,
+  status,
+  claimed,
+  total,
+  isYearly = false,
+  isFallback = false,
+}: FoundingStripProps) {
   if (status === 'loading') {
     // Silent height-matched skeleton instead of "Checking availability" UI
     return (
@@ -21,14 +29,15 @@ export function FoundingStrip({ plan, status, claimed, total, isYearly = false }
   const isAvailable = status === 'available';
   const isSoldOut = status === 'sold_out';
   const isError = status === 'error';
+  const isPreviewFallback = isFallback && !isError;
 
-  // If sold out, force max fill. If error, don't show dynamic fill just empty state.
-  const percentage = isSoldOut ? 100 : isError ? 0 : (claimed / total) * 100;
+  // If sold out, force max fill. If error or preview fallback, don't imply live scarcity.
+  const percentage = isSoldOut ? 100 : isError || isPreviewFallback ? 0 : (claimed / total) * 100;
 
   return (
     <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4 relative overflow-hidden shadow-sm">
       <div 
-        className={`absolute top-0 left-0 bottom-0 bg-primary/10 transition-all duration-1000 ease-in-out ${isSoldOut ? 'opacity-50 grayscale' : ''}`}
+        className={`absolute bottom-0 left-0 top-0 bg-primary/10 transition-[width] duration-700 ease-out ${isSoldOut ? 'opacity-50 grayscale' : ''}`}
         style={{ width: `${percentage}%` }}
       />
       
@@ -41,9 +50,9 @@ export function FoundingStrip({ plan, status, claimed, total, isYearly = false }
             </span>
           </div>
           {!isError && (
-            <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-background/60 rounded-full px-2.5 py-1 tracking-tight backdrop-blur-sm">
+            <div className="flex items-center gap-1.5 rounded-full bg-background/60 px-2.5 py-1 text-xs font-semibold tracking-tight text-muted-foreground">
               <Users className="h-3 w-3" />
-              {isSoldOut ? `${total} / ${total}` : `${claimed} / ${total}`} Claimed
+              {isPreviewFallback ? `-- / ${total}` : isSoldOut ? `${total} / ${total}` : `${claimed} / ${total}`} Claimed
             </div>
           )}
         </div>
@@ -53,8 +62,16 @@ export function FoundingStrip({ plan, status, claimed, total, isYearly = false }
             ? `All ${total} spots have been claimed. Regular pricing applies.`
             : isError 
             ? `Founding availability temporarily unavailable.`
+            : isPreviewFallback
+            ? `Availability will appear here once founding access is configured.`
             : `Only ${Math.max(0, total - claimed)} spots left. Lock in early-adopter pricing forever.`}
         </p>
+
+        {isPreviewFallback && (
+          <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
+            Preview data
+          </p>
+        )}
         
         <div className="flex items-baseline gap-2 mt-auto">
           <span className={`text-2xl font-bold tracking-tight ${isAvailable || isError ? 'text-foreground' : 'text-muted-foreground line-through opacity-70'}`}>

@@ -49,6 +49,20 @@ function classifyHookType(text: string): string {
   return 'Authority';
 }
 
+function assessHookStrength(text: string): 'High' | 'Medium' | 'Low' {
+  let score = 0;
+  if (text.length >= 15 && text.length <= 80) score++;
+  if (/\d+|%/.test(text)) score++;
+  if (/stop|never|don't|quit|wrong|secret|exactly|proven|truth|real|actually/i.test(text)) score++;
+  if (/\?|:|\d+\s/.test(text)) score++;
+  if (!/just|maybe|kind of|sort of|basically/i.test(text)) score++;
+  if (score >= 4) return 'High';
+  if (score >= 2) return 'Medium';
+  return 'Low';
+}
+
+const STRENGTH_BARS: Record<string, number> = { 'High': 3, 'Medium': 2, 'Low': 1 };
+
 export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onRefine, onBack, userPlan, weekNumber, year, dataSource }: Props) {
   const [copiedHookIndex, setCopiedHookIndex] = useState<number | null>(null);
   const [copiedPostIndex, setCopiedPostIndex] = useState<number | null>(null);
@@ -83,50 +97,75 @@ export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onR
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="rounded-[24px] border border-border bg-card p-6 lg:p-8">
-        <h2 className="text-xl font-semibold text-foreground">Content Ideas & Hooks</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          Attention-grabbing openings, alternative content angles, and customizable final drafts 
-          generated specifically for your niche context.
-        </p>
-        <div className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-primary/70">
-          <CheckCircle2 className="h-3 w-3" />
-          Patterns mapped to content strategy · {hooks.length} hooks · {posts.length} drafts
+      <div className="str-panel rounded-sm p-6 lg:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 border-l-4 border-l-emerald-500">
+        <div>
+          <h2 className="text-xl font-bold tracking-tight text-white">Generation Workbench</h2>
+          <p className="mt-2 text-sm text-white/50 max-w-xl font-light">
+            Hook structures and draft bodies synthesized from extracted signals. 
+            Proceed with sequence or initiate automated refinement.
+          </p>
+        </div>
+        <div className="flex flex-col items-start md:items-end gap-1.5 focus:outline-none">
+          <div className="str-mono text-emerald-500/80">
+            <CheckCircle2 className="inline-block h-3 w-3 mr-1 mb-0.5" />
+            Analysis Complete
+          </div>
+          <div className="str-mono text-white/40">
+            {hooks.length} HOOKS · {posts.length} DRAFTS
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="rounded-[20px] border border-border bg-card shadow-sm p-6">
-          <h3 className="mb-4 flex items-center gap-2 font-semibold text-foreground">
-            <Hash className="text-primary" size={16} />
-            Strong Hooks
+        <div className="str-panel rounded-sm p-6">
+          <h3 className="mb-4 flex items-center gap-2 font-bold text-white uppercase text-sm tracking-widest">
+            <Hash className="text-emerald-500" size={14} />
+            Hook Layer
           </h3>
           <ul className="space-y-3">
             {hooks.map((hook, index) => {
               const hookType = classifyHookType(hook);
-              const badgeStyle = HOOK_TYPE_STYLES[hookType] ?? HOOK_TYPE_STYLES['Authority'];
+              const strength = assessHookStrength(hook);
+              const bars = STRENGTH_BARS[strength];
 
               return (
                 <li
                   key={index}
-                  className="rounded-xl border border-border bg-secondary p-4 text-sm leading-relaxed text-foreground transition-colors hover:border-primary/30"
+                  className="rounded-sm border border-white/10 bg-white/[0.02] hover:border-white/20 p-4 text-sm leading-relaxed transition-colors relative group text-white/90 font-light"
                 >
-                  <span className={`mb-2.5 inline-flex items-center rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest ${badgeStyle}`}>
-                    Hook Type: {hookType}
-                  </span>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="block text-[9px] font-bold uppercase tracking-widest text-emerald-500/60">
+                      TYPE: {hookType}
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm bg-white/5 text-white/40">
+                      Option {String(index + 1).padStart(2, '0')}
+                    </span>
+                  </div>
                   <p>{hook}</p>
+                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
+                    <div className="flex items-center gap-2">
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3].map((i) => (
+                          <div key={i} className={`w-3 h-1 rounded-[1px] ${i <= bars ? 'bg-white/50' : 'bg-white/10'}`} />
+                        ))}
+                      </div>
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-white/40">
+                        {strength}
+                      </span>
+                    </div>
+                    <span className="text-[9px] text-white/20">structure estimate</span>
+                  </div>
                   <Button
                     onClick={() => handleCopy(hook, 'hook', index)}
                     variant="ghost"
                     size="sm"
-                    className="mt-3 px-2 h-8 text-primary hover:bg-secondary hover:text-primary transition-colors"
+                    className="absolute top-8 right-2 px-2 h-7 text-white/40 hover:bg-white/10 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
                   >
                     {copiedHookIndex === index ? (
-                      <Check className="mr-1.5 h-3.5 w-3.5" />
+                      <Check className="h-3.5 w-3.5 text-emerald-500" />
                     ) : (
-                      <Copy className="mr-1.5 h-3.5 w-3.5" />
+                      <Copy className="h-3.5 w-3.5" />
                     )}
-                    {copiedHookIndex === index ? 'Copied' : 'Copy'}
                   </Button>
                 </li>
               );
@@ -134,58 +173,63 @@ export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onR
           </ul>
         </div>
 
-        <div className="rounded-[20px] border border-border bg-card shadow-sm p-6">
-          <h3 className="mb-4 flex items-center gap-2 font-semibold text-foreground">
-            <LightbulbIcon className="text-yellow-500/80" size={16} />
+        <div className="str-panel rounded-sm p-6 flex flex-col">
+          <h3 className="mb-4 flex items-center gap-2 font-bold text-white uppercase text-sm tracking-widest">
+            <LightbulbIcon className="text-amber-500/80" size={14} />
             Alternative Ideas
           </h3>
-          <ul className="space-y-3">
+          <ul className="space-y-3 flex-1 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - 400px)' }}>
             {ideas.slice(0, 5).map((idea, index) => (
-              <li key={index} className="rounded-xl border border-border bg-secondary p-4 text-sm leading-relaxed text-foreground">
-                <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-yellow-500/80">{idea.type}</span>
-                {idea.idea}
+              <li key={index} className="rounded-sm border border-white/10 bg-white/[0.02] p-4 text-sm leading-relaxed text-white/90">
+                <span className="mb-2 block text-[9px] font-bold uppercase tracking-widest text-amber-500/60 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-amber-500/50 rounded-full" />
+                  {idea.type}
+                </span>
+                <p className="font-light">{idea.idea}</p>
               </li>
             ))}
           </ul>
         </div>
       </div>
 
-      <div>
-        <h2 className="mb-2 text-xl font-semibold text-foreground">Ready-to-publish Drafts</h2>
-        <p className="mb-6 text-sm leading-relaxed text-muted-foreground">
-          Select a draft below to edit, copy directly, or link metrics to it 
-          after you publish it on LinkedIn.
+      <div className="pt-4 border-t border-white/10">
+        <h2 className="mb-2 text-sm font-bold uppercase tracking-widest text-white">Draft Sequences</h2>
+        <p className="mb-6 text-sm leading-relaxed text-white/50 font-light max-w-2xl">
+          Select a draft block to enter editor mode, duplicate to clipboard, or track published trajectory.
         </p>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           {posts.map((post, index) => (
-            <Card key={index} className="flex flex-col justify-between rounded-[20px] border-border bg-card shadow-sm p-6 transition-colors hover:border-primary/30">
+            <Card key={index} className="flex flex-col justify-between rounded-sm str-panel p-5 transition-colors hover:border-white/20 group">
               <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <span className="rounded-md bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+                <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3">
+                  <span className="str-mono text-white/60">Draft Set 0{index + 1}</span>
+                  <span className="str-mono text-emerald-500/80 bg-emerald-500/10 px-2 py-0.5 rounded-sm">
                     {post.type}
                   </span>
                 </div>
-                <div className="mb-5 line-clamp-6 whitespace-pre-wrap font-mono text-[13px] leading-relaxed text-foreground">
+                <div className="mb-6 line-clamp-6 whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-white/90">
                   {post.content}
                 </div>
-                <div className="mb-4 rounded-xl border border-border bg-secondary p-3.5 text-xs leading-relaxed text-muted-foreground">
-                  <span className="mb-1.5 block font-bold text-[10px] uppercase tracking-wider text-muted-foreground">Strategy Note</span>
-                  {post.explanation}
+                <div className="mb-4 pt-3 border-t border-white/5">
+                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-widest text-white/40">Why this works</span>
+                  <div className="text-xs leading-relaxed text-white/60 font-light">
+                    {post.explanation}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 space-y-2.5">
+              <div className="mt-4 pt-4 border-t border-white/10 space-y-3 flex flex-col justify-end">
                 <div className="grid grid-cols-2 gap-2">
                   <Button
                     onClick={() => handleCopy(post.content, 'post', index)}
                     variant="outline"
-                    className="border-border bg-transparent text-foreground hover:bg-secondary"
+                    className="border-white/10 bg-transparent text-white/80 hover:bg-white/5 hover:text-white rounded-sm text-xs font-mono uppercase tracking-wider h-8"
                   >
                     {copiedPostIndex === index ? (
-                      <Check className="mr-2 h-3.5 w-3.5" />
+                      <Check className="h-3.5 w-3.5 mr-1 text-emerald-500" />
                     ) : (
-                      <Copy className="mr-2 h-3.5 w-3.5" />
+                      <Copy className="h-3.5 w-3.5 mr-1" />
                     )}
                     {copiedPostIndex === index ? 'Copied' : 'Copy'}
                   </Button>
@@ -193,7 +237,7 @@ export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onR
                     <Button
                       onClick={() => setFeedbackPostIndex(index)}
                       variant="outline"
-                      className="border-border bg-transparent text-foreground hover:bg-secondary font-medium"
+                      className="border-white/10 bg-transparent text-white/80 hover:bg-white/5 hover:text-white rounded-sm text-xs font-mono uppercase tracking-wider h-8"
                     >
                       Metrics
                     </Button>
@@ -201,38 +245,36 @@ export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onR
                     <Button
                       onClick={() => setFeedbackPostIndex(index)}
                       variant="outline"
-                      className="border-amber-500/30 bg-amber-500/5 text-amber-600 hover:bg-amber-500/10 font-medium"
+                      className="border-amber-500/30 bg-amber-500/5 text-amber-500 hover:bg-amber-500/10 rounded-sm text-xs font-mono uppercase tracking-wider h-8"
                     >
-                      <Lock className="mr-1.5 h-3.5 w-3.5 opacity-70" />
-                      Metrics (Pro)
+                      <Lock className="mr-1 h-3 w-3 opacity-70" />
+                      Metrics
                     </Button>
                   )}
                 </div>
 
                 <Button
                   onClick={() => onSelectPost(post.content, index)}
-                  className="w-full rounded-lg bg-primary text-primary-foreground transition-all hover:bg-primary/90 font-medium"
+                  className="w-full rounded-sm bg-white text-black transition-all hover:bg-white/90 text-xs font-bold uppercase tracking-widest h-9"
                 >
-                  Edit Draft
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  Edit Artifact
+                  <ArrowRight className="ml-2 h-3.5 w-3.5" />
                 </Button>
 
-                <div className="flex flex-col mt-3 pt-3 border-t border-border">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-                    Refine:
-                  </span>
+                <div className="flex flex-col mt-4 pt-4 border-t border-white/10">
+                  <span className="str-mono text-white/40 mb-2">AUTO_REFINE:</span>
                   <div className="flex overflow-x-auto whitespace-nowrap gap-2 hide-scrollbar pb-1">
                   {[
-                    { label: 'Shorter', prompt: 'Make this post shorter. Keep the core message.' },
-                    { label: 'More direct', prompt: 'Make this post more direct and punchy.' },
-                    { label: 'More personal', prompt: 'Make this post more personal and conversational.' },
-                    { label: 'Add a question', prompt: 'Add an engaging question at the end of this post.' },
+                    { label: 'Condense', prompt: 'Make this post shorter. Keep the core message.' },
+                    { label: 'Direct', prompt: 'Make this post more direct and punchy.' },
+                    { label: 'Casual', prompt: 'Make this post more personal and conversational.' },
+                    { label: 'Ask', prompt: 'Add an engaging question at the end of this post.' },
                   ].map((action) => (
                     <button
                       key={action.label}
                       type="button"
                       onClick={() => onRefine(action.prompt, index)}
-                      className="flex-shrink-0 rounded-full border border-border bg-secondary px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/40 transition-all"
+                      className="flex-shrink-0 border border-white/10 bg-white/[0.02] px-3 py-1 text-[10px] font-mono text-white/60 hover:text-white hover:bg-white/10 transition-all uppercase tracking-wider rounded-sm"
                     >
                       {action.label}
                     </button>
@@ -240,9 +282,12 @@ export function ContentHooks({ historyId, hooks, ideas, posts, onSelectPost, onR
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-border">
-                  <span className="text-[10px] text-muted-foreground/50 font-medium tracking-wide">
-                    Source: {sourceLabel} · {post.type} format · {timeLabel}
+                <div className="flex justify-between items-center pt-2">
+                  <span className="str-mono text-white/30 truncate">
+                    {sourceLabel}
+                  </span>
+                  <span className="str-mono text-white/30">
+                    {timeLabel}
                   </span>
                 </div>
               </div>

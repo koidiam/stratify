@@ -60,19 +60,16 @@ export function OnboardingWizard() {
     <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
       
       {/* Container Card */}
-      <div className="w-full bg-card/40 backdrop-blur-md border border-white/5 rounded-[24px] shadow-2xl overflow-hidden p-6 md:p-10 relative">
+      <div className="w-full str-panel rounded-sm shadow-none overflow-hidden p-6 md:p-10 relative">
         
-        {/* Subtle Ambient Light instead of heavy blue glow */}
-        <div className="absolute top-10 right-10 w-[200px] h-[200px] bg-primary/10 rounded-full blur-[80px] pointer-events-none -z-10 mix-blend-screen" />
-
-        <div className="flex items-center justify-between mb-10">
-          <div className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-widest">
+        <div className="flex items-center justify-between mb-10 border-b border-white/5 pb-6">
+          <div className="text-[10px] font-bold text-white/50 uppercase tracking-widest font-mono">
             Step 0{step} / 05
           </div>
           <div className="w-2/3 max-w-[200px]">
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+            <div className="h-1 w-full overflow-hidden rounded-full bg-white/5">
               <div
-                className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+                className="h-full bg-emerald-500 transition-[width] duration-500 ease-out"
                 style={{ width: `${(step / 5) * 100}%` }}
               />
             </div>
@@ -126,25 +123,25 @@ export function OnboardingWizard() {
                 <button
                   type="button"
                   onClick={() => setStep(4)}
-                  className="px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                  className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white/50 hover:text-white transition-colors"
                 >
-                  ← Back
+                  ← BACK
                 </button>
                 <button
                   type="button"
                   onClick={handleFinish}
                   disabled={!data.goal || loading}
-                  className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-lg hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:pointer-events-none"
+                  className="rounded-sm bg-white hover:bg-white/90 text-black h-10 px-6 text-[10px] uppercase font-bold tracking-widest transition-all disabled:opacity-50 flex items-center"
                 >
-                  {loading ? 'Finalizing Profile...' : 'Complete Setup'}
+                  {loading ? 'Processing...' : 'Complete Configuration'}
                 </button>
               </div>
             </div>
           )}
         </div>
       </div>
-      <div className="mt-8 text-center text-muted-foreground text-[11px] font-medium opacity-80 uppercase tracking-wide">
-        🔒 Your data is fully encrypted and never shared externally.
+      <div className="mt-8 text-center text-white/40 text-[9px] font-mono opacity-80 uppercase tracking-widest">
+        ENCRYPTED_AND_SECURE
       </div>
     </div>
   );
