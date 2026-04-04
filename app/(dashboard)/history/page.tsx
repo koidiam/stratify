@@ -1,22 +1,33 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { BarChart3, ChevronDown } from 'lucide-react';
+import { ChevronDown, Lock } from 'lucide-react';
+import { LiveStatus } from '@/components/system/LiveStatus';
+import { HISTORY_LOCK_MESSAGE } from '@/lib/constants/plan-copy';
 import { createClient } from '@/lib/supabase/server';
-import { Button } from '@/components/ui/button';
+import {
+  formatLongDate,
+  formatShortDate,
+  getCycleImplication,
+  getCycleLeadSignal,
+  getCycleOutputSummary,
+  getCycleSignalStrength,
+  getDominantPostType,
+  type StoredCycleRecord,
+} from '@/lib/utils/history';
+import {
+  buildLearningSummary,
+  formatPathTypeLabel,
+  getCycleLearningSnapshot,
+  type StoredFeedbackRecord,
+} from '@/lib/utils/learning';
+import { getISOWeek } from '@/lib/utils/week';
 
-interface HistoryRecord {
-  id: string;
-  week_number: number;
-  year: number;
-  hooks: string[] | null;
-  insights: Array<{ insight: string; why: string; trigger: string }> | null;
-  posts: Array<{ content: string; type: string; explanation?: string }> | null;
-  created_at: string;
-}
+function truncateText(value: string, limit: number = 180): string {
+  if (value.length <= limit) {
+    return value;
+  }
 
-interface FeedbackRecord {
-  history_id: string;
-  created_at: string;
+  return `${value.slice(0, limit).trimEnd()}...`;
 }
 
 export default async function HistoryPage() {
@@ -33,24 +44,35 @@ export default async function HistoryPage() {
     .eq('id', session.user.id)
     .maybeSingle();
 
-  const plan = profile?.plan === 'basic' || profile?.plan === 'pro' ? profile.plan : 'free';
+  const plan =
+    profile?.plan === 'basic' || profile?.plan === 'pro' ? profile.plan : 'free';
 
   const { data: history, error } = await supabase
     .from('content_history')
-    .select('*')
+    .select('id, week_number, year, insights, hooks, posts, created_at')
     .eq('user_id', session.user.id)
     .order('created_at', { ascending: false });
 
   const { data: feedback } = await supabase
     .from('post_feedback')
-    .select('history_id, created_at')
+    .select('history_id, post_index, views, likes, comments, reposts, notes, created_at')
     .eq('user_id', session.user.id)
     .order('created_at', { ascending: false });
 
-  const historyRecords = (history ?? []) as HistoryRecord[];
-  const feedbackRecords = (feedback ?? []) as FeedbackRecord[];
+  const historyRecords = (history ?? []) as StoredCycleRecord[];
+  const feedbackRecords = (feedback ?? []) as StoredFeedbackRecord[];
+  const { week, year } = getISOWeek();
+  const currentWeekRecord =
+    historyRecords.find(
+      (record) => record.week_number === week && record.year === year
+    ) ?? null;
+  const accessibleRecords = plan === 'free' ? historyRecords.slice(0, 1) : historyRecords;
+  const lockedRecords = plan === 'free' ? historyRecords.slice(1) : [];
+  const learningSummary = buildLearningSummary(historyRecords, feedbackRecords);
 
-  const feedbackSummary = feedbackRecords.reduce<Record<string, { count: number; lastSubmittedAt: string }>>((acc, item) => {
+  const feedbackSummary = feedbackRecords.reduce<
+    Record<string, { count: number; lastSubmittedAt: string }>
+  >((acc, item) => {
     const current = acc[item.history_id];
 
     acc[item.history_id] = {
@@ -61,135 +83,399 @@ export default async function HistoryPage() {
     return acc;
   }, {});
 
+  const learningStatusLabel =
+    learningSummary.status === 'directional'
+      ? 'Directional learning live'
+      : learningSummary.status === 'early'
+        ? 'Early learning live'
+        : 'Learning idle';
+
+  const performanceGapNote =
+    learningSummary.feedbackEntryCount === 0
+      ? 'Log reviewed post results to compare cycles.'
+      : learningSummary.comparisonBasis === 'insufficient'
+        ? 'Log reviewed posts across more cycles to compare gaps.'
+        : learningSummary.latestOperatorNote
+          ? `Latest operator note: ${learningSummary.latestOperatorNote}`
+          : `Keep logging reviewed results to sharpen the layer beyond ${learningSummary.annotatedCycleCount} annotated cycle${learningSummary.annotatedCycleCount === 1 ? '' : 's'}.`;
+
+  const learningCells = [
+    {
+      label: 'Stronger patterns',
+      value: learningSummary.strongestType
+        ? `${formatPathTypeLabel(learningSummary.strongestType)} paths`
+        : 'Awaiting results',
+      detail:
+        learningSummary.bestPerformanceNote ??
+        'Log reviewed posts to surface stronger patterns.',
+    },
+    {
+      label: 'Weaker patterns',
+      value: learningSummary.weakestType
+        ? `${formatPathTypeLabel(learningSummary.weakestType)} paths`
+        : 'Need more cycles',
+      detail:
+        learningSummary.cautionNote ??
+        'The system needs more reviewed cycles before it can call a weaker pattern.',
+    },
+    {
+      label: 'Drift detection',
+      value:
+        learningSummary.driftStatus === 'repeating'
+          ? 'Repeated bias detected'
+        : learningSummary.driftStatus === 'emerging'
+            ? 'Drift emerging'
+            : 'Watch more cycles',
+      detail:
+        learningSummary.driftNote ??
+        'Drift appears after repeated cycle behavior, not a single run.',
+    },
+    {
+      label: 'Performance gaps',
+      value:
+        learningSummary.feedbackEntryCount === 0
+          ? 'Review posts first'
+          : `${learningSummary.feedbackEntryCount} reviewed post${learningSummary.feedbackEntryCount === 1 ? '' : 's'}`,
+      detail: performanceGapNote,
+    },
+  ];
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-white uppercase">Generation_History</h1>
-        <p className="text-white/50 mt-2 text-sm leading-relaxed font-light">Your strategy archives and performance notes from previous iterations.</p>
-      </div>
+    <div className="mx-auto flex max-w-6xl flex-col gap-8 animate-in fade-in duration-500">
+      <header className="flex flex-col gap-4 border-b border-white/5 pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/35">
+            History
+          </div>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+            System memory
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
+            Learning first. Timeline below.
+          </p>
+        </div>
 
-      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/42">
+          <span className="rounded-sm border border-white/10 px-2.5 py-1">
+            {currentWeekRecord ? `Week ${week}, ${year} stored` : `Week ${week}, ${year} open`}
+          </span>
+          <span className="rounded-sm border border-white/10 px-2.5 py-1">
+            {historyRecords.length} retained cycle{historyRecords.length === 1 ? '' : 's'}
+          </span>
+          {lockedRecords.length > 0 && (
+            <span className="rounded-sm border border-white/10 px-2.5 py-1">
+              {lockedRecords.length} protected
+            </span>
+          )}
+        </div>
+      </header>
+
+      <section className="str-elevated rounded-sm border border-white/10 bg-[#020202] p-6">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
+              Learning layer
+            </div>
+            <h2 className="mt-2 text-2xl font-medium text-white">
+              System learning
+            </h2>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <LiveStatus
+                label="Memory updated"
+                timestamp={historyRecords[0]?.created_at ?? null}
+                fallback="No cycle signal"
+                justNowLabel="Memory updated just now"
+                pulse={Boolean(historyRecords[0]?.created_at)}
+              />
+              <LiveStatus
+                label="Feedback synced"
+                timestamp={learningSummary.lastFeedbackAt}
+                fallback="No feedback signal"
+                justNowLabel="Feedback synced just now"
+              />
+            </div>
+          </div>
+
+          <div className="rounded-sm border border-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
+            {learningStatusLabel}
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-px overflow-hidden rounded-sm border border-white/10 bg-white/10 md:grid-cols-2">
+          {learningCells.map((cell) => (
+            <div key={cell.label} className="str-surface-interactive bg-[#020202] p-4">
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/32">
+                {cell.label}
+              </div>
+              <p className="mt-3 text-base font-medium text-white">
+                {cell.value}
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-white/50">
+                {cell.detail}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
+              Memory timeline
+            </div>
+            <h2 className="mt-2 text-2xl font-medium text-white">
+              Retained weekly cycles
+            </h2>
+          </div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-white/42">
+            {historyRecords.length === 0
+              ? 'Timeline empty'
+              : `${accessibleRecords.length} cycle${accessibleRecords.length === 1 ? '' : 's'} visible`}
+          </div>
+        </div>
+
         {!error && historyRecords.length > 0 ? (
-          historyRecords.map((record, index) => {
-            const isLocked = plan === 'free' && index > 0;
+          <div className="str-elevated overflow-hidden rounded-sm border border-white/10 bg-[#020202]">
+            {accessibleRecords.map((record, index) => {
+              const isCurrentCycle =
+                record.week_number === week && record.year === year;
+              const historyIndex = historyRecords.findIndex((item) => item.id === record.id);
+              const followingCycle =
+                historyIndex > 0 ? historyRecords[historyIndex - 1] ?? null : null;
+              const cycleFeedback = feedbackSummary[record.id];
+              const cycleLearning = getCycleLearningSnapshot(
+                record,
+                feedbackRecords,
+                followingCycle
+              );
+              const leadSignal = truncateText(getCycleLeadSignal(record.insights), 170);
+              const implication = truncateText(getCycleImplication(record.insights), 160);
+              const signalStrength = getCycleSignalStrength(record.insights);
+              const dominantPath = getDominantPostType(record.posts);
 
-            if (isLocked) {
               return (
-                <div key={record.id} className="relative group overflow-hidden rounded-sm str-panel p-5 blur-[2px] opacity-70 cursor-not-allowed">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <div className="text-lg font-semibold text-foreground tracking-tight">Week {record.week_number}, {record.year}</div>
-                      <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                        <span className="font-medium">{record.insights?.length ?? 0} insights</span>
-                        <span className="font-medium">{record.posts?.length ?? 0} posts</span>
+                <details
+                  key={record.id}
+                  open={index === 0}
+                  className="group border-b border-white/10 last:border-b-0"
+                >
+                  <summary className="list-none cursor-pointer px-5 py-5">
+                    <div className="str-surface-interactive grid gap-4 rounded-sm px-1 py-1 lg:grid-cols-[140px_minmax(0,1fr)_150px] lg:items-start">
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/32">
+                          {isCurrentCycle ? 'Current cycle' : index === 0 ? 'Latest cycle' : 'Stored cycle'}
+                        </div>
+                        <div className="mt-2 text-lg font-medium text-white">
+                          Week {record.week_number}, {record.year}
+                        </div>
+                        <div className="mt-2 text-[11px] text-white/42">
+                          {formatLongDate(record.created_at)}
+                        </div>
+                      </div>
+
+                      <div>
+                        <p className="text-sm leading-relaxed text-white">
+                          {leadSignal}
+                        </p>
+                      </div>
+
+                      <div className="space-y-2 lg:text-right">
+                        <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/36 lg:justify-end">
+                          <span>{record.insights?.length ?? 0} signals</span>
+                          <span>{record.hooks?.length ?? 0} hooks</span>
+                          <span>{record.posts?.length ?? 0} drafts</span>
+                          {signalStrength && <span>{signalStrength} signal</span>}
+                        </div>
+                        <div className="text-[12px] text-white/50">
+                          {dominantPath ?? getCycleOutputSummary(record.hooks, record.posts)}
+                        </div>
+                        <div className="flex items-center gap-2 text-[11px] text-white/45 lg:justify-end">
+                          <span>Expand cycle</span>
+                          <ChevronDown className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
+                        </div>
+                      </div>
+                    </div>
+                  </summary>
+
+                  <div className="border-t border-white/10 px-5 py-6">
+                    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_240px]">
+                      <div className="space-y-3">
+                        <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/28">
+                          Signal memory
+                        </div>
+                        <p className="text-sm leading-relaxed text-white/86">{leadSignal}</p>
+                        <p className="text-[12px] leading-relaxed text-white/48">{implication}</p>
+                        <div className="space-y-4 border-l border-white/5 pl-4">
+                          {(record.insights ?? []).slice(0, 3).map((item, insightIndex) => (
+                            <div key={`${record.id}-insight-${insightIndex}`}>
+                              <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">
+                                Signal {insightIndex + 1}
+                              </div>
+                              <p className="mt-1 text-[12px] leading-relaxed text-white/72">
+                                {item.pattern || item.insight || 'Stored signal summary unavailable.'}
+                              </p>
+                              <p className="mt-1 text-[11px] leading-relaxed text-white/42">
+                                {item.implication || item.recommended_move || item.why || 'No additional implication note is attached.'}
+                              </p>
+                            </div>
+                          ))}
+
+                          {(record.insights ?? []).length === 0 && (
+                            <p className="text-sm leading-relaxed text-white/50">
+                              No retained signal layer is attached to this cycle.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">
+                            Recommended move
+                          </div>
+                          <p className="mt-1 text-[12px] leading-relaxed text-white/66">
+                            {truncateText(getCycleImplication(record.insights), 180)}
+                          </p>
+                        </div>
+                        <div>
+                          <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">
+                            Output bias
+                          </div>
+                          <p className="mt-1 text-[12px] leading-relaxed text-white/48">
+                            {dominantPath ?? getCycleOutputSummary(record.hooks, record.posts)}
+                          </p>
+                        </div>
+                        <div>
+                          <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">
+                            Stored summary
+                          </div>
+                          <p className="mt-1 text-[12px] leading-relaxed text-white/48">
+                            {getCycleOutputSummary(record.hooks, record.posts)}
+                          </p>
+                        </div>
+                        <div>
+                          <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">
+                            Retained hooks
+                          </div>
+                          <div className="mt-1 space-y-1">
+                            {(record.hooks ?? []).slice(0, 3).map((hook, hookIndex) => (
+                              <p
+                                key={`${record.id}-hook-${hookIndex}`}
+                                className="text-[12px] leading-relaxed text-white/60"
+                              >
+                                {hook}
+                              </p>
+                            ))}
+                            {(record.hooks ?? []).length === 0 && (
+                              <p className="text-[11px] leading-relaxed text-white/40">
+                                No hooks retained.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4 border-t border-white/5 pt-4 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+                        <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/28">
+                          Cycle record
+                        </div>
+                        <div>
+                          <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">
+                            Feedback layer
+                          </div>
+                          <p className="mt-1 text-[12px] leading-relaxed text-white/66">
+                            {cycleFeedback
+                              ? `${cycleFeedback.count} feedback note${cycleFeedback.count === 1 ? '' : 's'} attached`
+                              : 'No feedback notes attached to this cycle yet.'}
+                          </p>
+                          <p className="mt-1 text-[11px] leading-relaxed text-white/42">
+                            {cycleFeedback?.lastSubmittedAt
+                              ? `Last sync ${formatShortDate(cycleFeedback.lastSubmittedAt)}`
+                              : 'Feedback continuity begins after the first reviewed post.'}
+                          </p>
+                        </div>
+                        <div>
+                          <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/28">
+                            Learning from this cycle
+                          </div>
+                          <p className="mt-1 text-[12px] leading-relaxed text-white/66">
+                            {cycleLearning.summary}
+                          </p>
+                          <p className="mt-1 text-[11px] leading-relaxed text-white/42">
+                            {cycleLearning.progressionNote ?? 'No following retained cycle exists yet to show the next shift.'}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  {index === 1 && (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm">
-                      <div className="text-3xl mb-2">🔒</div>
-                      <p className="text-sm font-semibold text-foreground bg-background px-4 py-2 rounded-full border border-border shadow-sm">Upgrade to Pro to access past weeks</p>
-                    </div>
-                  )}
-                </div>
+                </details>
               );
-            }
-
-            return (
-            <details
-              key={record.id}
-              open={index === 0}
-              className="group overflow-hidden rounded-sm str-panel transition-colors hover:border-white/20"
-            >
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 outline-none focus-visible:bg-white/[0.02]">
-                <div>
-                  <div className="text-lg font-bold text-white tracking-tight uppercase">
-                    W_{record.week_number}.{record.year}
-                  </div>
-                  <div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] font-mono uppercase tracking-widest text-emerald-500/80">
-                    <span>{record.insights?.length ?? 0} signals</span>
-                    <span className="text-white/20">|</span>
-                    <span>{record.posts?.length ?? 0} drafts</span>
-                    <span className="text-white/20">|</span>
-                    <span>{feedbackSummary[record.id]?.count ?? 0} metrics</span>
-                    <span className="text-white/20">|</span>
-                    <span className="text-white/40">{new Date(record.created_at).toLocaleDateString('en-US')}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 text-[10px] uppercase font-bold tracking-widest text-white/40 group-hover:text-white transition-colors">
-                  <span>View Details</span>
-                  <ChevronDown className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
-                </div>
-              </summary>
-
-              <div className="border-t border-white/10 px-6 py-6 bg-white/[0.01]">
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <div className="str-panel rounded-sm bg-white/[0.02] shadow-none p-5 border border-white/5">
-                    <div className="text-[9px] font-bold uppercase tracking-widest text-white/50 mb-4">Extracted Signals</div>
-                    <ul className="space-y-4 text-sm leading-relaxed text-white/80 font-light list-disc list-inside marker:text-emerald-500/50">
-                      {record.insights?.map((item, insightIndex) => (
-                        <li key={`${record.id}-insight-${insightIndex}`} className="pl-1">
-                          <span className="-ml-1">{item.insight}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="str-panel rounded-sm bg-white/[0.02] shadow-none p-5 border border-white/5">
-                    <div className="text-[9px] font-bold uppercase tracking-widest text-white/50 mb-4">Generated Hooks</div>
-                    <ul className="space-y-4 text-sm leading-relaxed text-white/80 font-light list-disc list-inside marker:text-emerald-500/50">
-                      {record.hooks?.map((hook, hookIndex) => (
-                        <li key={`${record.id}-hook-${hookIndex}`} className="pl-1">
-                          <span className="-ml-1">{hook}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="str-panel rounded-sm bg-white/[0.02] shadow-none p-5 border border-white/5">
-                    <div className="text-[9px] font-bold uppercase tracking-widest text-white/50 mb-4">Draft Artifacts</div>
-                    <div className="space-y-4">
-                      {record.posts?.map((post, postIndex) => (
-                        <div key={`${record.id}-post-${postIndex}`} className="rounded-sm border border-white/10 bg-[#000000]/40 p-3.5">
-                          <div className="mb-2 text-[9px] font-bold uppercase tracking-widest text-emerald-500/80">
-                            F_0{postIndex + 1}_{post.type.substring(0,4)}
-                          </div>
-                          <p className="line-clamp-4 whitespace-pre-wrap text-[11px] font-mono leading-relaxed text-white/70">
-                            {post.content}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-5 rounded-sm border border-emerald-500/20 bg-emerald-500/5 px-4 py-3.5 text-[11px] uppercase tracking-widest font-mono text-emerald-500/60 flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-emerald-500" />
-                  LAST_METRICS_SYNC:
-                  <span className="font-bold text-emerald-500">
-                    {feedbackSummary[record.id]?.lastSubmittedAt
-                      ? new Date(feedbackSummary[record.id].lastSubmittedAt).toLocaleDateString('en-US')
-                      : 'N/A'}
-                  </span>
-                </div>
-              </div>
-            </details>
-          )})
+            })}
+          </div>
         ) : error ? (
-          <div className="rounded-[24px] border border-dashed border-border bg-secondary/50 flex flex-col items-center justify-center min-h-[30vh] text-center p-8">
-            <p className="text-muted-foreground">History records are temporarily unavailable.</p>
+          <div className="rounded-sm border border-white/10 bg-[#020202] px-6 py-10 text-center text-white/58">
+            History records are temporarily unavailable.
           </div>
         ) : (
-          <div className="rounded-[24px] border border-dashed border-border bg-secondary/50 flex flex-col items-center justify-center min-h-[30vh] text-center p-8">
-            <p className="text-muted-foreground text-lg mb-2">You haven&apos;t generated any content yet.</p>
-            <Link href="/generate">
-               <Button variant="link" className="text-primary hover:text-primary/80">
-                 Run your first strategy engine
-               </Button>
-            </Link>
+          <div className="rounded-sm border border-white/10 bg-[#020202] px-6 py-10 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
+              Memory timeline empty
+            </div>
+            <p className="mt-3 text-lg text-white">Run the first cycle.</p>
+            <p className="mt-2 mx-auto max-w-2xl text-sm leading-relaxed text-white/58">
+              That creates memory and unlocks comparison and drift detection.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/generate"
+                className="str-cta inline-flex h-11 items-center justify-center rounded-sm bg-white px-5 text-[11px] font-bold uppercase tracking-widest text-black hover:bg-white/90"
+              >
+                Run first cycle
+              </Link>
+              <Link
+                href="/dashboard"
+                className="str-soft-transition inline-flex h-11 items-center justify-center rounded-sm border border-white/10 px-5 text-[11px] font-bold uppercase tracking-widest text-white/72 hover:border-white/20 hover:text-white"
+              >
+                Return to dashboard
+              </Link>
+            </div>
           </div>
         )}
-      </div>
+
+        {lockedRecords.length > 0 && (
+          <div className="border-t border-white/5 pt-5">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="max-w-3xl">
+                <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-white/28">
+                  <Lock className="h-3.5 w-3.5 text-white/40" />
+                  Protected memory
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-white/50">
+                  {HISTORY_LOCK_MESSAGE}. {lockedRecords.length} older cycle{lockedRecords.length === 1 ? '' : 's'} remain stored in this workspace even though only the newest retained cycle is currently visible.
+                </p>
+              </div>
+              <Link
+                href="/settings"
+                className="str-soft-transition inline-flex h-10 items-center justify-center rounded-sm border border-white/10 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/64 hover:border-white/20 hover:text-white"
+              >
+                Review plans
+              </Link>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/38">
+              {lockedRecords.slice(0, 6).map((record) => (
+                <span
+                  key={record.id}
+                  className="rounded-sm border border-white/10 px-2.5 py-1"
+                >
+                  Week {record.week_number}, {record.year}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

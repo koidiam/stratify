@@ -36,18 +36,18 @@ function SidebarContent({
 }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full bg-[#050505] border-r border-white/5">
-      
       <Link href="/dashboard" onClick={onNavigate} className="block px-6 py-6 transition-opacity hover:opacity-80">
-        <div className="flex items-center gap-2 text-white">
-           <span className="text-lg font-medium tracking-tight">Stratify</span>
+        <div className="text-white">
+          <span className="text-lg font-medium tracking-tight">Stratify</span>
+          <div className="mt-1 text-[10px] uppercase tracking-[0.22em] text-white/32">
+            Weekly Operating System
+          </div>
         </div>
       </Link>
 
       <div className="flex-1 px-4 py-2 space-y-8">
-        
-        {/* Workspace Group */}
         <div>
-          <div className="px-2 mb-3 text-[10px] font-medium text-white/30 tracking-wider uppercase">Workspace</div>
+          <div className="px-2 mb-3 text-[10px] font-medium text-white/30 tracking-wider uppercase">Core Loop</div>
           <nav className="space-y-0.5">
             {WORKSPACE_ITEMS.map((item) => {
               const Icon = item.icon;
@@ -80,9 +80,8 @@ function SidebarContent({
           </nav>
         </div>
 
-        {/* System Group */}
         <div>
-          <div className="px-2 mb-3 text-[10px] font-medium text-white/30 tracking-wider uppercase">Account</div>
+          <div className="px-2 mb-3 text-[10px] font-medium text-white/30 tracking-wider uppercase">Configuration</div>
           <nav className="space-y-0.5">
             {SYSTEM_ITEMS.map((item) => {
               const Icon = item.icon;
@@ -158,9 +157,8 @@ export function Sidebar({ email, plan }: { email?: string; plan: Plan }) {
 
   return (
     <>
-      {/* Mobile Top Bar */}
       <div className="md:hidden flex items-center justify-between bg-[#0A0A0A] border-b border-white/5 p-4 fixed top-0 w-full z-40">
-        <Link href="/dashboard" className="text-white flex items-center transition-opacity hover:opacity-80">
+        <Link href="/dashboard" className="text-white transition-opacity hover:opacity-80">
           <span className="text-lg font-medium tracking-tight">Stratify</span>
         </Link>
         <button onClick={() => setMobileOpen(true)} className="text-white/50 hover:text-white transition-colors">
@@ -168,7 +166,6 @@ export function Sidebar({ email, plan }: { email?: string; plan: Plan }) {
         </button>
       </div>
 
-      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {mobileOpen && (
           <div className="md:hidden fixed inset-0 z-[50] flex">
@@ -205,7 +202,6 @@ export function Sidebar({ email, plan }: { email?: string; plan: Plan }) {
         )}
       </AnimatePresence>
 
-      {/* Desktop Sidebar */}
       <div className="hidden md:block fixed inset-y-0 left-0 z-20 w-64">
         <SidebarContent
           email={email}

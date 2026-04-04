@@ -61,25 +61,25 @@ export async function sendBillingEmail({ to, plan }: BillingParams): Promise<voi
 
   const basicUnlocked = `
     <ul style="padding-left: 18px; margin: 12px 0;">
-      <li>You now get <strong>3 strategy sessions per week</strong> (was 1)</li>
-      <li>Your insights are tuned deeper to your niche</li>
-      <li>Full generation history access is active</li>
+      <li>The <strong>continuity layer</strong> across retained cycles is now open</li>
+      <li>You now have <strong>3 weekly strategy passes</strong> to test and compare directions</li>
+      <li>The learning loop has more room to resolve over time</li>
     </ul>
   `;
 
   const proUnlocked = `
     <ul style="padding-left: 18px; margin: 12px 0;">
-      <li>You now get <strong>50 strategy sessions per week</strong></li>
-      <li>Live LinkedIn signal scanning is active — your insights are powered by real-time data</li>
-      <li>Competitor and reference post analysis is on</li>
-      <li>Priority generation speed is enabled</li>
+      <li>The <strong>full intelligence layer</strong> is now open</li>
+      <li>Live LinkedIn signal scanning is active across your weekly runs</li>
+      <li>Reference and competitor texture is available during research</li>
+      <li>You now have <strong>50 weekly strategy passes</strong> for the deepest learning resolution</li>
     </ul>
   `;
 
   const html = buildEmailHTML({
-    title: `You just unlocked ${planName} — here's what changed`,
+    title: `You just opened ${planName} — here's what changed`,
     body: `
-      <p>Your ${planName} plan is now active. Here's what's different starting now:</p>
+      <p>Your ${planName} plan is now active. Here is the deeper system layer that just opened:</p>
       ${plan === 'pro' ? proUnlocked : basicUnlocked}
       <p>Your engine is ready. Generate your first ${planName} strategy now.</p>
     `,
@@ -101,19 +101,19 @@ interface PreLimitParams {
 
 export async function sendPreLimitEmail({ to, plan, used, limit }: PreLimitParams): Promise<void> {
   const upgradeHint = plan === 'basic'
-    ? '<p style="margin-top: 16px; color: #6B7280; font-size: 13px;">Want more? Pro gives you 50 sessions per week plus live LinkedIn signal scanning.</p>'
+    ? '<p style="margin-top: 16px; color: #6B7280; font-size: 13px;">Pro opens the deepest live signal and reference layer if you want more system depth immediately.</p>'
     : '';
 
   const html = buildEmailHTML({
-    title: "You're almost at your weekly limit",
+    title: "Your weekly system layer is nearing capacity",
     body: `
-      <p>You've used <strong>${used} of ${limit}</strong> strategy sessions this week.</p>
-      <p>After your limit resets next Monday, you'll be ready to go again.</p>
+      <p>You have used <strong>${used} of ${limit}</strong> weekly strategy passes.</p>
+      <p>After the cycle resets next Monday, the current layer will be ready again.</p>
       ${upgradeHint}
     `,
   });
 
-  await sendEmail(to, "You're almost at your weekly limit", html);
+  await sendEmail(to, "Your weekly system layer is nearing capacity", html);
 }
 
 // ─── 4. Limit Reached Email — Value Preview ─────────────────────────────────
@@ -129,21 +129,21 @@ export async function sendLimitReachedEmail({ to, plan, used }: LimitReachedPara
 
   if (plan === 'free') {
     valuePreview = `
-      <p>This week, you generated <strong>${used} strategy session</strong>.</p>
-      <p style="margin-top: 8px;">Here's what you're missing:</p>
+      <p>This week, you generated <strong>${used} strategy pass</strong>.</p>
+      <p style="margin-top: 8px;">Here is the deeper system depth still sealed above Free:</p>
       <ul style="padding-left: 18px; margin: 8px 0;">
-        <li><strong>Basic:</strong> 2 more sessions waiting for you every week</li>
-        <li><strong>Pro:</strong> 50 sessions per week + live LinkedIn signal scanning — sharper, data-driven insights every time</li>
+        <li><strong>Basic:</strong> full continuity across retained cycles plus 2 more weekly passes</li>
+        <li><strong>Pro:</strong> the full live signal and reference intelligence layer</li>
       </ul>
     `;
   } else if (plan === 'basic') {
     valuePreview = `
       <p>This week, you generated <strong>${used} strategy sessions</strong>.</p>
-      <p style="margin-top: 8px;">Here's what you're missing:</p>
+      <p style="margin-top: 8px;">Here is the deeper system depth still sealed above Basic:</p>
       <ul style="padding-left: 18px; margin: 8px 0;">
-        <li><strong>Pro:</strong> 47 more sessions per week</li>
-        <li>Live LinkedIn data powering every insight</li>
-        <li>Competitor and reference post analysis</li>
+        <li><strong>Pro:</strong> the full live signal system plus reference intelligence</li>
+        <li>Deeper strategy shaping from current market input</li>
+        <li>More room for the learning loop to resolve over time</li>
       </ul>
     `;
   } else {
@@ -157,11 +157,11 @@ export async function sendLimitReachedEmail({ to, plan, used }: LimitReachedPara
   const showCta = plan !== 'pro';
 
   const html = buildEmailHTML({
-    title: "Your weekly limit is reached — here's what you're missing",
+    title: "Your current system layer is at capacity",
     body: valuePreview,
     ctaText: showCta ? 'See upgrade options →' : undefined,
     ctaUrl: showCta ? `${APP_URL}/settings` : undefined,
   });
 
-  await sendEmail(to, "Your weekly limit is reached", html);
+  await sendEmail(to, "Your current system layer is at capacity", html);
 }

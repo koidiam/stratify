@@ -89,7 +89,7 @@ export function FeedbackDialog({ open, onOpenChange, historyId, postIndex }: Pro
         throw new Error(getApiError(payload) ?? 'Failed to save feedback.');
       }
 
-      toast.success('Performance metrics added.');
+      toast.success('Results stored for the next strategy pass.');
       setIsSuccess(true);
     } catch (error: unknown) {
       toast.error(getErrorMessage(error));
@@ -111,11 +111,11 @@ export function FeedbackDialog({ open, onOpenChange, historyId, postIndex }: Pro
       <DialogContent className="max-w-2xl str-panel bg-[#050505] p-0 text-white shadow-2xl overflow-y-auto max-h-[90vh] rounded-sm">
         <div className="border-b border-emerald-500/20 bg-emerald-500/5 px-6 py-6">
           <DialogHeader>
-             <DialogTitle className="text-sm font-bold text-white uppercase tracking-widest">
+            <DialogTitle className="text-sm font-bold text-white uppercase tracking-widest">
               Log Results
              </DialogTitle>
             <DialogDescription className="max-w-xl text-[11px] leading-relaxed text-white/50 mt-2 font-mono">
-              Save observed post performance for this draft.
+              Save observed post performance for this draft. Logged results feed the next weekly strategy pass when real feedback is available.
             </DialogDescription>
           </DialogHeader>
         </div>
@@ -128,7 +128,7 @@ export function FeedbackDialog({ open, onOpenChange, historyId, postIndex }: Pro
                   Results Saved
                   </div>
                   <p className="text-xs text-white/50 font-mono">
-                  Stored for future comparison.
+                  Stored for the next strategy pass.
                   </p>
                 </div>
               <Button onClick={() => handleOpenChange(false)} className="rounded-sm bg-white text-black h-10 px-8 font-bold text-[9px] uppercase tracking-widest shadow-none">
@@ -217,8 +217,13 @@ export function FeedbackDialog({ open, onOpenChange, historyId, postIndex }: Pro
               </div>
 
               <div className="flex flex-col gap-3 rounded-sm border border-white/5 bg-white/[0.02] p-5 md:flex-row md:items-center md:justify-between">
-                <div className="text-[10px] font-mono text-white/45">
-                  {engagementRate ? `Engagement rate: ${engagementRate}%` : `Draft F_0${postIndex + 1}`}
+                <div className="space-y-1">
+                  <div className="text-[10px] font-mono text-white/45">
+                    {engagementRate ? `Engagement rate: ${engagementRate}%` : `Draft F_0${postIndex + 1}`}
+                  </div>
+                  <div className="text-[10px] leading-relaxed text-white/35">
+                    The next weekly run will surface this feedback only if it adds a real directional signal.
+                  </div>
                 </div>
 
                 <div className="flex gap-3">

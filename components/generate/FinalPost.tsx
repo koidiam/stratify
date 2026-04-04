@@ -212,7 +212,7 @@ export function FinalPost({
             </p>
             <h3 className="mt-2 text-sm font-bold text-white tracking-wide">METRICS PIPELINE</h3>
             <p className="mt-2 text-xs leading-relaxed text-white/50 font-light max-w-[90%]">
-              Feeding publication metrics back into the system calibrates future generations specifically to your audience graph.
+              Feeding publication metrics back into the system gives the next weekly strategy pass a real learning layer instead of treating each run as isolated.
             </p>
             <Button
               onClick={() => setFeedbackOpen(true)}

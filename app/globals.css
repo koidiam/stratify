@@ -118,8 +118,77 @@
     @apply font-mono text-[11px] uppercase tracking-wider text-white/50;
   }
 
+  .str-text-primary {
+    @apply text-white;
+  }
+
+  .str-text-secondary {
+    @apply text-white/72;
+  }
+
+  .str-text-meta {
+    @apply text-white/40;
+  }
+
   .str-glow {
     box-shadow: 0 0 40px rgba(255, 255, 255, 0.03), inset 0 0 20px rgba(255, 255, 255, 0.02);
+  }
+
+  .str-elevated {
+    box-shadow: 0 14px 32px -22px rgba(0, 0, 0, 0.95), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .str-soft-transition {
+    transition-property: transform, box-shadow, border-color, background-color, color, opacity;
+    transition-duration: 180ms;
+    transition-timing-function: ease-out;
+  }
+
+  .str-surface-interactive {
+    transition-property: transform, box-shadow, border-color, background-color, color, opacity;
+    transition-duration: 180ms;
+    transition-timing-function: ease-out;
+  }
+
+  .str-surface-interactive:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.14);
+    background-color: rgba(255, 255, 255, 0.025);
+    box-shadow: 0 16px 34px -24px rgba(0, 0, 0, 0.95), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .str-cta {
+    transition-property: transform, box-shadow, background-color, filter;
+    transition-duration: 180ms;
+    transition-timing-function: ease-out;
+  }
+
+  .str-cta:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.04);
+  }
+
+  .str-live-row {
+    @apply inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/42;
+  }
+
+  .str-live-dot {
+    position: relative;
+    display: inline-flex;
+    height: 7px;
+    width: 7px;
+    border-radius: 9999px;
+    background: rgba(110, 231, 183, 0.95);
+    box-shadow: 0 0 0 1px rgba(110, 231, 183, 0.18);
+  }
+
+  .str-live-dot::after {
+    content: "";
+    position: absolute;
+    inset: -4px;
+    border-radius: 9999px;
+    border: 1px solid rgba(110, 231, 183, 0.2);
+    animation: signal-pulse 1.8s ease-out infinite;
   }
 
   .animate-spin-slow {
@@ -130,6 +199,33 @@
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes signal-pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.82);
+  }
+  70% {
+    opacity: 0;
+    transform: scale(1.28);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .str-soft-transition,
+  .str-surface-interactive,
+  .str-cta,
+  .animate-spin-slow,
+  .str-live-dot::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
 }
 
 .dark-premium {

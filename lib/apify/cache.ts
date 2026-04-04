@@ -8,6 +8,12 @@ interface CacheEntry<T> {
   expiresAt: string | null;
 }
 
+export interface CachedScrapeResult<T> {
+  results: T[];
+  sourceType: 'live' | 'cached' | 'none';
+  cacheStatus: 'fresh' | 'stale' | 'miss';
+}
+
 interface CachedScrapeOptions {
   cacheKey: string;
   actorId: string;
@@ -120,38 +126,51 @@ export async function getCachedOrScrape<T>({
   supabase,
   maxItems,
   allowScrape = true,
-}: CachedScrapeOptions): Promise<T[]> {
+}: CachedScrapeOptions): Promise<CachedScrapeResult<T>> {
   const cacheEntry = await getCacheEntry<T>(cacheKey, supabase);
   const nowIso = new Date().toISOString();
+  const cachedFallback: CachedScrapeResult<T> = {
+    results: cacheEntry?.results ?? [],
+    sourceType: cacheEntry ? 'cached' : 'none',
+    cacheStatus: cacheEntry ? 'stale' : 'miss',
+  };
 
   if (cacheEntry?.expiresAt && cacheEntry.expiresAt > nowIso) {
-    return cacheEntry.results;
+    return {
+      results: cacheEntry.results,
+      sourceType: 'cached',
+      cacheStatus: 'fresh',
+    };
   }
 
   // If scrape is explicitly disabled for this plan/call, return stale cache or empty
   if (!allowScrape) {
-    return cacheEntry?.results ?? [];
+    return cachedFallback;
   }
 
   const monthlyScrapeCount = await getMonthlyScrapeCount(userId, supabase);
 
   if (monthlyScrapeCount === null) {
-    return cacheEntry?.results ?? [];
+    return cachedFallback;
   }
 
   if (
     monthlyScrapeCount >= APIFY_RULES.maxMonthlyScrapesPerUser
   ) {
-    return cacheEntry?.results ?? [];
+    return cachedFallback;
   }
 
   try {
     const results = await runApifyActor<T>(actorId, input, { maxItems });
     await persistCache(cacheKey, actorId, ttlDays, results, supabase);
     await recordUsage(userId, actorId, results.length, supabase);
-    return results;
+    return {
+      results,
+      sourceType: 'live',
+      cacheStatus: cacheEntry ? 'stale' : 'miss',
+    };
   } catch (error) {
     console.warn(`[Apify Fallback] actor ${actorId} failed or timed out:`, error);
-    return cacheEntry?.results ?? [];
+    return cachedFallback;
   }
 }

@@ -2,12 +2,14 @@ import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { getUsageStatus, incrementUsage } from '@/lib/utils/usage';
 import { generateStructuredJSON } from '@/lib/groq/client';
-import { buildLinkedInResearchContext } from '@/lib/apify/linkedin';
+import { buildLinkedInResearchContext, enrichInsightsWithResearchBasis } from '@/lib/apify/linkedin';
 import { buildInsightPrompt } from '@/lib/prompts/insight.prompt';
 import { buildContentPrompt } from '@/lib/prompts/content.prompt';
+import { StoredCycleRecord } from '@/lib/utils/history';
+import { buildLearningPromptContext, StoredFeedbackRecord } from '@/lib/utils/learning';
 import { getISOWeek } from '@/lib/utils/week';
 import { getErrorMessage, isInsightItemArray, isWeeklyContent, isWeeklyGeneration } from '@/lib/utils/parsers';
-import { InsightItem, WeeklyContent } from '@/types';
+import { InsightItem, LinkedInResearchContext, WeeklyContent } from '@/types';
 import { sendLimitReachedEmail, sendPreLimitEmail } from '@/lib/resend/client';
 
 export const maxDuration = 60;
@@ -80,7 +82,32 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       }, { status: 429 });
     }
 
-    let linkedinResearch = null;
+    const fallbackResearch: LinkedInResearchContext = {
+      trendQuery: `${onboarding.niche} linkedin`,
+      trendPosts: [],
+      referencePosts: [],
+      insightContext: null,
+      contentContext: null,
+      researchSummary: {
+        sourceMode: 'none' as const,
+        marketInputStatus: 'profile-only' as const,
+        analyzedPostCount: 0,
+        retainedPostCount: 0,
+        filteredPostCount: 0,
+        trendQuery: `${onboarding.niche} linkedin`,
+        trendSourceType: 'none' as const,
+        trendPostCount: 0,
+        referenceSourceType: 'none' as const,
+        referencePostCount: 0,
+        referenceInputCount: onboarding.reference_posts?.length ?? 0,
+        lowSignalFilterApplied: false,
+        lowSignalPostsFiltered: 0,
+        jobPostFilterApplied: false,
+        jobPostsExcluded: 0,
+      },
+    };
+
+    let linkedinResearch: LinkedInResearchContext = fallbackResearch;
     try {
       linkedinResearch = await buildLinkedInResearchContext(
         user.id,
@@ -92,26 +119,24 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       console.warn('[Apify Layer Fallback] Research failed completely. Proceeding Groq-only natively.', err);
     }
 
-    let feedbackContext: string | null = null;
-    const { data: recentFeedback } = await adminClient
-      .from('post_feedback')
-      .select('notes, likes, comments, reposts, views')
+    const { data: recentHistory } = await adminClient
+      .from('content_history')
+      .select('id, week_number, year, created_at, insights, hooks, posts')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(5);
-      
-    if (recentFeedback && recentFeedback.length > 0) {
-      feedbackContext = recentFeedback
-        .map((feedback, index) => {
-          const note =
-            typeof feedback.notes === 'string' && feedback.notes.trim()
-              ? `, note="${feedback.notes.trim()}"`
-              : '';
 
-          return `Post ${index + 1}: likes=${feedback.likes ?? 0}, comments=${feedback.comments ?? 0}, reposts=${feedback.reposts ?? 0}, views=${feedback.views ?? 0}${note}`;
-        })
-        .join('\n');
-    }
+    const { data: recentFeedback } = await adminClient
+      .from('post_feedback')
+      .select('history_id, post_index, views, likes, comments, reposts, notes, created_at')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(8);
+
+    const { learningSummary, promptContext: feedbackContext } = buildLearningPromptContext(
+      (recentHistory ?? []) as StoredCycleRecord[],
+      (recentFeedback ?? []) as StoredFeedbackRecord[]
+    );
 
     const insightPromptText = buildInsightPrompt(
       onboarding,
@@ -133,7 +158,7 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
         throw new Error('Insight response was not valid JSON');
       }
 
-      insights = rawInsights;
+      insights = enrichInsightsWithResearchBasis(rawInsights, linkedinResearch);
     } catch (error) {
       console.error('[Generate API] Insight generation failed.', error);
       throw new Error('Insight response was not valid JSON');
@@ -238,8 +263,10 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       ideas: content.ideas,
       hooks: content.hooks,
       posts: content.posts,
-      researchUsed: (linkedinResearch?.trendPosts.length ?? 0) > 0,
-      trendPostCount: linkedinResearch?.trendPosts.length ?? 0,
+      researchUsed: linkedinResearch.researchSummary.retainedPostCount > 0,
+      trendPostCount: linkedinResearch.trendPosts.length,
+      researchSummary: linkedinResearch.researchSummary,
+      learningSummary,
     };
 
     const responseCandidate: unknown = responsePayload;
@@ -255,6 +282,8 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
         posts_count: Array.isArray(responsePayload.posts) ? responsePayload.posts.length : null,
         researchUsed: responsePayload.researchUsed,
         trendPostCount: responsePayload.trendPostCount,
+        researchSummary: responsePayload.researchSummary,
+        learningSummary: responsePayload.learningSummary,
       });
       throw new Error('Generated response did not match WeeklyGeneration contract.');
     }

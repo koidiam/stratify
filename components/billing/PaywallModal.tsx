@@ -6,12 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Lock, AlertCircle } from 'lucide-react';
 import { Plan } from '@/types';
 import {
-  PAYWALL_BASIC_FEATURES,
-  PAYWALL_PRO_FEATURES,
   PAYWALL_WHY_UPGRADE,
-  getImmediateUnlocks,
+  getCurrentLayerStatus,
+  getHigherPlanCards,
   getMissingCapabilities,
   getPaywallTeaser,
+  getPlanDepthCard,
+  getUpgradeButtonLabel,
+  getUpgradeTargetPlan,
+  getUpgradeTriggerDescription,
+  getUpgradeTriggerTitle,
+  getNextLayerStatus,
 } from '@/lib/constants/plan-copy';
 
 interface PaywallModalProps {
@@ -40,23 +45,16 @@ export function PaywallModal({
     router.push('/settings');
   };
 
-  const immediateUnlocks = getImmediateUnlocks(plan);
+  const upgradeTarget = getUpgradeTargetPlan(plan);
+  const targetCard = upgradeTarget ? getPlanDepthCard(upgradeTarget) : null;
   const missingNow = getMissingCapabilities(plan);
-  const comparisonCards =
-    plan === 'basic'
-      ? [{ name: 'Pro', items: PAYWALL_PRO_FEATURES }]
-      : plan === 'free'
-        ? [
-            { name: 'Basic', items: PAYWALL_BASIC_FEATURES },
-            { name: 'Pro', items: PAYWALL_PRO_FEATURES },
-          ]
-        : [];
-  const upgradeTitle =
-    plan === 'basic' ? 'Upgrade to Pro to keep momentum' : 'Upgrade to remove this weekly limit';
-  const upgradeDescription =
-    plan === 'pro'
-      ? 'You have reached this week’s current run capacity. Manage your plan in Settings to review options.'
-      : PAYWALL_WHY_UPGRADE;
+  const comparisonCards = getHigherPlanCards(plan).filter(
+    (card) => card.plan !== upgradeTarget
+  );
+  const currentLayer = getCurrentLayerStatus(plan);
+  const nextLayer = getNextLayerStatus(plan);
+  const upgradeTitle = getUpgradeTriggerTitle(plan);
+  const upgradeDescription = getUpgradeTriggerDescription(plan);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -68,14 +66,15 @@ export function PaywallModal({
               {upgradeTitle}
             </DialogTitle>
             <DialogDescription className="text-[12px] text-white/55 pt-2 leading-relaxed">
-              You have used {used} of {limit} weekly strategy runs.
+              The current weekly run budget is at {used} of {limit}.
               <span className="block mt-2">{upgradeDescription}</span>
+              {plan !== 'pro' && <span className="block mt-2">{PAYWALL_WHY_UPGRADE}</span>}
             </DialogDescription>
           </DialogHeader>
 
           <div className="mb-4 border border-white/10 rounded-sm bg-white/[0.02] p-4">
             <p className="text-[10px] font-mono uppercase tracking-widest text-white/40 mb-1">
-              This week on Pro
+              Intelligence Preview
             </p>
             <p className="text-sm text-white/70 leading-relaxed">
               {getPaywallTeaser(trendPostCount, niche)}
@@ -84,15 +83,15 @@ export function PaywallModal({
 
           <div className="mb-4 grid gap-3 md:grid-cols-2">
             <div className="rounded-sm border border-white/5 bg-black/30 p-4">
-              <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Right Now</div>
+              <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">{currentLayer.label}</div>
               <p className="mt-2 text-sm leading-relaxed text-white/75">
-                The current flow stops here, so this week&apos;s signals cannot become another fresh strategy pass until capacity resets or the plan changes.
+                {currentLayer.detail}
               </p>
             </div>
             <div className="rounded-sm border border-emerald-500/15 bg-emerald-500/5 p-4">
-              <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-500/70">After Upgrade</div>
+              <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-500/70">{nextLayer.label}</div>
               <p className="mt-2 text-sm leading-relaxed text-white/80">
-                The limitation lifts immediately, so you can continue this week&apos;s workflow with more capacity and a stronger signal layer as soon as the plan change takes effect.
+                {nextLayer.detail}
               </p>
             </div>
           </div>
@@ -100,7 +99,7 @@ export function PaywallModal({
           <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
             <div className="border border-white/5 bg-white/[0.02] rounded-sm p-4">
               <div className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-4">
-                Currently Missing
+                Sealed Right Now
               </div>
               <ul className="space-y-3">
                 {missingNow.map((item) => (
@@ -114,16 +113,29 @@ export function PaywallModal({
 
             <div className="border border-white/5 bg-white/[0.02] rounded-sm p-4">
               <div className="text-[9px] font-bold uppercase tracking-widest text-white/30 mb-4">
-                Unlock Immediately
+                Next Layer Opens
               </div>
-              {immediateUnlocks.length > 0 ? (
-                <ul className="space-y-3">
-                  {immediateUnlocks.map((item) => (
-                    <li key={item} className="text-[11px] leading-relaxed text-white/75">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+              {targetCard ? (
+                <>
+                  <div className="rounded-sm border border-white/10 bg-black/20 p-3">
+                    <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-emerald-400">
+                      {targetCard.name} · {targetCard.depthLabel}
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-white">{targetCard.headline}</p>
+                    <p className="mt-2 text-[11px] leading-relaxed text-white/60">{targetCard.description}</p>
+                    <p className="mt-3 text-[10px] uppercase tracking-widest text-white/35">
+                      {targetCard.capacityLabel}
+                    </p>
+                  </div>
+
+                  <ul className="mt-4 space-y-3">
+                    {targetCard.capabilities.map((item) => (
+                      <li key={item} className="text-[11px] leading-relaxed text-white/75">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </>
               ) : (
                 <p className="text-[11px] leading-relaxed text-white/60">
                   Your current plan is already the highest tier available. Settings is the best place to review billing and timing.
@@ -136,9 +148,16 @@ export function PaywallModal({
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {comparisonCards.map((card) => (
                 <div key={card.name} className="rounded-sm border border-white/5 bg-black/30 p-4">
-                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">{card.name}</div>
+                  <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                    {card.name} · {card.depthLabel}
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-white">{card.headline}</p>
+                  <p className="mt-2 text-[11px] leading-relaxed text-white/55">{card.description}</p>
+                  <p className="mt-3 text-[10px] uppercase tracking-widest text-white/35">
+                    {card.capacityLabel}
+                  </p>
                   <ul className="mt-3 space-y-2">
-                    {card.items.map((item) => (
+                    {card.capabilities.map((item) => (
                       <li key={item} className="text-[11px] leading-relaxed text-white/65">
                         {item}
                       </li>
@@ -161,7 +180,7 @@ export function PaywallModal({
             className="w-full sm:w-auto text-[9px] uppercase tracking-widest font-bold h-9 rounded-sm bg-white text-black hover:bg-white/90 shadow-none border border-transparent"
             onClick={handleUpgradeNavigation}
           >
-            Review Plans in Settings
+            {getUpgradeButtonLabel(plan)}
           </Button>
         </div>
       </DialogContent>

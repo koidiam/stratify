@@ -1,12 +1,14 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { CreditCard, Shield, Sparkles, User, AlertTriangle } from 'lucide-react';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { Button } from '@/components/ui/button';
 import { DeleteAccountButton } from '@/components/settings/DeleteAccountButton';
 import { ProfileForm } from '@/components/settings/ProfileForm';
-
 import { PlanManager } from '@/components/settings/PlanManager';
+import {
+  getCurrentLayerStatus,
+  getNextLayerStatus,
+} from '@/lib/constants/plan-copy';
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -90,107 +92,144 @@ export default async function SettingsPage() {
     .maybeSingle();
 
   const plan = profile?.plan === 'basic' || profile?.plan === 'pro' ? profile.plan : 'free';
+  const currentLayer = getCurrentLayerStatus(plan);
+  const nextLayer = getNextLayerStatus(plan);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-white uppercase">System_Settings</h1>
-        <p className="mt-2 text-sm text-white/50 leading-relaxed font-light">
-          Manage your operational profile, feature access, and system preferences.
+    <div className="mx-auto flex max-w-3xl flex-col gap-8 animate-in fade-in duration-500">
+      <header className="border-b border-white/5 pb-6">
+        <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/35">
+          Settings
+        </div>
+        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
+          Configuration
+        </h1>
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/50">
+          Profile, plan, and access.
         </p>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <div className="relative overflow-hidden str-panel rounded-sm p-6 flex flex-col">
-          <div className="absolute -right-6 -top-6 flex items-start justify-end p-6 opacity-[0.02] pointer-events-none">
-            <CreditCard size={140} className="text-white" />
+      <section className="rounded-sm border border-white/10 bg-[#020202] p-6">
+        <div className="flex flex-col gap-1">
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
+            Profile
           </div>
-          <div className="relative z-10 flex-1 flex flex-col">
-            <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-white uppercase tracking-wider">
-              <Shield className="text-emerald-500 w-4 h-4" /> License Tier
-            </h3>
-            <p className="text-sm text-white/50 leading-relaxed font-light max-w-[90%]">
-              Manage your computational boundaries and access levels.
-            </p>
-
-            <div className="mb-8 mt-6">
-              <span className="mb-1 block text-[9px] font-bold uppercase tracking-widest text-emerald-500/80">
-                Current Plan
-              </span>
-              <span className="text-2xl font-bold tracking-tight text-white uppercase">
-                {plan}_PROFILE
-              </span>
-            </div>
-            
-            <div className="mt-auto">
-              <PlanManager currentPlan={plan} />
-            </div>
-          </div>
+          <h2 className="text-xl font-medium text-white">Operator profile</h2>
         </div>
 
-        <div className="str-panel rounded-sm p-6">
-          <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-white uppercase tracking-wider">
-            <User className="text-emerald-500 w-4 h-4" /> Operator Identity
-          </h3>
-          <p className="mb-6 text-sm text-white/50 leading-relaxed font-light">
-            Your secure identity details are mapped below.
-          </p>
-
-          <div className="space-y-4">
-            <ProfileForm 
-              initialName={session.user.user_metadata?.full_name || ''} 
-              updateName={updateNameAction} 
+        <div className="mt-5 grid gap-6 md:grid-cols-[minmax(0,1fr)_240px]">
+          <div className="space-y-3">
+            <ProfileForm
+              initialName={session.user.user_metadata?.full_name || ''}
+              updateName={updateNameAction}
             />
-            <div className="rounded-sm border border-white/5 bg-white/[0.02] p-4">
-              <span className="mb-1 block text-[9px] font-bold uppercase tracking-widest text-white/30">Admin Email</span>
-              <span className="text-xs font-mono text-white/80">{session.user.email}</span>
+            <div className="px-0 py-1">
+              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+                Email
+              </div>
+              <div className="mt-1 text-sm text-white/72">{session.user.email}</div>
+            </div>
+          </div>
+
+          <dl className="space-y-3 border-t border-white/5 pt-4 md:border-l md:border-t-0 md:pl-6 md:pt-0">
+            <div>
+              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+                Niche
+              </dt>
+              <dd className="mt-1 text-sm text-white/72">
+                {onboarding?.niche || 'Not set'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+                Audience
+              </dt>
+              <dd className="mt-1 text-sm text-white/72">
+                {onboarding?.target_audience || 'Not set'}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+                Tone
+              </dt>
+              <dd className="mt-1 text-sm text-white/72">
+                {onboarding?.tone || 'Not set'}
+              </dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section className="rounded-sm border border-white/10 bg-[#020202] p-6">
+        <div className="flex flex-col gap-1">
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
+            Plan
+          </div>
+          <h2 className="text-xl font-medium text-white">Access and billing</h2>
+        </div>
+
+        <div className="mt-5 grid gap-4 border-b border-white/5 pb-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+              Current access
+            </div>
+            <p className="mt-2 text-sm font-medium text-white">{currentLayer.label}</p>
+            <p className="mt-1 text-sm leading-relaxed text-white/50">{currentLayer.detail}</p>
+          </div>
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+              Next access change
+            </div>
+            <p className="mt-2 text-sm font-medium text-white">{nextLayer.label}</p>
+            <p className="mt-1 text-sm leading-relaxed text-white/50">{nextLayer.detail}</p>
+          </div>
+        </div>
+
+        <div className="mt-5">
+          <PlanManager currentPlan={plan} />
+        </div>
+      </section>
+
+      <section className="rounded-sm border border-white/10 bg-[#020202] p-6">
+        <div className="flex flex-col gap-1">
+          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
+            Access
+          </div>
+          <h2 className="text-xl font-medium text-white">Workspace resets and account removal</h2>
+        </div>
+
+        <div className="mt-5 space-y-5">
+          <div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
+              Reset onboarding
+            </div>
+            <p className="mt-1 text-sm leading-relaxed text-white/50">
+              Reopen niche, audience, and tone setup.
+            </p>
+            <form action={resetOnboardingAction} className="mt-4">
+              <Button
+                type="submit"
+                variant="outline"
+                className="h-10 rounded-sm border-white/10 bg-transparent px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white hover:bg-white/5"
+              >
+                Reopen onboarding
+              </Button>
+            </form>
+          </div>
+
+          <div className="border-t border-white/10 pt-6">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-red-400/75">
+              Danger zone
+            </div>
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
+              Permanently removes profile, memory, and subscription access.
+            </p>
+            <div className="mt-4 max-w-sm">
+              <DeleteAccountButton action={deleteAccountAction} />
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="str-panel rounded-sm p-6">
-        <h3 className="mb-2 flex items-center gap-2 text-lg font-bold text-white uppercase tracking-wider">
-          <Sparkles className="text-emerald-500 w-4 h-4" /> AI Engine Configuration
-        </h3>
-        <p className="mb-6 text-sm text-white/50 leading-relaxed max-w-2xl font-light">
-          Redeploy the configuration pipeline to retrain the generative model along a new strategic vector.
-        </p>
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <div className="rounded-sm border border-white/5 bg-white/[0.02] p-4">
-            <span className="mb-1 block text-[9px] font-bold uppercase tracking-widest text-emerald-500/80">Active Context</span>
-            <span className="text-[11px] font-mono text-white/90 capitalize block truncate" title={onboarding?.niche || 'Not Set'}>{onboarding?.niche || 'Not Set'}</span>
-          </div>
-          <div className="rounded-sm border border-white/5 bg-white/[0.02] p-4">
-            <span className="mb-1 block text-[9px] font-bold uppercase tracking-widest text-emerald-500/80">Tone Mapping</span>
-            <span className="text-[11px] font-mono text-white/90 capitalize block truncate" title={onboarding?.tone || 'Not Set'}>{onboarding?.tone || 'Not Set'}</span>
-          </div>
-          <div className="rounded-sm border border-white/5 bg-white/[0.02] p-4">
-            <span className="mb-1 block text-[9px] font-bold uppercase tracking-widest text-emerald-500/80">Target Vector</span>
-            <span className="text-[11px] font-mono text-white/90 capitalize block truncate" title={onboarding?.target_audience || 'Not Set'}>{onboarding?.target_audience || 'Not Set'}</span>
-          </div>
-        </div>
-
-        <form action={resetOnboardingAction} className="mt-6 block">
-          <Button type="submit" variant="outline" className="w-full border-white/10 bg-transparent text-white pt-1 hover:bg-white/5 transition-colors font-bold uppercase tracking-widest text-xs h-10 rounded-sm">
-            Retrain Strategy Model
-          </Button>
-        </form>
-      </div>
-
-      <div className="str-panel !border-red-500/20 bg-[linear-gradient(180deg,rgba(220,38,38,0.05),transparent)] p-6 rounded-sm">
-        <h3 className="text-sm font-bold tracking-widest text-red-500 flex items-center gap-2 uppercase">
-           <AlertTriangle className="w-4 h-4" /> Critical Destructive Actions
-        </h3>
-        <p className="mt-2 text-xs leading-relaxed text-red-500/70 max-w-2xl font-light">
-          Account deletion executes a permanent purge. Your identity nodes, operational memory, and subscription vectors will be unrecoverable.
-        </p>
-
-        <div className="mt-6">
-          <DeleteAccountButton action={deleteAccountAction} />
-        </div>
-      </div>
+      </section>
     </div>
   );
 }

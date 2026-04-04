@@ -3,6 +3,17 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
+  const requiresOnboardingGuard =
+    request.nextUrl.pathname.startsWith('/generate') ||
+    request.nextUrl.pathname.startsWith('/history') ||
+    request.nextUrl.pathname.startsWith('/settings');
+
+  if (!requiresOnboardingGuard) {
+    return NextResponse.next({
+      request,
+    });
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -32,7 +43,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
 
   // Onboarding Guard - Only protect /generate and /history strictly
-  if (user && (request.nextUrl.pathname.startsWith('/generate') || request.nextUrl.pathname.startsWith('/history') || request.nextUrl.pathname.startsWith('/settings'))) {
+  if (user) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('onboarding_completed')

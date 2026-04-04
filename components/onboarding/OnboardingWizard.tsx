@@ -57,7 +57,7 @@ export function OnboardingWizard() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[70vh]">
+    <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-center bg-[#000000] min-h-screen">
       
       {/* Container Card */}
       <div className="w-full str-panel rounded-sm shadow-none overflow-hidden p-6 md:p-10 relative">

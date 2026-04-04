@@ -8,7 +8,7 @@ export const APIFY_RULES = {
   maxMonthlyScrapesPerUser: 2,
   trendTtlDays: 7,
   referenceTtlDays: 14,
-  trendLimitPerSource: 12,
+  trendLimitPerSource: 8,
   referenceProfileLimit: 6,
-  referencePostLimit: 3,
+  referencePostLimit: 2,
 } as const;
