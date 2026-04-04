@@ -21,7 +21,7 @@ export interface InsightItem {
   insight: string;
   why: string;
   trigger: PsychTrigger;
-  format_hint?: 'list' | 'story' | 'hook-question' | 'contrarian' | 'data-driven';
+  format_hint?: 'list' | 'story' | 'hook-question' | 'contrarian' | 'data-driven' | 'other';
 }
 
 export interface IdeaItem {

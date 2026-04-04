@@ -22,7 +22,8 @@ function isFormatHint(value: unknown): value is InsightItem['format_hint'] {
     value === 'story' ||
     value === 'hook-question' ||
     value === 'contrarian' ||
-    value === 'data-driven'
+    value === 'data-driven' ||
+    value === 'other'
   );
 }
 
@@ -57,7 +58,11 @@ function getCaseInsensitiveValue(record: UnknownRecord, keyPaths: string[]): unk
 }
 
 export function isInsightItemArray(value: unknown): value is InsightItem[] {
-  if (!Array.isArray(value)) return false;
+  if (!Array.isArray(value) || value.length === 0) {
+    console.error('[isInsightItemArray] Expected non-empty array. Raw value:', value);
+    return false;
+  }
+
   return value.every((item) => {
     if (!isRecord(item)) return false;
     const insightStr = getCaseInsensitiveValue(item, ['insight']);

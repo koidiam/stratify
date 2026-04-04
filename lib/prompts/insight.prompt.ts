@@ -23,32 +23,33 @@ Each insight must be:
 3. Actionable — specify both the content type AND the format pattern to use
 4. If live LinkedIn evidence is available, explicitly state which format (list/story/contrarian/etc.) is winning this week and why
 
-For each insight, identify:
-- insight: What pattern works? Name the format. (1 clear sentence)
-- why: Why does it work? Reference specific engagement data if available. (2-3 sentences)
-- trigger: The primary psychological trigger (choose one: Curiosity, Social proof, Scarcity, Relatability, Contrast, Progress)
-- format_hint: The specific post format to use (choose one: list, story, hook-question, contrarian, data-driven)
+Return exactly this JSON shape:
+- insights: an array of exactly 3 objects
+- insight: one single-line string
+- why: one single-line string
+- trigger: one of Curiosity | Social proof | Scarcity | Relatability | Contrast | Progress
+- format_hint: one of list | story | hook-question | contrarian | data-driven | other
 
-RESPOND ONLY WITH VALID JSON. No markdown, no explanation, no preamble:
+CRITICAL: Return ONLY the JSON object below. No markdown. No explanation. No text before or after. Every string value must be on a single line with no unescaped quotes or newlines inside.
 {
   "insights": [
     {
-      "insight": "...",
-      "why": "...",
-      "trigger": "...",
-      "format_hint": "..."
+      "insight": "Data-backed retention postmortems are outperforming generic growth tips in this niche this week.",
+      "why": "Posts that show a specific operating failure with concrete metrics create stronger credibility and higher attention than broad advice, especially when the format is data-driven and high-engagement examples are present.",
+      "trigger": "Social proof",
+      "format_hint": "data-driven"
     },
     {
-      "insight": "...",
-      "why": "...",
-      "trigger": "...",
-      "format_hint": "..."
+      "insight": "Founder stories that reveal a painful turning point are driving stronger response than polished outcome summaries.",
+      "why": "Narratives with a visible before-and-after gap create emotional tension and make the lesson easier to remember, especially when recent story-format posts show medium or high engagement.",
+      "trigger": "Relatability",
+      "format_hint": "story"
     },
     {
-      "insight": "...",
-      "why": "...",
-      "trigger": "...",
-      "format_hint": "..."
+      "insight": "Contrarian breakdowns of common playbooks are pulling more comments than standard how-to threads.",
+      "why": "When the audience already knows the default advice, a clear disagreement with that advice creates a stronger open loop and drives discussion, especially when contrarian posts are showing high-engagement tiers.",
+      "trigger": "Contrast",
+      "format_hint": "contrarian"
     }
   ]
 }`;
