@@ -1,43 +1,61 @@
 # Stratify
 
-Stratify is an AI-driven LinkedIn content strategy and scheduling platform. It uses cutting-edge LLMs to analyze user niches, target audiences, and goals to generate high-performing hooks, insights, and weekly post drafts.
+LinkedIn strategy engine for founders, operators, and subject-matter experts who need a repeatable weekly content system.
 
-## Tech Stack
+Stratify analyzes niche-level LinkedIn signals, extracts strategic patterns, and generates insights, hooks, and post drafts — in a single weekly pipeline run.
 
-- **Framework**: Next.js 14+ (App Router)
-- **Database & Auth**: Supabase
-- **AI Engine**: Groq (Llama 3.3 70B)
-- **Styling**: Tailwind CSS & shadcn/ui
-- **Data Enrichment**: Apify (LinkedIn Profile Data)
-- **Emails**: Resend
+**Live:** https://stratify-one-teal.vercel.app
 
-## Getting Started
+## Stack
 
-1. **Install dependencies**:
-   ```bash
+- **Framework:** Next.js (App Router)
+- **Auth & Database:** Supabase
+- **AI:** Groq — Llama 3.3 70B
+- **Signal Research:** Apify (LinkedIn scraping layer)
+- **Payments:** Lemon Squeezy
+- **Email:** Resend
+- **Styling:** Tailwind CSS + shadcn/ui
+
+## Local Setup
+
+1. Install dependencies
+```bash
    npm install
-   ```
+```
 
-2. **Environment Setup**:
-   Copy the example environment file and fill in your keys:
-   ```bash
+2. Copy environment variables
+```bash
    cp .env.example .env.local
-   ```
+```
+   Fill in: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GROQ_API_KEY`, `APIFY_API_TOKEN`, `LEMON_SQUEEZY_API_KEY`, `RESEND_API_KEY`
 
-3. **Database Setup**:
-   Apply the migrations located in the `/supabase/migrations` folder to set up your Supabase project.
+3. Apply database migrations
+```bash
+   # Run each file in supabase/migrations/ against your Supabase project in order
+```
 
-4. **Run the Development Server**:
-   ```bash
+4. Start the dev server
+```bash
    npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) to view the application.
+```
 
-## Infrastructure
+## Database Schema
 
-The application relies on several core database tables:
-- `profiles`: User information and settings
-- `onboarding`: User's niche, audience, and goals
-- `content_history`: Weekly generated insights and post drafts
-- `usage_tracking`: Generation quota tracking
-- `post_feedback`: Analytics and performance tracking for generated content
+| Table | Purpose |
+|-------|---------|
+| `profiles` | User account and plan data |
+| `onboarding` | Niche, audience, tone, and goal configuration |
+| `content_history` | Weekly generated insights, hooks, and drafts |
+| `usage_tracking` | Weekly generation quota per user |
+| `post_feedback` | Post performance metrics for feedback loop |
+| `scrape_cache` | Cached Apify research results |
+| `apify_usage` | Apify scrape tracking per user |
+| `subscriptions` | Lemon Squeezy subscription state |
+
+## Plans
+
+| Plan | Runs/week | Signal source |
+|------|-----------|---------------|
+| Free | 1 | Cached research |
+| Basic | 3 | Cached research |
+| Pro | 50 | Live LinkedIn signals |
