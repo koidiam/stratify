@@ -6,7 +6,7 @@ import { buildLinkedInResearchContext } from '@/lib/apify/linkedin';
 import { buildInsightPrompt } from '@/lib/prompts/insight.prompt';
 import { buildContentPrompt } from '@/lib/prompts/content.prompt';
 import { getISOWeek } from '@/lib/utils/week';
-import { getErrorMessage, isInsightItemArray, isWeeklyContent } from '@/lib/utils/parsers';
+import { getErrorMessage, isInsightItemArray, isWeeklyContent, isWeeklyGeneration } from '@/lib/utils/parsers';
 import { InsightItem, WeeklyContent } from '@/types';
 import { sendLimitReachedEmail, sendPreLimitEmail } from '@/lib/resend/client';
 
@@ -170,6 +170,27 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
 
     if (histErr) throw histErr;
 
+    let historyId = typeof historyRecord?.id === 'string' ? historyRecord.id : null;
+    if (!historyId) {
+      const { data: persistedHistory, error: persistedHistoryError } = await adminClient
+        .from('content_history')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('week_number', week)
+        .eq('year', year)
+        .maybeSingle();
+
+      if (persistedHistoryError) {
+        throw persistedHistoryError;
+      }
+
+      if (typeof persistedHistory?.id !== 'string') {
+        throw new Error('Generated history record did not return a usable id.');
+      }
+
+      historyId = persistedHistory.id;
+    }
+
     await incrementUsage(
       user.id,
       adminClient,
@@ -209,8 +230,8 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       }
     }
 
-    return NextResponse.json({
-      history_id: historyRecord.id,
+    const responsePayload = {
+      history_id: historyId,
       week_number: week,
       year,
       insights,
@@ -219,7 +240,26 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       posts: content.posts,
       researchUsed: (linkedinResearch?.trendPosts.length ?? 0) > 0,
       trendPostCount: linkedinResearch?.trendPosts.length ?? 0,
-    });
+    };
+
+    const responseCandidate: unknown = responsePayload;
+
+    if (!isWeeklyGeneration(responseCandidate)) {
+      console.error('[Generate API] Final payload failed WeeklyGeneration validation.', {
+        history_id: responsePayload.history_id,
+        week_number: responsePayload.week_number,
+        year: responsePayload.year,
+        insights_count: Array.isArray(responsePayload.insights) ? responsePayload.insights.length : null,
+        ideas_count: Array.isArray(responsePayload.ideas) ? responsePayload.ideas.length : null,
+        hooks_count: Array.isArray(responsePayload.hooks) ? responsePayload.hooks.length : null,
+        posts_count: Array.isArray(responsePayload.posts) ? responsePayload.posts.length : null,
+        researchUsed: responsePayload.researchUsed,
+        trendPostCount: responsePayload.trendPostCount,
+      });
+      throw new Error('Generated response did not match WeeklyGeneration contract.');
+    }
+
+    return NextResponse.json(responsePayload);
 
   } catch (error: unknown) {
     console.error('[Generate API] Master Catch Block Error:', error);
