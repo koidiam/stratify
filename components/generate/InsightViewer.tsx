@@ -14,6 +14,8 @@ interface Props {
   weekNumber?: number;
   year?: number;
   dataSource?: string;
+  researchUsed?: boolean;
+  trendPostCount?: number;
 }
 
 function normalizeSystemTone(text: string): string {
@@ -125,7 +127,15 @@ function getExecutionConstraints(trigger: string, insight: string): { performsWh
   };
 }
 
-export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }: Props) {
+export function InsightViewer({
+  insights,
+  onNext,
+  weekNumber,
+  year,
+  dataSource,
+  researchUsed,
+  trendPostCount,
+}: Props) {
   if (insights.length === 0) return null;
 
   const sourceLabel = dataSource ?? 'Niche signals';
@@ -201,6 +211,17 @@ export function InsightViewer({ insights, onNext, weekNumber, year, dataSource }
                     Breaks when {constraints.breaksWhen}
                   </p>
                 </div>
+
+                {researchUsed && (trendPostCount ?? 0) > 0 && (
+                  <p className="mt-2 text-[10px] font-mono text-white/30 uppercase tracking-widest">
+                    {trendPostCount} LinkedIn post analiz edildi
+                  </p>
+                )}
+                {!researchUsed && (
+                  <p className="mt-2 text-[10px] font-mono text-white/30 uppercase tracking-widest">
+                    Niche profili baz alındı · Canlı sinyal: Pro planda
+                  </p>
+                )}
               </div>
             </Card>
           );

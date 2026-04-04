@@ -6,6 +6,13 @@ import { getCachedOrScrape } from './cache';
 import { APIFY_ACTORS, APIFY_RULES } from './constants';
 
 type ApifyRecord = Record<string, unknown>;
+type PostFormat =
+  | 'list'
+  | 'story'
+  | 'hook-question'
+  | 'contrarian'
+  | 'data-driven'
+  | 'other';
 
 function getString(record: ApifyRecord, keys: string[]): string | null {
   for (const key of keys) {
@@ -48,14 +55,72 @@ function buildTrendSearchUrl(query: string): string {
   return `https://www.linkedin.com/search/results/content/?keywords=${encodeURIComponent(query)}`;
 }
 
+const NICHE_ALIASES: Record<string, string> = {
+  'b2b saas': 'B2B SaaS',
+  saas: 'SaaS',
+  'saas founder': 'SaaS founder',
+  developer: 'software developer',
+  dev: 'software developer',
+  freelancer: 'freelance professional',
+  consultant: 'business consultant',
+  creator: 'content creator',
+};
+
+function normalizeNiche(raw: string): string {
+  const lower = raw
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\s+/g, ' ');
+
+  return NICHE_ALIASES[lower] ?? lower;
+}
+
 function buildTrendQuery(data: OnboardingData): string {
-  const niche = data.niche.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '');
-  const audience = data.target_audience.trim().toLowerCase().replace(/[^a-z0-9 ]/g, '');
-  return `${niche} ${audience} linkedin`;
+  const niche = normalizeNiche(data.niche);
+  return `${niche} linkedin`;
 }
 
 function getTrendCacheKey(query: string): string {
-  return `niche-trend:${query.replace(/\s+/g, '-')}`;
+  return `niche-trend:${query.toLowerCase().replace(/\s+/g, '-')}`;
+}
+
+function filterByEngagement(posts: LinkedInPostSignal[]): LinkedInPostSignal[] {
+  if (posts.length < 4) {
+    return posts;
+  }
+
+  const scores = posts.map((post) => post.engagementScore).sort((a, b) => a - b);
+  const p25 = scores[Math.floor(scores.length * 0.25)];
+
+  return posts.filter((post) => post.engagementScore >= p25);
+}
+
+function detectPostFormat(content: string): PostFormat {
+  const lower = content.toLowerCase();
+  const lines = content.split('\n').filter((line) => line.trim());
+
+  if (lines.filter((line) => /^[\d•\-\*]/.test(line.trim())).length >= 3) {
+    return 'list';
+  }
+
+  if (/^\d+[\s\S]{0,20}(years?|months?|ago|back)/i.test(content)) {
+    return 'story';
+  }
+
+  if (/^(what if|why do|how do|did you|have you)/i.test(content)) {
+    return 'hook-question';
+  }
+
+  if (/(wrong|myth|stop|nobody|unpopular)/i.test(lower)) {
+    return 'contrarian';
+  }
+
+  if (/\d+%|\$[\d,]+|[0-9]+x|[0-9]+ (users?|customers?|revenue)/i.test(content)) {
+    return 'data-driven';
+  }
+
+  return 'other';
 }
 
 function normalizeLinkedInPost(record: ApifyRecord): LinkedInPostSignal | null {
@@ -90,10 +155,15 @@ function normalizeLinkedInPost(record: ApifyRecord): LinkedInPostSignal | null {
 }
 
 function summarizePost(post: LinkedInPostSignal): string {
-  const excerpt = post.content.replace(/\s+/g, ' ').slice(0, 180);
+  const excerpt = post.content.replace(/\s+/g, ' ').slice(0, 220);
   const authorBits = [post.authorName, post.authorHeadline].filter(Boolean).join(' — ');
-  const stats = `likes:${post.likeCount}, comments:${post.commentCount}, shares:${post.shareCount}`;
-  return `${authorBits || 'Unknown author'} | ${stats} | "${excerpt}"`;
+  const format = detectPostFormat(post.content);
+  const engagementTier =
+    post.engagementScore > 200 ? 'high' :
+    post.engagementScore > 50 ? 'medium' :
+    'low';
+
+  return `[format:${format}][engagement:${engagementTier}] ${authorBits || 'Unknown'} | likes:${post.likeCount} comments:${post.commentCount} | "${excerpt}"`;
 }
 
 function buildContextBlock(title: string, posts: LinkedInPostSignal[]): string | null {
@@ -222,7 +292,9 @@ export async function buildLinkedInResearchContext(
   const allowReferenceScrape = plan === 'pro';
 
   const trendQuery = buildTrendQuery(onboarding);
-  const trendPosts = await getTrendPosts(userId, trendQuery, supabase, allowTrendScrape);
+  const trendPosts = filterByEngagement(
+    await getTrendPosts(userId, trendQuery, supabase, allowTrendScrape)
+  );
   const referencePosts = await getReferencePosts(
     userId,
     onboarding.reference_posts ?? [],

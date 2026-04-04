@@ -118,6 +118,14 @@ export function getPlanSourceSummary(plan: Plan): { label: string; detail: strin
   };
 }
 
+export function getPaywallTeaser(trendPostCount: number, niche: string): string {
+  if (trendPostCount > 0) {
+    return `${trendPostCount} LinkedIn posts were analyzed in the ${niche} niche this week. Competitor profiles and weekly signal shifts are included in every Pro run.`;
+  }
+
+  return `Every Pro run is powered by live LinkedIn signals. Live data analysis for the ${niche} niche is currently locked.`;
+}
+
 export function getImmediateUnlocks(plan: Plan): string[] {
   if (plan === 'free') return PAYWALL_BASIC_FEATURES;
   if (plan === 'basic') return PAYWALL_PRO_FEATURES;

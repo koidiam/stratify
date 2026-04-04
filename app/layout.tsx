@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
-
-const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Stratify | Growth & Strategy Engine',
@@ -35,7 +32,11 @@ export default function RootLayout({
   return (
     // Light mode default for clean SaaS look
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} min-h-screen bg-background text-foreground`} suppressHydrationWarning>
+      <body
+        className="min-h-screen bg-background text-foreground"
+        style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}
+        suppressHydrationWarning
+      >
         <TooltipProvider>
           {children}
           <Toaster position="top-center" />

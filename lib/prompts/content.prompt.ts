@@ -6,7 +6,10 @@ export function buildContentPrompt(
   linkedinContext?: string | null
 ): string {
   const insightSummary = insights
-    .map((i, idx) => `${idx + 1}. ${i.insight} (Trigger: ${i.trigger})`)
+    .map((i, idx) => {
+      const formatHint = i.format_hint ? `, Format: ${i.format_hint}` : '';
+      return `${idx + 1}. ${i.insight} (Trigger: ${i.trigger}${formatHint})`;
+    })
     .join('\n');
 
   return `You are a LinkedIn content strategist for ${data.niche} professionals.

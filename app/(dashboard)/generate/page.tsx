@@ -32,6 +32,12 @@ interface SetupContext {
   tone: string;
 }
 
+interface LastRunContext {
+  weekNumber: number;
+  year: number;
+  insight: string;
+}
+
 export default function GeneratePage() {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -50,6 +56,7 @@ export default function GeneratePage() {
     targetAudience: '',
     tone: '',
   });
+  const [lastRunContext, setLastRunContext] = useState<LastRunContext | null>(null);
 
   useEffect(() => {
     const fetchSetup = async () => {
@@ -78,6 +85,39 @@ export default function GeneratePage() {
         targetAudience: onboarding?.target_audience ?? '',
         tone: onboarding?.tone ?? '',
       });
+
+      const { data: latestHistory } = await supabase
+        .from('content_history')
+        .select('week_number, year, insights')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const topInsight =
+        Array.isArray(latestHistory?.insights) &&
+        typeof latestHistory.insights[0] === 'object' &&
+        latestHistory.insights[0] !== null &&
+        'insight' in latestHistory.insights[0] &&
+        typeof latestHistory.insights[0].insight === 'string' &&
+        latestHistory.insights[0].insight.trim()
+          ? latestHistory.insights[0].insight.trim()
+          : null;
+
+      if (
+        latestHistory &&
+        typeof latestHistory.week_number === 'number' &&
+        typeof latestHistory.year === 'number' &&
+        topInsight
+      ) {
+        setLastRunContext({
+          weekNumber: latestHistory.week_number,
+          year: latestHistory.year,
+          insight: topInsight,
+        });
+      } else {
+        setLastRunContext(null);
+      }
     };
     fetchSetup();
   }, []);
@@ -409,6 +449,22 @@ export default function GeneratePage() {
                     Typical time: 10-15s
                   </div>
 
+                  {lastRunContext && (
+                    <div className="w-full max-w-3xl mt-6 rounded-sm border border-white/10 bg-white/[0.02] p-4 text-left">
+                        <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">
+                          Last run · Week {lastRunContext.weekNumber}
+                        </div>
+                        <div className="text-[10px] font-mono uppercase tracking-widest text-white/30">
+                          {lastRunContext.year}
+                        </div>
+                      </div>
+                      <p className="mt-3 text-sm leading-relaxed text-white/75">
+                        {lastRunContext.insight}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="w-full max-w-3xl mt-8 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4 text-left">
                       <div className="text-[10px] font-bold uppercase tracking-widest text-white/30">Niche</div>
@@ -486,6 +542,8 @@ export default function GeneratePage() {
               weekNumber={data.week_number}
               year={data.year}
               dataSource={dataSource}
+              researchUsed={data.researchUsed ?? false}
+              trendPostCount={data.trendPostCount ?? 0}
             />
           </motion.div>
         )}
@@ -621,7 +679,15 @@ export default function GeneratePage() {
         </div>
       </div>
       
-      <PaywallModal open={showPaywall} onOpenChange={setShowPaywall} used={paywallData.used} limit={paywallData.limit} plan={userPlan} />
+      <PaywallModal
+        open={showPaywall}
+        onOpenChange={setShowPaywall}
+        used={paywallData.used}
+        limit={paywallData.limit}
+        plan={userPlan}
+        trendPostCount={data?.trendPostCount ?? 0}
+        niche={setupContext?.niche ?? ''}
+      />
     </div>
   );
 }

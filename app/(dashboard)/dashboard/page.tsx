@@ -76,6 +76,7 @@ export default async function DashboardPage() {
     ) ?? null;
   const planLimit = PLAN_LIMITS[plan] ?? 1;
   const remainingRuns = Math.max(planLimit - currentUsage, 0);
+  const hasRunsRemaining = currentUsage < planLimit;
 
   const nextAction = (() => {
     if (remainingRuns === 0) {
@@ -158,75 +159,156 @@ export default async function DashboardPage() {
     <div className="flex w-full flex-1 flex-col animate-in fade-in duration-500 -mt-2">
       <div className="grid w-full flex-1 grid-cols-1 border-t border-white/5 bg-[#020202] xl:grid-cols-[minmax(0,1fr)_220px]">
         <div className="order-1 bg-[#000000] p-6 md:p-8">
-          <div className="rounded-sm border border-white/10 bg-white/[0.03] p-6 md:p-8">
-            <div className="inline-flex items-center gap-2 rounded-sm border border-white/10 bg-black/30 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.22em] text-white/58">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Weekly State
-            </div>
+          {!latestHistory ? (
+            <div className="rounded-sm border border-white/10 bg-white/[0.03] p-6 md:p-8">
+              <div className="inline-flex items-center gap-2 rounded-sm border border-white/10 bg-black/30 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.22em] text-white/58">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Weekly State
+              </div>
 
-            <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-3xl">
+              <div className="mt-6 max-w-3xl">
                 <div className="text-[9px] font-bold uppercase tracking-[0.24em] text-white/30">
-                  {stateBadge}
+                  {hasRunsRemaining ? 'Not started' : 'Blocked'}
                 </div>
                 <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
-                  {primaryHeadline}
+                  {hasRunsRemaining ? 'Build your first weekly strategy' : 'Weekly limit reached'}
                 </h2>
                 <p className="mt-3 text-sm leading-relaxed text-white/68">
-                  {primaryDescription}
+                  {hasRunsRemaining
+                    ? `Stratify will analyze LinkedIn signals in the ${niche} niche and generate insights, hooks, and drafts for this week. First run takes about 15 seconds.`
+                    : "You've used your run allowance for this week. Limit resets on Monday."}
                 </p>
               </div>
 
-              <Link
-                href={nextAction.href}
-                className="inline-flex h-12 items-center justify-center rounded-sm bg-white px-6 text-[11px] font-bold uppercase tracking-widest text-black transition-colors hover:bg-white/90"
-              >
-                {nextAction.label}
-              </Link>
+              {hasRunsRemaining ? (
+                <>
+                  <div className="mt-6 grid gap-px overflow-hidden rounded-sm border border-white/10 bg-white/10 sm:grid-cols-3">
+                    <div className="bg-black/30 px-4 py-4">
+                      <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                        Niche
+                      </div>
+                      <p className="mt-2 text-sm font-medium text-white">
+                        {niche}
+                      </p>
+                    </div>
+
+                    <div className="bg-black/30 px-4 py-4">
+                      <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                        Output
+                      </div>
+                      <p className="mt-2 text-sm font-medium text-white">
+                        3 insights · 5 hooks · 3 drafts
+                      </p>
+                    </div>
+
+                    <div className="bg-black/30 px-4 py-4">
+                      <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                        Time
+                      </div>
+                      <p className="mt-2 text-sm font-medium text-white">
+                        ~15 seconds
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <Link
+                      href="/generate"
+                      className="inline-flex h-12 items-center justify-center rounded-sm bg-white px-6 text-[11px] font-bold uppercase tracking-widest text-black transition-colors hover:bg-white/90"
+                    >
+                      Start Strategy Run
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <div className="mt-6 space-y-4">
+                  {plan === 'free' && (
+                    <div className="rounded-sm border border-white/10 bg-white/[0.02] p-4">
+                      <p className="text-sm leading-relaxed text-white/68">
+                        Upgrade to Basic or Pro for more weekly runs.
+                      </p>
+                      <Link
+                        href="/settings"
+                        className="mt-3 inline-flex text-sm text-white/55 transition-colors hover:text-white"
+                      >
+                        Review plans →
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-
-            <div className="mt-6 grid gap-px overflow-hidden rounded-sm border border-white/10 bg-white/10 sm:grid-cols-3">
-              <div className="bg-black/30 px-4 py-4">
-                <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
-                  Current Cycle
-                </div>
-                <p className="mt-2 text-sm font-medium text-white">
-                  Week {week}, {year}
-                </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-white/50">
-                  The cycle currently in focus.
-                </p>
+          ) : (
+            <div className="rounded-sm border border-white/10 bg-white/[0.03] p-6 md:p-8">
+              <div className="inline-flex items-center gap-2 rounded-sm border border-white/10 bg-black/30 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.22em] text-white/58">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                Weekly State
               </div>
 
-              <div className="bg-black/30 px-4 py-4">
-                <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
-                  Last Completed Run
+              <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-3xl">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.24em] text-white/30">
+                    {stateBadge}
+                  </div>
+                  <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white md:text-4xl">
+                    {primaryHeadline}
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed text-white/68">
+                    {primaryDescription}
+                  </p>
                 </div>
-                <p className="mt-2 text-sm font-medium text-white">
-                  {lastCompletedRun}
-                </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-white/50">
-                  {lastCompletedRunMeta}
-                </p>
+
+                <Link
+                  href={nextAction.href}
+                  className="inline-flex h-12 items-center justify-center rounded-sm bg-white px-6 text-[11px] font-bold uppercase tracking-widest text-black transition-colors hover:bg-white/90"
+                >
+                  {nextAction.label}
+                </Link>
               </div>
 
-              <div className="bg-black/30 px-4 py-4">
-                <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
-                  Weekly Capacity
+              <div className="mt-6 grid gap-px overflow-hidden rounded-sm border border-white/10 bg-white/10 sm:grid-cols-3">
+                <div className="bg-black/30 px-4 py-4">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                    Current Cycle
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-white">
+                    Week {week}, {year}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+                    The cycle currently in focus.
+                  </p>
                 </div>
-                <p className="mt-2 text-sm font-medium text-white">
-                  {weeklyCapacityLabel}
-                </p>
-                <p className="mt-1 text-[11px] leading-relaxed text-white/50">
-                  {weeklyCapacityMeta}
-                </p>
+
+                <div className="bg-black/30 px-4 py-4">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                    Last Completed Run
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-white">
+                    {lastCompletedRun}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+                    {lastCompletedRunMeta}
+                  </p>
+                </div>
+
+                <div className="bg-black/30 px-4 py-4">
+                  <div className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                    Weekly Capacity
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-white">
+                    {weeklyCapacityLabel}
+                  </p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+                    {weeklyCapacityMeta}
+                  </p>
+                </div>
               </div>
+
+              <p className="mt-4 text-xs leading-relaxed text-white/44">
+                {nextAction.description}
+              </p>
             </div>
-
-            <p className="mt-4 text-xs leading-relaxed text-white/44">
-              {nextAction.description}
-            </p>
-          </div>
+          )}
         </div>
 
         <div className="order-2 border-t border-white/5 bg-[#000000]/20 p-6 xl:border-l xl:border-t-0">

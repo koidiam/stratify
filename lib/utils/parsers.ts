@@ -16,6 +16,16 @@ function isString(value: unknown): value is string {
   return typeof value === 'string';
 }
 
+function isFormatHint(value: unknown): value is InsightItem['format_hint'] {
+  return (
+    value === 'list' ||
+    value === 'story' ||
+    value === 'hook-question' ||
+    value === 'contrarian' ||
+    value === 'data-driven'
+  );
+}
+
 export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
@@ -53,13 +63,20 @@ export function isInsightItemArray(value: unknown): value is InsightItem[] {
     const insightStr = getCaseInsensitiveValue(item, ['insight']);
     const whyStr = getCaseInsensitiveValue(item, ['why']);
     const triggerStr = getCaseInsensitiveValue(item, ['trigger']);
+    const formatHint = getCaseInsensitiveValue(item, ['format_hint', 'formatHint']);
     
     // Auto-normalize the item so TypeScript casts work flawlessly upstream
     if (isString(insightStr)) item.insight = insightStr;
     if (isString(whyStr)) item.why = whyStr;
     if (isString(triggerStr)) item.trigger = triggerStr;
+    if (isString(formatHint) && isFormatHint(formatHint)) item.format_hint = formatHint;
 
-    return isString(insightStr) && isString(whyStr) && isString(triggerStr);
+    return (
+      isString(insightStr) &&
+      isString(whyStr) &&
+      isString(triggerStr) &&
+      (formatHint === undefined || (isString(formatHint) && isFormatHint(formatHint)))
+    );
   });
 }
 
@@ -105,8 +122,24 @@ export function isWeeklyContent(value: unknown): value is WeeklyContent {
 }
 
 export function isWeeklyGeneration(value: unknown): value is WeeklyGeneration {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  if (typeof value.researchUsed === 'number') {
+    value.researchUsed = value.researchUsed > 0;
+  }
+
+  if (typeof value.trendPostCount === 'string') {
+    const parsed = Number(value.trendPostCount);
+    if (Number.isFinite(parsed)) {
+      value.trendPostCount = parsed;
+    }
+  }
+
   return (
-    isRecord(value) &&
+    (value.researchUsed === undefined || typeof value.researchUsed === 'boolean') &&
+    (value.trendPostCount === undefined || typeof value.trendPostCount === 'number') &&
     isString(value.history_id) &&
     typeof value.week_number === 'number' &&
     typeof value.year === 'number' &&

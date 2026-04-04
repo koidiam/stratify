@@ -11,6 +11,7 @@ import {
   PAYWALL_WHY_UPGRADE,
   getImmediateUnlocks,
   getMissingCapabilities,
+  getPaywallTeaser,
 } from '@/lib/constants/plan-copy';
 
 interface PaywallModalProps {
@@ -19,9 +20,19 @@ interface PaywallModalProps {
   used: number;
   limit: number;
   plan: Plan;
+  trendPostCount: number;
+  niche: string;
 }
 
-export function PaywallModal({ open, onOpenChange, used, limit, plan }: PaywallModalProps) {
+export function PaywallModal({
+  open,
+  onOpenChange,
+  used,
+  limit,
+  plan,
+  trendPostCount,
+  niche,
+}: PaywallModalProps) {
   const router = useRouter();
 
   const handleUpgradeNavigation = () => {
@@ -61,6 +72,15 @@ export function PaywallModal({ open, onOpenChange, used, limit, plan }: PaywallM
               <span className="block mt-2">{upgradeDescription}</span>
             </DialogDescription>
           </DialogHeader>
+
+          <div className="mb-4 border border-white/10 rounded-sm bg-white/[0.02] p-4">
+            <p className="text-[10px] font-mono uppercase tracking-widest text-white/40 mb-1">
+              This week on Pro
+            </p>
+            <p className="text-sm text-white/70 leading-relaxed">
+              {getPaywallTeaser(trendPostCount, niche)}
+            </p>
+          </div>
 
           <div className="mb-4 grid gap-3 md:grid-cols-2">
             <div className="rounded-sm border border-white/5 bg-black/30 p-4">

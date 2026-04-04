@@ -8,7 +8,8 @@ async function run() {
     {
       "insight": "...",
       "why": "...",
-      "trigger": "..."
+      "trigger": "...",
+      "format_hint": "story"
     }
   ]
 }`;

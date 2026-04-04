@@ -21,6 +21,7 @@ export interface InsightItem {
   insight: string;
   why: string;
   trigger: PsychTrigger;
+  format_hint?: 'list' | 'story' | 'hook-question' | 'contrarian' | 'data-driven';
 }
 
 export interface IdeaItem {
@@ -45,6 +46,8 @@ export interface WeeklyGeneration extends WeeklyContent {
   history_id: string;
   week_number: number;
   year: number;
+  researchUsed?: boolean;
+  trendPostCount?: number;
 }
 
 export interface ApiErrorResponse {

@@ -93,15 +93,24 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
     }
 
     let feedbackContext: string | null = null;
-    const { data: pastFeedback } = await adminClient
+    const { data: recentFeedback } = await adminClient
       .from('post_feedback')
-      .select('views, likes, comments, reposts, notes')
+      .select('notes, likes, comments, reposts, views')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(5);
       
-    if (pastFeedback && pastFeedback.length > 0) {
-      feedbackContext = pastFeedback.map(f => `Views: ${f.views}, Likes: ${f.likes}, Comments: ${f.comments}, Reposts: ${f.reposts}, Notes: ${f.notes || 'None'}`).join('\n');
+    if (recentFeedback && recentFeedback.length > 0) {
+      feedbackContext = recentFeedback
+        .map((feedback, index) => {
+          const note =
+            typeof feedback.notes === 'string' && feedback.notes.trim()
+              ? `, note="${feedback.notes.trim()}"`
+              : '';
+
+          return `Post ${index + 1}: likes=${feedback.likes ?? 0}, comments=${feedback.comments ?? 0}, reposts=${feedback.reposts ?? 0}, views=${feedback.views ?? 0}${note}`;
+        })
+        .join('\n');
     }
 
     const insightPromptText = buildInsightPrompt(
@@ -199,6 +208,8 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       ideas: content.ideas,
       hooks: content.hooks,
       posts: content.posts,
+      researchUsed: (linkedinResearch?.trendPosts.length ?? 0) > 0,
+      trendPostCount: linkedinResearch?.trendPosts.length ?? 0,
     });
 
   } catch (error: unknown) {

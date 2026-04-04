@@ -85,9 +85,32 @@ const PROOF_ITEMS = [
   },
 ] as const;
 
+const NICHE_EXAMPLES = [
+  {
+    label: 'SaaS Founder',
+    signal: 'Competitor postmortems are getting 3x more saves than growth tactics in B2B SaaS this week.',
+    hook: '"We lost 40% of our users in month 4. Here\'s what the data actually said."',
+    draft: `We had 800 active users.\nMonth 3 retention looked fine.\nMonth 4: 40% churned in 2 weeks.\n\nThe dashboard showed usage. It didn't show frustration.\n\nWe were measuring the wrong thing the whole time —`,
+  },
+  {
+    label: 'Freelancer',
+    signal: 'Pricing transparency posts are outperforming portfolio posts 2:1 among freelance professionals this week.',
+    hook: '"Why I charge $8,000 for a 3-week project — and stopped apologizing for it."',
+    draft: `3 years ago I quoted $1,200 for a brand identity.\nClient said yes immediately.\n\nThat was the sign I was undercharging.\n\nNow I charge $8,000. Fewer clients. Better work. More revenue —`,
+  },
+  {
+    label: 'Consultant',
+    signal: 'Contrarian takes on industry frameworks are driving comment rates up 45% this month.',
+    hook: '"The framework everyone uses is optimized for the consultant, not the client."',
+    draft: `I've used the 2x2 matrix in 60+ client engagements.\n\nIt's not a strategy tool.\nIt's a conversation-ending tool.\n\nHere's what actually works when the stakes are real —`,
+  },
+] as const;
+
 export function LandingPage() {
   const [isYearly, setIsYearly] = useState(false);
+  const [activeTab, setActiveTab] = useState<0 | 1 | 2>(0);
   const { status, claimed, total, isFallback } = useFoundingStatus();
+  const selectedExample = NICHE_EXAMPLES[activeTab];
 
   return (
     <main className="dark-premium min-h-screen text-foreground bg-background relative selection:bg-primary/20 font-sans overflow-x-hidden">
@@ -361,55 +384,60 @@ export function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 relative cursor-default">
-            {/* Step 1 */}
-            <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8 flex flex-col hover:-translate-y-1 transition-transform duration-300">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-6 h-6 rounded-sm bg-white/5 text-white/50 font-mono text-[9px] flex items-center justify-center border border-white/10">01</div>
-                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/50">The Raw Signal</div>
-              </div>
-              <p className="text-white text-[11px] leading-relaxed mb-6 flex-grow font-mono">
-                Personal proof is outperforming generic advice in this niche because the audience wants real operator experience.
-              </p>
-              <div className="inline-flex items-center gap-2 rounded-sm bg-emerald-500/10 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-widest text-emerald-500 border border-emerald-500/20 w-max">
-                <Zap size={10} className="text-emerald-500" /> Trigger: Relatability
-              </div>
+          <div className="mx-auto w-full max-w-4xl">
+            <div className="flex flex-wrap items-center justify-center gap-5 border-b border-white/10 pb-4">
+              {NICHE_EXAMPLES.map((example, index) => {
+                const isActive = activeTab === index;
+
+                return (
+                  <button
+                    key={example.label}
+                    type="button"
+                    onClick={() => setActiveTab(index as 0 | 1 | 2)}
+                    className={`border-b pb-2 text-sm transition-colors ${
+                      isActive
+                        ? 'border-white/30 text-white'
+                        : 'border-transparent text-white/40 hover:text-white/70'
+                    }`}
+                  >
+                    {example.label}
+                  </button>
+                );
+              })}
             </div>
 
-            {/* Step 2 */}
-            <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8 flex flex-col hover:-translate-y-1 transition-transform duration-300">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-6 h-6 rounded-sm bg-white/5 text-white/50 font-mono text-[9px] flex items-center justify-center border border-white/10">02</div>
-                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/50">The Hook</div>
+            <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-white/30">
+                  Signal
+                </div>
+                <p className="mt-3 text-sm text-white/70 leading-relaxed">
+                  {selectedExample.signal}
+                </p>
               </div>
-              <p className="text-white font-bold text-sm md:text-base leading-snug flex-grow font-serif italic">
-                &quot;The lesson that hurt our growth more than any competitor did&quot;
-              </p>
-              <p className="text-white/40 text-[10px] font-mono leading-relaxed border-t border-white/5 pt-4 mt-4">
-                Converts the signal into a strategic opening with tension, proof, and a clear angle.
-              </p>
-            </div>
 
-            {/* Step 3 */}
-            <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8 flex flex-col hover:-translate-y-1 transition-transform duration-300">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-6 h-6 rounded-sm bg-white/5 text-white/50 font-mono text-[9px] flex items-center justify-center border border-white/10">03</div>
-                <div className="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-white/50">The Draft</div>
+              <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-white/30">
+                  Hook
+                </div>
+                <p className="mt-3 text-sm text-white/70 leading-relaxed">
+                  {selectedExample.hook}
+                </p>
               </div>
-              <div className="rounded-sm border border-white/5 bg-white/[0.02] p-4 flex-grow">
-                <p className="text-white/80 text-[10px] leading-relaxed whitespace-pre-line font-mono">
-                  {`We hit $8K MRR in month 3.
 
-Then we tried to scale too fast.
-
-Hired 2 devs before repeatable sales.
-
-Back to $2K in 3 months.
-
-Here's my expensive lesson —`}
+              <div className="rounded-sm str-panel border-white/5 bg-[#000000]/40 p-6 md:p-8">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-white/30">
+                  Draft
+                </div>
+                <p className="mt-3 text-sm text-white/70 leading-relaxed whitespace-pre-line">
+                  {selectedExample.draft}
                 </p>
               </div>
             </div>
+
+            <p className="mt-4 text-center text-[10px] text-white/20">
+              Illustrative examples. Output varies by niche and weekly signals.
+            </p>
           </div>
         </motion.section>
 
