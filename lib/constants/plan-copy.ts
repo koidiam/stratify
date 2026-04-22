@@ -27,12 +27,13 @@ const PLAN_DEPTH_CARDS: Record<Plan, PlanDepthCard> = {
     depthLabel: 'Surface Layer',
     headline: 'Core engine access, limited system depth',
     description:
-      'Free lets the user sample Stratify as a strategy engine, but continuity across cycles and the deepest signal layers remain sealed.',
-    capacityLabel: '1 weekly strategy pass',
+      'The initial layer lets the system operate, but continuity and deepest signal learning stay sealed.',
+    capacityLabel: 'Baseline system capacity',
     capabilities: [
-      'Cached market basis keeps the engine usable',
-      'Newest retained cycle stays open',
-      'Good for sampling the weekly loop before deeper continuity matters',
+      'Limited market pattern signals',
+      'Single strategy path extraction',
+      'Short-term cycle memory',
+      'Minimal learning carryover',
     ],
   },
   basic: {
@@ -41,12 +42,13 @@ const PLAN_DEPTH_CARDS: Record<Plan, PlanDepthCard> = {
     depthLabel: 'Operating Layer',
     headline: 'Usable weekly system with continuity',
     description:
-      'Basic turns Stratify into a real weekly operating loop: more room to test, full continuity across retained cycles, and a stronger learning surface.',
-    capacityLabel: '3 weekly strategy passes',
+      'The operating layer connects your cycles together. Learning begins to influence output.',
+    capacityLabel: 'Expanded operating capacity',
     capabilities: [
-      'Full retained history across cycles',
-      'More room to compare weekly strategy passes and accumulate learning',
-      'A deeper operating system than the free surface layer',
+      'Expanded market pattern signals',
+      'Dual strategy path extraction',
+      'Partial memory continuity across cycles',
+      'Directional learning influence',
     ],
   },
   pro: {
@@ -55,12 +57,14 @@ const PLAN_DEPTH_CARDS: Record<Plan, PlanDepthCard> = {
     depthLabel: 'Intelligence Layer',
     headline: 'Full live strategy intelligence system',
     description:
-      'Pro opens the deepest research layer: live signal basis, reference inputs, and the most room for the learning loop to sharpen over time.',
-    capacityLabel: '50 weekly strategy passes',
+      'The intelligence layer completely unlocks the system. It adapts to you over time.',
+    capacityLabel: 'Full system capacity',
     capabilities: [
-      'Live signal system folded into each run',
-      'Reference and competitor texture available during research',
-      'Highest weekly testing room for stronger strategy shaping and learning resolution',
+      'Full live pattern landscape',
+      'Complete strategy path extraction',
+      'Full memory continuity chain',
+      'Adaptive learning-driven system behavior',
+      'Direct reference integration',
     ],
   },
 };
@@ -89,26 +93,26 @@ export function getUpgradeTargetPlan(plan: Plan): Plan | null {
 
 export function getUpgradeTriggerTitle(plan: Plan): string {
   if (plan === 'free') {
-    return 'Move beyond the surface layer';
+    return 'Deeper signal layers available';
   }
 
   if (plan === 'basic') {
-    return 'Open the full intelligence layer';
+    return 'Approaching intelligence layer depth';
   }
 
-  return 'Intelligence layer at weekly capacity';
+  return 'System capacity reached';
 }
 
 export function getUpgradeTriggerDescription(plan: Plan): string {
   if (plan === 'free') {
-    return 'Free keeps the engine usable, but the continuity layer and the deepest market intelligence remain sealed above it.';
+    return 'You are approaching deeper system layers. Continuity continues at higher system depth.';
   }
 
   if (plan === 'basic') {
-    return 'Basic keeps the weekly operating loop open. Pro adds the deepest live signal, reference, and learning-resolution layer.';
+    return 'You are gaining access to higher system depth. Next cycle will not be fully retained on this layer.';
   }
 
-  return 'You are already on the deepest plan. This surface is about current weekly capacity, not missing capability.';
+  return "This week's system capacity has been reached. Continuity resumes next week.";
 }
 
 export function getCurrentLayerStatus(plan: Plan): { label: string; detail: string } {
@@ -131,7 +135,7 @@ export function getCurrentLayerStatus(plan: Plan): { label: string; detail: stri
   return {
     label: 'Intelligence layer active',
     detail:
-      'No deeper product tier exists above Pro. The current pause is only about this week’s available capacity.',
+      "No deeper product tier exists above Pro. The current pause is only about this week's available capacity.",
   };
 }
 
@@ -159,10 +163,10 @@ export function getNextLayerStatus(plan: Plan): { label: string; detail: string 
   };
 }
 
-export function getUpgradeButtonLabel(plan: Plan): string {
-  if (plan === 'free') return 'Review Deeper Layers in Settings';
-  if (plan === 'basic') return 'Review Pro Intelligence Layer';
-  return 'Review Billing in Settings';
+export function getUpgradeButtonLabel(plan: Plan): string | null {
+  if (plan === 'free') return 'Unlock deeper layers';
+  if (plan === 'basic') return 'Unlock intelligence layer';
+  return null;
 }
 
 export function getLockedLayerHint(
@@ -175,44 +179,44 @@ export function getLockedLayerHint(
 
   if (context === 'history') {
     return {
-      eyebrow: 'Continuity Layer',
-      title: 'Full cycle continuity is sealed above the free layer',
+      eyebrow: 'Memory Continuity',
+      title: 'Full continuity unlocks in deeper system layers',
       detail:
         plan === 'free'
-          ? 'Basic reopens prior retained cycles and gives the learning loop more continuity to work with. Pro adds the deepest intelligence layer on top of that continuity.'
-          : 'The full continuity layer is already open on Basic. Pro changes the depth of the signal system, not archive access.',
+          ? 'Next cycle will build on this direction. This cycle is not contributing to full system learning.'
+          : 'You already have full continuity on Basic. Intelligence depth expands your signal, not your archive access.',
     };
   }
 
   if (context === 'reference') {
     return {
-      eyebrow: 'Reference Intelligence',
-      title: plan === 'free' ? 'Reference depth lives above the surface layer' : 'Reference depth is sealed above Basic',
+      eyebrow: 'System Depth',
+      title: plan === 'free' ? 'Deeper system layers available' : 'Reference intelligence is sealed on this plan',
       detail:
         plan === 'free'
-          ? 'Free keeps the engine usable, but the deeper reference layer only opens inside Pro alongside the full live intelligence system.'
-          : 'Basic keeps the operating loop open, but Pro adds the deeper reference and competitor texture layer during research.',
+          ? 'Continuity expands with access. More patterns emerge at higher system depth when references are connected.'
+          : 'You are approaching deeper system layers. Pro adds the deeper reference and competitor texture layer during research.',
     };
   }
 
   if (context === 'learning') {
     return {
       eyebrow: 'Learning Resolution',
-      title: plan === 'free' ? 'Learning stays low-resolution on the surface layer' : 'Pro gives the learning loop more room to resolve',
+      title: plan === 'free' ? 'Deeper signal layers available' : 'More patterns emerge at higher system depth',
       detail:
         plan === 'free'
-          ? 'With only the surface layer open, the system has less continuity and less weekly testing room to accumulate strong adaptation signals.'
-          : 'Basic keeps learning active, but Pro pairs deeper market basis with wider weekly testing room for sharper strategy shaping over time.',
+          ? 'You are approaching deeper system layers. Expanding access gives the learning loop historical traction to accurately shape your strategy.'
+          : 'You are gaining access to higher system depth. Pro pairs deeper market baseline data with more weekly testing room.',
     };
   }
 
   return {
     eyebrow: 'Signal Depth',
-    title: plan === 'free' ? 'Live market depth is sealed above the surface layer' : 'The deepest intelligence layer remains sealed',
+    title: plan === 'free' ? 'Deeper signal layers available' : 'Approaching deeper system layers',
     detail:
       plan === 'free'
-        ? 'Free relies on the surface signal layer. Basic reopens continuity and more weekly testing room, while Pro adds the full live signal and reference system.'
-        : 'Basic keeps the weekly loop open, but Pro adds the deepest live signal and reference layer when you need sharper market basis.',
+        ? 'More patterns emerge at higher system depth. Continuity expands with access to live LinkedIn signals.'
+        : 'You are gaining access to higher system depth. Pro feeds direct references into your strategy when you need them.',
   };
 }
 
@@ -250,6 +254,17 @@ export function getLoadingMessages(plan: Plan): string[] {
       'Connecting to strategy engine...',
       'Loading audience and tone context...',
       'Scanning live LinkedIn signals...',
+      'Extracting repeatable patterns...',
+      'Translating patterns into hook angles...',
+      'Compiling full LinkedIn drafts...',
+      'Preparing structured output...',
+    ];
+  }
+  if (plan === 'basic') {
+    return [
+      'Connecting to strategy engine...',
+      'Loading audience and tone context...',
+      'Scanning operating signal layer...',
       'Extracting repeatable patterns...',
       'Translating patterns into hook angles...',
       'Compiling full LinkedIn drafts...',
@@ -304,23 +319,26 @@ export function getQuickActionsUpgradeHint(plan: Plan): string | null {
 
 // ─── History — Lock Message ─────────────────────────────────────────────────
 
-export const HISTORY_LOCK_MESSAGE = 'Basic and Pro reopen the full continuity layer across retained cycles';
+export const HISTORY_LOCK_MESSAGE = 'Extended memory continuity is sealed at this layer. Partial continuity is retained across cycles.';
 
 // ─── PaywallModal ───────────────────────────────────────────────────────────
 
 export const PAYWALL_WHY_UPGRADE =
-  'Upgrading opens a deeper system layer: more continuity across cycles, stronger intelligence depth, and more room for the learning loop to resolve.';
+  'You are approaching deeper system layers. Continuity expands with access.';
 
 export const PAYWALL_BASIC_FEATURES = [
-  'Full continuity across retained cycles',
-  'More weekly room to test strategy directions',
-  'A usable weekly operating loop instead of a surface-only layer',
+  'Expanded market pattern signals',
+  'Dual strategy path extraction',
+  'Partial memory continuity across cycles',
+  'Directional learning influence',
 ];
 
 export const PAYWALL_PRO_FEATURES = [
-  'Live signal system folded into each run',
-  'Reference and competitor texture during research',
-  'Highest weekly testing room for deeper learning resolution',
+  'Full live pattern landscape',
+  'Complete strategy path extraction',
+  'Full memory continuity chain',
+  'Adaptive learning-driven system behavior',
+  'Direct reference integration',
 ];
 
 export function getPlanSourceSummary(plan: Plan): { label: string; detail: string } {
@@ -361,22 +379,22 @@ export function getImmediateUnlocks(plan: Plan): string[] {
 export function getMissingCapabilities(plan: Plan): string[] {
   if (plan === 'free') {
     return [
-      'Full continuity across prior retained cycles stays sealed',
-      'Weekly testing room is too narrow for stronger learning resolution',
+      'Expanded strategy path extraction stays sealed',
+      'Memory continuity pauses at this cycle',
       'The deepest live signal and reference layers stay sealed',
     ];
   }
 
   if (plan === 'basic') {
     return [
-      'The deepest live signal layer is still sealed above Basic',
-      'Reference and competitor texture are unavailable in the current research layer',
-      'The learning loop has less room to resolve across many weekly strategy passes',
+      'The deepest live signal layer is still sealed above the operating layer',
+      'Complete strategy path extraction is restricted',
+      'Adaptive learning behavior stays locked without full limit testing',
     ];
   }
 
   return [
     'No deeper intelligence tier exists above Pro',
-    'Current weekly capacity resumes next week unless billing changes',
+    'System continuity resumes next week when capacity resets',
   ];
 }

@@ -234,6 +234,7 @@ export function isWeeklyGeneration(value: unknown): value is WeeklyGeneration {
     typeof value.week_number === 'number' &&
     typeof value.year === 'number' &&
     isInsightItemArray(value.insights) &&
+    (value.run_logic_summary === undefined || isString(value.run_logic_summary)) &&
     isWeeklyContent(value)
   );
 }

@@ -21,9 +21,9 @@ export interface StoredFeedbackRecord {
 }
 
 export interface CycleLearningSnapshot {
-  summary: string;
-  progressionNote: string | null;
-  latestNote: string | null;
+  learned: string;
+  reinforced: string;
+  nextImpact: string;
 }
 
 interface EnrichedFeedbackEntry {
@@ -327,9 +327,11 @@ export function buildLearningSummary(
   const status: LearningSummary['status'] =
     feedbackEntryCount === 0
       ? 'none'
-      : bestPerformanceNote || cautionNote
-        ? 'directional'
-        : 'early';
+      : (feedbackEntryCount >= 5 && annotatedCycleCount >= 2 && driftStatus === 'repeating' && strongestType)
+        ? 'reinforced'
+        : (bestPerformanceNote || cautionNote)
+          ? 'directional'
+          : 'early';
 
   const adjustmentContext: string[] = [];
 
@@ -447,36 +449,47 @@ export function getCycleLearningSnapshot(
   nextCycle: StoredCycleRecord | null
 ): CycleLearningSnapshot {
   const cycleFeedback = feedbackRecords.filter((item) => item.history_id === record.id);
+  const dominantNextType = nextCycle ? getDominantPostTypeKey(nextCycle.posts) : null;
+  const cycleSummary = cycleFeedback.length > 0 ? buildLearningSummary([record], cycleFeedback) : null;
+  
+  let nextImpact = '';
+  if (nextCycle) {
+    if (cycleSummary?.driftStatus === 'repeating') {
+      nextImpact = `System continued to bias toward ${formatPathTypeLabel(dominantNextType)} setups in the ensuing run.`;
+    } else {
+      nextImpact = `System shifted subsequent execution toward ${formatPathTypeLabel(dominantNextType)} baselines.`;
+    }
+  } else if (cycleSummary?.strongestType) {
+    if (cycleSummary.driftStatus === 'repeating') {
+      nextImpact = `System shows consistent preference for ${formatPathTypeLabel(cycleSummary.strongestType)} patterns in forward pipeline.`;
+    } else {
+      nextImpact = `System is shifting baseline bias toward ${formatPathTypeLabel(cycleSummary.strongestType)} based on logged signals.`;
+    }
+  } else {
+    nextImpact = `System maintains baseline multi-path distribution for upcoming runs.`;
+  }
 
-  if (cycleFeedback.length === 0) {
+  if (cycleFeedback.length === 0 || !cycleSummary) {
     return {
-      summary: 'No measured outcome log is attached to this cycle yet.',
-      progressionNote: nextCycle
-        ? `The following retained cycle opened with ${getCycleLeadSignal(nextCycle.insights)}`
-        : null,
-      latestNote: null,
+      learned: 'No feedback attached to this cycle. Baseline operational data only.',
+      reinforced: 'None. Building memory footprint.',
+      nextImpact
     };
   }
 
-  const cycleSummary = buildLearningSummary([record], cycleFeedback);
-  const dominantNextType = nextCycle ? getDominantPostTypeKey(nextCycle.posts) : null;
-  const referenceType = cycleSummary.strongestType ?? getDominantPostTypeKey(record.posts);
+  const learned = cycleSummary.weakestType
+    ? `Detected softer response clustering on ${formatPathTypeLabel(cycleSummary.weakestType)} structures.`
+    : cycleSummary.bestPerformanceNote
+      ? `Isolated definitive signal from ${cycleFeedback.length} feedback logs.`
+      : 'Feedback attached but differential signal is partial.';
 
-  let progressionNote: string | null = null;
-
-  if (nextCycle && dominantNextType) {
-    progressionNote =
-      referenceType && dominantNextType === referenceType
-        ? `The following retained cycle kept ${formatPathTypeLabel(dominantNextType)} as the dominant output bias.`
-        : `The following retained cycle shifted dominant output bias to ${formatPathTypeLabel(dominantNextType)}.`;
-  }
+  const reinforced = cycleSummary.strongestType
+    ? `Strongest engagement mapped on ${formatPathTypeLabel(cycleSummary.strongestType)} paths.`
+    : 'No statistically dominant outlier yet.';
 
   return {
-    summary:
-      cycleSummary.bestPerformanceNote ??
-      cycleSummary.cautionNote ??
-      'Outcome logs are attached to this cycle, but not enough comparable path data exists to rank the response yet.',
-    progressionNote,
-    latestNote: cycleSummary.latestOperatorNote,
+    learned,
+    reinforced,
+    nextImpact
   };
 }

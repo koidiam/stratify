@@ -1,14 +1,16 @@
 "use client";
 
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
-import { AlertCircle, ArrowRight, Loader2, Lock } from 'lucide-react';
+import { AlertCircle, ArrowRight, Loader2, Lock, ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { InsightViewer } from '@/components/generate/InsightViewer';
 import { ContentHooks } from '@/components/generate/ContentHooks';
 import { FinalPost } from '@/components/generate/FinalPost';
 import { LiveStatus } from '@/components/system/LiveStatus';
+import { RunManifest } from '@/components/system/RunManifest';
 import { createClient } from '@/lib/supabase/client';
 import { PaywallModal } from '@/components/billing/PaywallModal';
 import { getApiError, getErrorMessage, isWeeklyGeneration } from '@/lib/utils/parsers';
@@ -97,19 +99,19 @@ function getPipelineStateClassName(state: PipelineState): string {
 }
 
 function getRunStateBadge(runState: EngineRunState): string {
-  if (runState === 'running') return 'Run in progress';
-  if (runState === 'results') return 'Run complete';
-  if (runState === 'limit') return 'Run limit reached';
-  if (runState === 'error') return 'Retry available';
-  return 'Run ready';
+  if (runState === 'running') return 'Active';
+  if (runState === 'results') return 'Review';
+  if (runState === 'limit') return 'Blocked';
+  if (runState === 'error') return 'Error';
+  return 'Ready';
 }
 
 function getRunStateHeadline(runState: EngineRunState): string {
-  if (runState === 'running') return 'Run in progress';
-  if (runState === 'results') return 'Run complete';
-  if (runState === 'limit') return 'Run limit reached';
-  if (runState === 'error') return 'Retry the run';
-  return 'Run ready';
+  if (runState === 'running') return 'Cycle running';
+  if (runState === 'results') return 'Cycle pending review';
+  if (runState === 'limit') return 'Capacity block active';
+  if (runState === 'error') return 'Cycle error';
+  return 'Ready to run';
 }
 
 function getRunStateDescription(
@@ -120,19 +122,19 @@ function getRunStateDescription(
   limitState?: { used: number; limit: number } | null
 ): string {
   if (runState === 'running') {
-    return 'The engine is processing the weekly sequence.';
+    return 'The system is compiling the current cycle.';
   }
 
   if (runState === 'results') {
-    return 'Signals, paths, and drafts are attached.';
+    return 'This week’s strategy is deployed. The system is tracking signals and waiting for your review to close the cycle.';
   }
 
   if (runState === 'limit') {
-    return `The weekly run budget is exhausted${limitState ? ` (${limitState.used}/${limitState.limit})` : ''}. ${getUpgradeTriggerDescription(plan)}`;
+    return `Weekly continuity capacity reached${limitState ? ` (${limitState.used}/${limitState.limit})` : ''}. ${getUpgradeTriggerDescription(plan)}`;
   }
 
   if (runState === 'error') {
-    return 'Saved context held. Retry the run.';
+    return 'Memory intact. Please retry the compilation.';
   }
 
   return `${sourceLabel} attached. ${sourceDetail}`;
@@ -165,13 +167,6 @@ function getRunSourceDetail(plan: Plan, summary?: ResearchProvenance): string {
   return 'No market post set is attached. The engine is using saved context and feedback.';
 }
 
-function getMarketInputLabel(summary?: ResearchProvenance): string {
-  if (!summary) return 'Pending';
-  if (summary.marketInputStatus === 'trend-and-reference') return 'Trend + reference';
-  if (summary.marketInputStatus === 'trend-only') return 'Trend only';
-  if (summary.marketInputStatus === 'reference-only') return 'Reference only';
-  return 'Profile context only';
-}
 
 function formatSourceTypeLabel(sourceType: ResearchProvenance['sourceMode']): string {
   if (sourceType === 'live') return 'Live';
@@ -223,6 +218,7 @@ function getFilterAuditLabel(summary?: ResearchProvenance): string {
   return notes.length > 0 ? notes.join(' · ') : 'No post-filter pass ran';
 }
 
+
 function getLearningStateLabel(summary?: LearningSummary | null): string {
   if (!summary || summary.feedbackEntryCount === 0) {
     return 'Learning idle';
@@ -233,18 +229,6 @@ function getLearningStateLabel(summary?: LearningSummary | null): string {
   }
 
   return 'Early learning live';
-}
-
-function getLearningStateDetail(summary?: LearningSummary | null): string {
-  if (!summary || summary.feedbackEntryCount === 0) {
-    return 'Log reviewed posts to activate learning.';
-  }
-
-  return (
-    summary.bestPerformanceNote ??
-    summary.cautionNote ??
-    'Feedback is attached, but it is still too sparse to support a stronger adjustment claim.'
-  );
 }
 
 export default function GeneratePage() {
@@ -266,6 +250,7 @@ export default function GeneratePage() {
   });
   const [lastRunContext, setLastRunContext] = useState<LastRunContext | null>(null);
   const [learningSummary, setLearningSummary] = useState<LearningSummary | null>(null);
+  const [activeLogic, setActiveLogic] = useState<{ signal: string; shift: string; because: string } | null>(null);
 
   const sourceSummary = getPlanSourceSummary(userPlan);
   const pipelineStages: PipelineStageItem[] = [
@@ -327,7 +312,7 @@ export default function GeneratePage() {
 
       if (!cancelled) {
         setSetupContext({
-          niche: onboarding?.niche ?? '',
+          niche: onboarding?.niche || '',
           targetAudience: onboarding?.target_audience ?? '',
           tone: onboarding?.tone ?? '',
         });
@@ -357,21 +342,51 @@ export default function GeneratePage() {
             (recentFeedback ?? []) as StoredFeedbackRecord[]
           )
         );
+
+        if (latestHistory) {
+          const { getCycleLeadSignal, getDominantPostType } = await import('@/lib/utils/history');
+          const { getCycleLearningSnapshot } = await import('@/lib/utils/learning');
+          const prevHistory = historyRecords[1] ?? null;
+          const cycleFeedbackRecords = recentFeedback?.filter((fb) => fb.history_id === latestHistory.id) ?? [];
+          const cLearning = getCycleLearningSnapshot(latestHistory, (recentFeedback ?? []) as StoredFeedbackRecord[], prevHistory);
+          
+          let signal = getCycleLeadSignal(latestHistory.insights);
+          let shift = 'Exploration baseline';
+          let because = 'No prior data to shift from';
+          const dominantPath = getDominantPostType(latestHistory.posts);
+          const prevDominantPath = prevHistory ? getDominantPostType(prevHistory.posts) : null;
+
+          if (cLearning.reinforced && cLearning.reinforced !== 'No statistically dominant outlier yet.' && cLearning.reinforced !== 'None. Building memory footprint.') {
+            shift = cLearning.reinforced;
+            because = cycleFeedbackRecords.length > 0 ? `Engagement clustered on this structural pattern` : 'Pattern reinforced';
+          } else if (dominantPath && prevDominantPath && dominantPath !== prevDominantPath) {
+            shift = `Bias shifted to ${dominantPath}`;
+            because = `System rotated format from ${prevDominantPath} to map engagement surfaces`;
+          } else if (dominantPath && prevDominantPath && dominantPath === prevDominantPath) {
+            shift = `Maintained ${dominantPath} format`;
+            because = `Previous execution maintained established baseline efficiently`;
+          } else {
+            shift = 'Executing baseline logic';
+            because = 'Variance in feedback statistically insignificant';
+          }
+
+          setActiveLogic({ signal, shift, because });
+        }
       }
 
+      const { getTopInsight } = await import('@/lib/utils/history').then(m => ({ getTopInsight: (r: any) => m.getCycleLeadSignal(r?.insights) }));
       const topInsight = getTopInsight(latestHistory);
 
       if (!cancelled) {
         if (
           latestHistory &&
           typeof latestHistory.week_number === 'number' &&
-          typeof latestHistory.year === 'number' &&
-          topInsight
+          typeof latestHistory.year === 'number'
         ) {
           setLastRunContext({
             weekNumber: latestHistory.week_number,
             year: latestHistory.year,
-            insight: topInsight,
+            insight: topInsight || 'No insight available',
             createdAt: latestHistory.created_at,
           });
         } else {
@@ -498,7 +513,6 @@ export default function GeneratePage() {
   const activeResearchSummary = data?.researchSummary;
   const activeLearningSummary = data?.learningSummary ?? learningSummary;
   const dataSource = getRunSourceLabel(userPlan, activeResearchSummary);
-  const activeSourceDetail = getRunSourceDetail(userPlan, activeResearchSummary);
   const runState: EngineRunState = loading
     ? 'running'
     : limitState
@@ -545,119 +559,156 @@ export default function GeneratePage() {
   const resultSurface = (() => {
     if (!data) return null;
 
-    if (step === 1) {
-      return (
-        <InsightViewer
-          insights={data.insights}
-          onNext={() => setStep(2)}
-          weekNumber={data.week_number}
-          year={data.year}
-          dataSource={dataSource}
-          researchSummary={data.researchSummary}
-          userPlan={userPlan}
-        />
-      );
-    }
+    return (
+      <div className="space-y-6">
+        {/* Step Navigation Bar */}
+        {runState === 'results' && step > 0 && (
+          <div className="flex items-center gap-3 mb-8">
+            <button 
+              onClick={() => setStep(1)}
+              className={`flex items-center gap-2 transition-colors ${step === 1 ? 'text-white font-medium' : 'text-white/30 hover:text-white/50'}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${step === 1 ? 'bg-emerald-500' : 'bg-white/20'}`} />
+              <span className="text-[13px]">Signals</span>
+            </button>
+            <div className="border-t border-white/15 w-16" />
+            <button 
+              onClick={() => step > 1 && setStep(2)}
+              disabled={step < 2}
+              className={`flex items-center gap-2 transition-colors ${step === 2 ? 'text-white font-medium' : step > 2 ? 'text-white/30 hover:text-white/50' : 'text-white/10'}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${step === 2 ? 'bg-emerald-500' : step > 2 ? 'bg-white/20' : 'bg-white/10'}`} />
+              <span className="text-[13px]">Strategy Paths</span>
+            </button>
+            <div className="border-t border-white/15 w-16" />
+            <button 
+              onClick={() => step > 2 && setStep(3)}
+              disabled={step < 3}
+              className={`flex items-center gap-2 transition-colors ${step === 3 ? 'text-white font-medium' : 'text-white/10'}`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${step === 3 ? 'bg-emerald-500' : 'bg-white/10'}`} />
+              <span className="text-[13px]">Draft</span>
+            </button>
+          </div>
+        )}
 
-    if (step === 2) {
-      return (
-        <ContentHooks
-          historyId={data.history_id}
-          hooks={data.hooks}
-          ideas={data.ideas}
-          posts={data.posts}
-          onSelectPost={handleSelectPost}
-          onRefine={handleRefine}
-          onBack={() => setStep(1)}
-          userPlan={userPlan}
-          weekNumber={data.week_number}
-          year={data.year}
-          dataSource={dataSource}
-        />
-      );
-    }
+        {step > 1 && (
+          <RunManifest
+            researchSummary={data.researchSummary}
+            learningSummary={data.learningSummary}
+            runLogicSummary={data.run_logic_summary}
+            userPlan={userPlan}
+            weekNumber={data.week_number}
+            year={data.year}
+            manifestMode={step === 2 ? 'compact' : 'sentence-only'}
+          />
+        )}
 
-    if (step === 3 && selectedPostIndex !== null) {
-      return (
-        <FinalPost
-          initialContent={selectedPost}
-          historyId={data.history_id}
-          postIndex={selectedPostIndex}
-          onBack={() => setStep(2)}
-          userPlan={userPlan}
-          weekNumber={data.week_number}
-          year={data.year}
-          postType={data.posts[selectedPostIndex]?.type}
-          hook={data.hooks[selectedPostIndex] ?? data.hooks[0]}
-          idea={data.ideas[selectedPostIndex]?.idea}
-          explanation={data.posts[selectedPostIndex]?.explanation}
-        />
-      );
-    }
+        {/* Learning Impact Layer */}
+        {step > 1 && data.learningSummary && (
+          <div className="str-elevated rounded-sm border border-emerald-500/10 bg-[#06140d] px-5 py-4 flex flex-col md:flex-row md:items-start md:gap-6 gap-3">
+            <div className="text-[12px] font-medium text-emerald-500 shrink-0 mt-0.5">
+              Learning Impact
+            </div>
+            <div className="text-[13px] leading-relaxed text-emerald-100/80">
+              {data.learningSummary.status === 'reinforced'
+                ? `Feedback threshold met. System is executing a confirmed structural bias toward ${data.learningSummary.strongestType?.toLowerCase() || 'specific'} formats.`
+                : data.learningSummary.status === 'directional'
+                ? `Feedback indicates an emerging pattern. System is testing a partial bias toward ${data.learningSummary.strongestType?.toLowerCase() || 'specific'} formats.`
+                : 'Feedback threshold unreached. System is executing baseline logic without operator bias.'}
+            </div>
+          </div>
+        )}
 
-    return null;
+        {step === 1 && (
+          <InsightViewer
+            insights={data.insights}
+            onNext={() => setStep(2)}
+            weekNumber={data.week_number}
+            year={data.year}
+            dataSource={dataSource}
+            researchSummary={data.researchSummary}
+            learningSummary={data.learningSummary}
+            runLogicSummary={data.run_logic_summary}
+            userPlan={userPlan}
+          />
+        )}
+
+        {step === 2 && (
+          <ContentHooks
+            historyId={data.history_id}
+            hooks={data.hooks}
+            ideas={data.ideas}
+            posts={data.posts}
+            onSelectPost={handleSelectPost}
+            onRefine={handleRefine}
+            onBack={() => setStep(1)}
+            userPlan={userPlan}
+            weekNumber={data.week_number}
+            year={data.year}
+            dataSource={dataSource}
+          />
+        )}
+
+        {step === 3 && selectedPostIndex !== null && (
+          <FinalPost
+            initialContent={selectedPost}
+            historyId={data.history_id}
+            postIndex={selectedPostIndex}
+            onBack={() => setStep(2)}
+            userPlan={userPlan}
+            weekNumber={data.week_number}
+            year={data.year}
+            postType={data.posts[selectedPostIndex]?.type}
+            hook={data.hooks[selectedPostIndex] ?? data.hooks[0]}
+            idea={data.ideas[selectedPostIndex]?.idea}
+            explanation={data.posts[selectedPostIndex]?.explanation}
+          />
+        )}
+
+        {sealedDepthHint && runState === 'results' && (
+          <div className="mt-8 border-t border-white/5 pt-6 flex flex-col md:flex-row md:items-start md:gap-6 gap-3 pl-2 border-l-2 border-transparent hover:border-white/10 transition-colors">
+            <div className="flex items-center gap-2 text-[12px] font-medium text-white/40 shrink-0 mt-0.5">
+              <Lock className="w-3.5 h-3.5" />
+              {sealedDepthHint.eyebrow}
+            </div>
+            <div>
+              <p className="text-[13px] font-medium text-white/80">{sealedDepthHint.title}</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-white/40 max-w-2xl">{sealedDepthHint.detail}</p>
+              <Link href="/settings" className="inline-block mt-4 text-[10px] font-bold uppercase tracking-widest text-emerald-500/80 hover:text-emerald-400 transition-colors bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 px-3 py-1.5 rounded-sm">
+                View deeper system layers →
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   })();
 
   return (
     <div className="mx-auto flex max-w-[1380px] flex-col gap-8 animate-in fade-in duration-500">
       <header className="flex flex-col gap-4 border-b border-white/5 pb-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/35">
-            Generate
+          <div className="mb-2 text-[13px] font-medium text-white/50">
+            Active week
           </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-            Engine run
+          <h1 className="text-3xl font-medium text-white">
+            Workspace
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
-            Current state. Main action. Next stage.
-          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/42">
-          <span className="rounded-sm border border-white/10 px-2.5 py-1">{getRunStateBadge(runState)}</span>
-          <span className="rounded-sm border border-white/10 px-2.5 py-1">{userPlan} plan</span>
-          <span className="rounded-sm border border-white/10 px-2.5 py-1">{dataSource}</span>
+        <div className="flex flex-wrap items-center gap-2 text-[12px] font-medium text-white/40">
+          <span className="rounded-sm border border-white/5 bg-white/[0.02] px-2.5 py-1">{getRunStateBadge(runState)}</span>
+          <span className="rounded-sm border border-white/5 bg-white/[0.02] px-2.5 py-1">{userPlan} plan</span>
+          <span className="rounded-sm border border-white/5 bg-white/[0.02] px-2.5 py-1">{dataSource}</span>
         </div>
       </header>
 
-      <div className="grid gap-6 xl:grid-cols-[240px_minmax(0,1fr)_300px]">
-        <aside className="str-elevated rounded-sm border border-white/10 bg-[#020202] p-4 xl:sticky xl:top-8 xl:self-start">
-          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
-            Run pipeline
-          </div>
-          <div className="mt-4 space-y-4 border-l border-white/10 pl-4">
-            {pipelineStages.map((stage, index) => {
-              const stageState = getPipelineState(index, loading, pipelineStageIdx, runState);
-              const isActive = stageState === 'running';
-
-              return (
-                <div
-                  key={stage.id}
-                  className={`relative str-soft-transition ${isActive ? 'translate-x-0.5' : ''}`}
-                >
-                  <span
-                    className={`absolute -left-[21px] top-1.5 h-2 w-2 rounded-full ${getPipelineStateClassName(stageState)}`}
-                  />
-                  <div className="flex items-center justify-between gap-3">
-                    <div className={`${isActive ? 'text-white' : 'text-white/78'} text-sm`}>
-                      {stage.label}
-                    </div>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">
-                      {getPipelineStateLabel(stageState)}
-                    </div>
-                  </div>
-                  {isActive && (
-                    <p className="mt-1 text-[11px] leading-relaxed text-white/42">{stage.detail}</p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </aside>
-
+      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_260px] xl:items-start">
+        {/* CENTER BOX: SYSTEM STATE */}
         <main className="space-y-6">
           <section
-            className={`str-elevated rounded-sm border bg-[#020202] p-7 md:p-10 ${
+            className={`str-elevated rounded-sm border bg-[#090909] p-7 md:p-10 ${
               loading || runState === 'results'
                 ? 'border-white/14 shadow-[0_22px_44px_-30px_rgba(255,255,255,0.15),0_18px_38px_-28px_rgba(0,0,0,0.98),inset_0_1px_0_0_rgba(255,255,255,0.06)]'
                 : 'border-white/10'
@@ -666,13 +717,13 @@ export default function GeneratePage() {
             <div className="flex flex-col gap-5">
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
-                    Active state
+                  <div className="mb-3 text-[13px] font-medium text-white/50">
+                    Current status
                   </div>
-                  <h2 className="mt-3 text-5xl font-semibold tracking-tight text-white md:text-[3.6rem]">
+                  <h2 className="mb-2 text-3xl font-semibold text-white">
                     {getRunStateHeadline(runState)}
                   </h2>
-                  <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/58">
+                  <p className="mt-3 max-w-xl text-[13px] leading-relaxed text-white/60">
                     {getRunStateDescription(
                       userPlan,
                       runState,
@@ -721,7 +772,7 @@ export default function GeneratePage() {
                 <div className="rounded-sm border border-emerald-500/20 bg-emerald-500/5 p-5">
                   <div className="flex items-start justify-between gap-4">
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">
+                    <div className="mb-2 text-[13px] font-medium text-emerald-400">
                       Running
                     </div>
                     <p className="mt-2 text-lg font-medium text-white">
@@ -741,8 +792,8 @@ export default function GeneratePage() {
                         style={{ width: `${Math.max(8, pipelineProgressPercent)}%` }}
                       />
                     </div>
-                    <div className="mt-3 flex justify-between text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">
-                      <span>Weekly sequence</span>
+                    <div className="mt-3 flex justify-between text-[12px] font-medium text-white/50">
+                      <span>Progression</span>
                       <span>{pipelineStageIdx + 1}/{pipelineStages.length}</span>
                     </div>
                   </div>
@@ -750,8 +801,8 @@ export default function GeneratePage() {
               ) : runState === 'limit' ? (
                 <div className="space-y-5 rounded-sm border border-amber-500/20 bg-amber-500/5 p-5">
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-amber-300">
-                      Capacity gate
+                    <div className="mb-2 text-[13px] font-medium text-amber-400">
+                      Capacity block
                     </div>
                     <p className="mt-2 text-3xl font-semibold text-white">
                       {limitState?.used ?? 0} / {limitState?.limit ?? 0}
@@ -790,18 +841,52 @@ export default function GeneratePage() {
                 <div className="pt-1">
                   <Button
                     onClick={handleGenerate}
-                    className="str-cta group h-14 rounded-sm bg-white px-7 text-[12px] font-bold uppercase tracking-[0.24em] text-black shadow-[0_10px_30px_-20px_rgba(255,255,255,0.35),0_0_0_1px_rgba(255,255,255,0.12)] hover:bg-white/92"
+                    className="bg-white text-black font-semibold px-8 py-3 rounded-md hover:bg-white/90 transition-all duration-150 group inline-flex items-center justify-center h-14 text-[13px] uppercase tracking-[0.15em]"
                   >
-                    {runState === 'error' ? 'Retry run' : 'Run engine'}
+                    {runState === 'error' ? 'Retry cycle' : 'Run this cycle'}
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" />
                   </Button>
-                  <div className="mt-3 text-[11px] uppercase tracking-[0.18em] text-white/36">
-                    Typical runtime: 10-15s
+                  <div className="mt-3 flex flex-col gap-1">
+                    <div className="text-[12px] font-medium text-white/40">
+                      Typical runtime: 10-15s
+                    </div>
+                    <div className="text-[11px] text-white/30">
+                      This cycle contributes to system learning
+                    </div>
                   </div>
                 </div>
               )}
 
-              <div className="grid gap-4 border-t border-white/10 pt-6 md:grid-cols-3">
+              <div className="border-t border-white/5 pt-6 pb-2">
+                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 mb-4">
+                  Active Logic
+                </div>
+                <div className="space-y-4">
+                  {activeLogic ? (
+                    <div className="flex flex-col gap-3 text-[13px]">
+                      <div className="flex items-start gap-4 bg-background-panel border border-white/8 rounded-md p-4">
+                        <span className="text-[10px] tracking-[0.12em] uppercase text-white/40 font-medium min-w-[90px] pt-0.5">Signal</span>
+                        <span className="text-white/90 leading-relaxed">{activeLogic.signal}</span>
+                      </div>
+                      <div className="flex items-start gap-4 bg-background-panel border border-white/8 rounded-md p-4">
+                        <span className="text-[10px] tracking-[0.12em] uppercase text-white/40 font-medium min-w-[90px] pt-0.5">System Shift</span>
+                        <span className="text-white/80 leading-relaxed">{activeLogic.shift}</span>
+                      </div>
+                      <div className="flex items-start gap-4 bg-background-panel border border-white/8 rounded-md p-4">
+                        <span className="text-[10px] tracking-[0.12em] uppercase text-white/40 font-medium min-w-[90px] pt-0.5">Because</span>
+                        <span className="text-white/60 leading-relaxed">{activeLogic.because}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-1 text-[13px]">
+                      <span className="text-[11px] font-medium uppercase tracking-wider text-white/40">Baseline Running</span>
+                      <span className="text-white/60">System requires an initial cycle to establish active logic.</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid gap-4 border-t border-white/5 pt-6 md:grid-cols-3">
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/32">
                     Current focus
@@ -825,128 +910,68 @@ export default function GeneratePage() {
                   </p>
                 </div>
               </div>
-
-              {lastRunContext && !loading && (
-                <div className="border-t border-white/10 pt-6">
-                  <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/32">
-                    Stored cycle
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-white">
-                    Week {lastRunContext.weekNumber}, {lastRunContext.year}
-                  </p>
-                  <p className="mt-1 text-sm leading-relaxed text-white/50">
-                    {lastRunContext.insight}
-                  </p>
-                </div>
-              )}
             </div>
           </section>
 
           {resultSurface}
         </main>
 
-        <aside className="space-y-4 border-t border-white/5 pt-4 text-xs xl:sticky xl:top-8 xl:self-start xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
-          <section>
-            <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/26">
-              Context
+        <aside className="space-y-6 text-xs xl:sticky xl:top-8 xl:self-start">
+          <div className="str-elevated rounded-sm flex flex-col items-start px-2">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
+              System Pipeline
             </div>
-            <dl className="mt-3 space-y-3">
-              <div>
-                <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/24">
-                  Niche
-                </dt>
-                <dd className="mt-1 text-[11px] text-white/48">{setupContext.niche || 'Not set'}</dd>
+            <div className="mt-4 space-y-4 border-l border-white/10 pl-4 w-full">
+              {pipelineStages.map((stage, index) => {
+                const stageState = getPipelineState(index, loading, pipelineStageIdx, runState);
+                const isActive = stageState === 'running';
+
+                return (
+                  <div
+                    key={stage.id}
+                    className={`relative str-soft-transition ${isActive ? 'translate-x-0.5' : ''}`}
+                  >
+                    <span
+                      className={`absolute -left-[22px] top-1.5 h-2.5 w-2.5 rounded-full ${isActive ? 'bg-accent shadow-[0_0_8px_var(--color-accent)] animate-pulse' : getPipelineStateClassName(stageState)}`}
+                    />
+                    <div className="flex items-center justify-between gap-3">
+                      <div className={`${isActive ? 'text-white' : 'text-white/60'} text-[13px]`}>
+                        {stage.label}
+                      </div>
+                      <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/30 hidden sm:block">
+                        {getPipelineStateLabel(stageState)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="border-t border-white/5 pt-5 px-2 mt-2">
+            
+            <dl className="space-y-3">
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-[9px] uppercase tracking-[0.1em] text-white/20">Niche</dt>
+                <dd className="text-[10px] text-white/50">{setupContext.niche || 'Not set'}</dd>
               </div>
-              <div>
-                <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/24">
-                  Audience
-                </dt>
-                <dd className="mt-1 text-[11px] text-white/48">{setupContext.targetAudience || 'Not set'}</dd>
+              
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-[9px] uppercase tracking-[0.1em] text-white/20">Market basis</dt>
+                <dd className="text-[10px] text-white/50">{dataSource}</dd>
               </div>
-              <div>
-                <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/24">
-                  Tone
-                </dt>
-                <dd className="mt-1 text-[11px] text-white/48">{setupContext.tone || 'Not set'}</dd>
+              
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-[9px] uppercase tracking-[0.1em] text-white/20">Output chain</dt>
+                <dd className="text-[10px] text-white/50">Signals → Paths → Drafts</dd>
+              </div>
+              
+              <div className="flex flex-col gap-0.5">
+                <dt className="text-[9px] uppercase tracking-[0.1em] text-white/20">Learning context</dt>
+                <dd className="text-[10px] text-white/50">{getLearningStateLabel(activeLearningSummary)}</dd>
               </div>
             </dl>
-          </section>
-
-          <section className="border-t border-white/5 pt-4">
-            <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/26">
-              Market basis
-            </div>
-            <p className="mt-2 text-[11px] font-medium text-white/78">{dataSource}</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-white/44">{activeSourceDetail}</p>
-
-            <div className="mt-3 space-y-3 border-t border-white/5 pt-3">
-              <div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/24">
-                  Market input
-                </div>
-                <p className="mt-1 text-[11px] text-white/48">{getMarketInputLabel(activeResearchSummary)}</p>
-              </div>
-              <div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/24">
-                  Trend layer
-                </div>
-                <p className="mt-1 text-[11px] text-white/48">{getTrendLayerLabel(activeResearchSummary)}</p>
-              </div>
-              <div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/24">
-                  Reference layer
-                </div>
-                <p className="mt-1 text-[11px] text-white/48">{getReferenceLayerLabel(userPlan, activeResearchSummary)}</p>
-              </div>
-              <div>
-                <div className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/24">
-                  Filter audit
-                </div>
-                <p className="mt-1 text-[11px] text-white/48">{getFilterAuditLabel(activeResearchSummary)}</p>
-              </div>
-            </div>
-          </section>
-
-          <section className="border-t border-white/5 pt-4">
-            <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/26">
-              Fallback logic
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-white/44">
-              Thin input falls back to saved context.
-            </p>
-          </section>
-
-          <section className="border-t border-white/5 pt-4">
-            <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/26">
-              Output chain
-            </div>
-            <p className="mt-2 text-[11px] font-medium text-white/78">
-              Signals → Strategy paths → Drafts
-            </p>
-          </section>
-
-          <section className="border-t border-white/5 pt-4">
-            <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/26">
-              Learning context
-            </div>
-            <p className="mt-2 text-[11px] font-medium text-white/78">
-              {getLearningStateLabel(activeLearningSummary)}
-            </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-white/44">
-              {getLearningStateDetail(activeLearningSummary)}
-            </p>
-          </section>
-
-          {sealedDepthHint && (
-            <section className="border-t border-white/5 pt-4">
-              <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-amber-300/70">
-                <Lock className="h-3.5 w-3.5" />
-                {sealedDepthHint.eyebrow}
-              </div>
-              <p className="mt-2 text-[11px] font-medium text-white/78">{sealedDepthHint.title}</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-white/44">{sealedDepthHint.detail}</p>
-            </section>
-          )}
+          </div>
         </aside>
       </div>
 

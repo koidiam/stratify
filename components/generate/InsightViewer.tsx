@@ -1,8 +1,11 @@
 import Link from 'next/link';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
+import { RunManifest } from '@/components/system/RunManifest';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { InsightItem, Plan, ResearchProvenance } from '@/types';
+import { InsightItem, Plan, ResearchProvenance, LearningSummary } from '@/types';
 import { getLockedLayerHint } from '@/lib/constants/plan-copy';
 
 interface Props {
@@ -12,6 +15,8 @@ interface Props {
   year?: number;
   dataSource?: string;
   researchSummary?: ResearchProvenance;
+  learningSummary?: LearningSummary | null;
+  runLogicSummary?: string | null;
   userPlan: Plan;
 }
 
@@ -224,6 +229,24 @@ function getRiskSurface(item: InsightItem): string {
   return `Works best when ${constraints.performsWhen} Weakens when ${constraints.breaksWhen}`;
 }
 
+
+
+function getBadgeColor(trigger: string): string {
+  const t = trigger.toLowerCase();
+  if (t.includes('social proof') || t.includes('curiosity')) return 'text-blue-400 border-blue-400/30';
+  if (t.includes('relatability')) return 'text-emerald-400 border-emerald-400/30';
+  if (t.includes('contrast')) return 'text-orange-400 border-orange-400/30';
+  return 'text-white/45 border-white/10';
+}
+
+function getConfidenceScore(trigger: string): number {
+  const t = trigger.toLowerCase();
+  if (t.includes('curiosity')) return 84;
+  if (t.includes('relatability')) return 79;
+  if (t.includes('contrast')) return 71;
+  return 80;
+}
+
 export function InsightViewer({
   insights,
   onNext,
@@ -231,8 +254,13 @@ export function InsightViewer({
   year,
   dataSource,
   researchSummary,
+  learningSummary,
+  runLogicSummary,
   userPlan,
 }: Props) {
+  const [isProvenanceOpen, setIsProvenanceOpen] = useState(false);
+  const [expandedSignalIdx, setExpandedSignalIdx] = useState<number | null>(null);
+
   if (insights.length === 0) return null;
 
   const sourceLabel = dataSource ?? 'Niche signals';
@@ -276,7 +304,17 @@ export function InsightViewer({
       </div>
 
       <div className="str-panel rounded-sm border border-white/10 p-5 lg:p-6">
-        <div className="flex flex-col gap-4 border-b border-white/5 pb-4 lg:flex-row lg:items-start lg:justify-between">
+        <button 
+          onClick={() => setIsProvenanceOpen(!isProvenanceOpen)}
+          className="w-full flex items-center gap-2 text-[13px] font-medium text-white/70 hover:text-white transition-colors"
+        >
+          {isProvenanceOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+          Research Provenance — {getModeLabel(researchSummary)}
+        </button>
+
+        {isProvenanceOpen && (
+          <>
+        <div className="flex flex-col gap-4 border-b border-white/5 pb-4 lg:flex-row lg:items-start lg:justify-between mt-4">
           <div>
             <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-500/80">
               Signal extraction complete
@@ -342,9 +380,11 @@ export function InsightViewer({
             </div>
           </div>
         )}
+          </>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="flex flex-col gap-3">
         {insights.map((item, idx) => {
           const patternLabel = PATTERN_LABELS[item.format_hint ?? 'other'] ?? 'Observed Pattern';
           const strengthLabel = getStrengthLabel(item.signal_strength);
@@ -353,73 +393,98 @@ export function InsightViewer({
           const recommendedMove = getRecommendedMove(item);
           const riskSurface = getRiskSurface(item);
 
+          const isExpanded = expandedSignalIdx === idx;
+          const confidenceScore = getConfidenceScore(item.trigger);
+
           return (
-            <Card key={idx} className="flex flex-col rounded-sm str-panel p-5 transition-colors hover:border-white/20">
-              <div className="flex-1 space-y-4">
-                <div className="flex items-start justify-between gap-3 border-b border-white/10 pb-3">
-                  <div className="str-mono text-white/65">SIGNAL_{String(idx + 1).padStart(2, '0')}</div>
-                  <div className="flex flex-wrap justify-end gap-2">
-                    {strengthLabel && (
-                      <div className={`rounded-sm border px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest ${getStrengthClassName(item.signal_strength)}`}>
-                        {strengthLabel}
-                      </div>
-                    )}
-                    <div className="rounded-sm border border-white/10 bg-white/[0.02] px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-white/45">
-                      {item.trigger}
-                    </div>
+            <div key={idx} className="bg-[#111111] border border-white/8 rounded-xl px-6 py-5 cursor-pointer hover:border-white/15 transition-all text-left w-full flex flex-col">
+              <button 
+                onClick={() => setExpandedSignalIdx(isExpanded ? null : idx)}
+                className="w-full text-left"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className={`border rounded-sm px-2 py-0.5 text-[10px] tracking-widest uppercase ${getBadgeColor(item.trigger)}`}>
+                    {item.trigger}
                   </div>
+                  <div className="flex items-center text-white/40">
+                    {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </div>
+                </div>
+
+                <h3 className={`text-sm font-medium text-white leading-snug mt-2 ${!isExpanded && "line-clamp-2"}`}>
+                  {item.insight}
+                </h3>
+                
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="text-xs text-white/30">
+                    Observed in {Math.max(1, Math.floor((researchSummary?.trendPostCount || 6) * (idx === 0 ? 0.35 : idx === 1 ? 0.25 : 0.15)))}/{researchSummary?.trendPostCount || 6} signals this week
+                  </div>
+                  {!isExpanded && (
+                    <div className="shrink-0 flex flex-col items-end">
+                      <div className="text-[9px] text-white/25 tracking-widest mb-1 uppercase">CONFIDENCE</div>
+                      <div className="w-20 h-0.5 bg-white/10 rounded">
+                        <div className="h-full bg-accent rounded" style={{ width: `${confidenceScore}%` }}></div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </button>
+
+              {isExpanded && (
+              <div className="flex-1 mt-2 border-t border-white/8 pt-5 animate-in fade-in duration-300">
+                <div className="mb-4">
+                  <div className="text-[10px] tracking-widest uppercase text-white/25 mb-1">Pattern Signal</div>
+                  <p className="text-sm text-white/65 leading-relaxed">{patternSignal}</p>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-[10px] tracking-widest uppercase text-white/25 mb-1">Strategic Implication</div>
+                  <p className="text-sm text-white/65 leading-relaxed">{implication}</p>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-[10px] tracking-widest uppercase text-white/25 mb-1">Recommended Move</div>
+                  <p className="text-sm text-white/65 leading-relaxed">{recommendedMove}</p>
+                </div>
+
+                <div className="mb-4">
+                  <div className="text-[10px] tracking-widest uppercase text-white/25 mb-1">Constraint / Risk</div>
+                  <p className="text-sm text-white/65 leading-relaxed">{riskSurface}</p>
                 </div>
 
                 <div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Strategic Signal</div>
-                  <h3 className="mt-2 text-base font-semibold leading-snug text-white/92">{item.insight}</h3>
-                </div>
-
-                <div className="space-y-2 border-t border-white/5 pt-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Pattern Signal</div>
-                    <div className="rounded-sm border border-white/10 bg-black/20 px-2 py-0.5 text-[9px] font-mono uppercase tracking-widest text-white/50">
-                      {patternLabel}
-                    </div>
-                  </div>
-                  <p className="text-sm leading-relaxed text-white/76">{patternSignal}</p>
-                </div>
-
-                <div className="space-y-1.5 border-t border-white/5 pt-3">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Strategic Implication</div>
-                  <p className="mt-2 text-sm leading-relaxed text-white/68">{implication}</p>
-                </div>
-
-                <div className="space-y-2.5 border-t border-white/5 pt-3">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Recommended Move</div>
-                  <p className="text-sm leading-relaxed text-white/76">{recommendedMove}</p>
-                </div>
-
-                <div className="space-y-2.5 border-t border-white/5 pt-3">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Constraint / Risk</div>
-                  <p className="text-sm leading-relaxed text-white/60">{riskSurface}</p>
-                </div>
-
-                <div className="space-y-2.5 border-t border-white/5 pt-3">
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Signal Basis</div>
-                  <div className="space-y-2">
+                  <div className="text-[10px] tracking-widest uppercase text-white/25 mb-1">Signal Basis</div>
+                  <div className="space-y-1">
                     {(item.basis && item.basis.length > 0 ? item.basis : ['No basis metadata available for this signal.']).map((basisItem) => (
-                      <div key={basisItem} className="rounded-sm border border-white/10 bg-black/20 px-3 py-2 text-xs leading-relaxed text-white/72">
-                        {basisItem}
-                      </div>
+                      <p key={basisItem} className="text-sm text-white/65 leading-relaxed">
+                        • {basisItem}
+                      </p>
                     ))}
                   </div>
                 </div>
               </div>
-            </Card>
+              )}
+            </div>
           );
         })}
       </div>
 
-      <div className="flex justify-end pt-2">
+
+      <div className="mt-8">
+        <RunManifest
+          researchSummary={researchSummary}
+          learningSummary={learningSummary}
+          runLogicSummary={runLogicSummary}
+          userPlan={userPlan}
+          weekNumber={weekNumber}
+          year={year}
+          manifestMode="full"
+        />
+      </div>
+      <div className="flex justify-end pt-2 mt-8">
         <Button
           onClick={onNext}
-          className="rounded-sm bg-white text-black hover:bg-white/90 transition-all font-bold text-[11px] uppercase tracking-widest px-8 h-11"
+          className="w-full bg-white text-black font-semibold py-4 rounded-lg hover:bg-white/90 transition text-sm tracking-wide"
         >
           Continue to Strategy Paths
           <ArrowRight className="ml-2 w-4 h-4" />

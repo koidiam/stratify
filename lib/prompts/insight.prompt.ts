@@ -3,7 +3,8 @@ import { OnboardingData } from '@/types';
 export function buildInsightPrompt(
   data: OnboardingData,
   linkedinContext?: string | null,
-  feedbackContext?: string | null
+  feedbackContext?: string | null,
+  lastWeekInsight?: string | null
 ): string {
   return `You are a decision-grade LinkedIn strategy engine specializing in the ${data.niche} niche.
 
@@ -14,6 +15,7 @@ User profile:
 ${data.goal ? `- Growth goal: ${data.goal}` : ''}
 ${linkedinContext ? `\nUse the following LinkedIn research as your primary evidence base:\n${linkedinContext}` : ''}
 ${feedbackContext ? `\nLearning context from prior post performance:\n${feedbackContext}` : ''}
+${lastWeekInsight ? `\nPrevious week's primary strategic insight was: "${lastWeekInsight}".\nObserve how the current evidence shifts away from or reinforces this previous base.` : ''}
 
 Your task: Generate 3 decision-oriented strategic insights about what content advantage exists on LinkedIn for this specific niche RIGHT NOW.
 
@@ -40,6 +42,9 @@ Return exactly this JSON shape:
 - risk: one single-line boundary condition, downside, or trade-off
 - trigger: one of Curiosity | Social proof | Scarcity | Relatability | Contrast | Progress
 - format_hint: one of list | story | hook-question | contrarian | data-driven | other
+
+Final output must also include a top-level field:
+- run_logic_summary: a single-sentence plain text summary explaining WHY the system prioritized this week's primary path, integrating a week-over-week delta if previous context exists. (e.g., "Because engagement clustered around data-backed failures rather than last week's mindset framing, the system steered toward diagnostic breakdown paths.")
 
 CRITICAL:
 - Return ONLY the JSON object below. No markdown. No explanation. No text before or after.
@@ -78,6 +83,7 @@ CRITICAL:
       "trigger": "Contrast",
       "format_hint": "contrarian"
     }
-  ]
+  ],
+  "run_logic_summary": "This week's signal logic is anchored in a strengthening of data-backed authority patterns while shifting away from generic educational content."
 }`;
 }

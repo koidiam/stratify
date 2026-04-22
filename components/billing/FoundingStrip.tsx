@@ -34,6 +34,10 @@ export function FoundingStrip({
   // If sold out, force max fill. If unavailable, don't imply live scarcity.
   const percentage = isSoldOut ? 100 : isUnavailable ? 0 : (claimed / total) * 100;
 
+  if (isUnavailable) {
+    return null;
+  }
+
   return (
     <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 p-4 relative overflow-hidden shadow-sm">
       <div 

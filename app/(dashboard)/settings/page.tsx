@@ -110,11 +110,14 @@ export default async function SettingsPage() {
       </header>
 
       <section className="rounded-sm border border-white/10 bg-[#020202] p-6">
+        <div className="mb-8 text-[9px] font-bold uppercase tracking-[0.24em] text-white/20">
+          System identity
+        </div>
         <div className="flex flex-col gap-1">
           <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
             Profile
           </div>
-          <h2 className="text-xl font-medium text-white">Operator profile</h2>
+          <h2 className="text-xl font-medium text-white">Operator configuration</h2>
         </div>
 
         <div className="mt-5 grid gap-6 md:grid-cols-[minmax(0,1fr)_240px]">
@@ -160,12 +163,12 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-sm border border-white/10 bg-[#020202] p-6">
+      <section className="rounded-sm border border-white/5 p-6 opacity-80 hover:opacity-100 transition-opacity">
         <div className="flex flex-col gap-1">
           <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
             Plan
           </div>
-          <h2 className="text-xl font-medium text-white">Access and billing</h2>
+          <h2 className="text-xl font-medium text-white/80">Access and billing</h2>
         </div>
 
         <div className="mt-5 grid gap-4 border-b border-white/5 pb-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -190,38 +193,38 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="rounded-sm border border-white/10 bg-[#020202] p-6">
-        <div className="flex flex-col gap-1">
+      <section className="pt-8 opacity-60 hover:opacity-100 transition-opacity">
+        <div className="flex flex-col gap-1 mb-5">
           <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
-            Access
+            System
           </div>
-          <h2 className="text-xl font-medium text-white">Workspace resets and account removal</h2>
+          <h2 className="text-xl font-medium text-white/80">Advanced controls</h2>
         </div>
 
-        <div className="mt-5 space-y-5">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/35">
-              Reset onboarding
+        <div className="space-y-6">
+          <div className="rounded-sm border border-white/5 bg-transparent p-5">
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">
+              Retrain strategy model
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-white/50">
-              Reopen niche, audience, and tone setup.
+            <p className="mt-1 text-sm leading-relaxed text-white/40">
+              Clear existing audience memory and retrain the strategy system basics.
             </p>
             <form action={resetOnboardingAction} className="mt-4">
               <Button
                 type="submit"
                 variant="outline"
-                className="h-10 rounded-sm border-white/10 bg-transparent px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white hover:bg-white/5"
+                className="h-9 rounded-sm border-white/10 bg-white/5 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/70 hover:bg-white/10 hover:text-white transition-colors"
               >
-                Reopen onboarding
+                Retrain model
               </Button>
             </form>
           </div>
 
-          <div className="border-t border-white/10 pt-6">
-            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-red-400/75">
-              Danger zone
+          <div className="pt-2">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-red-500/50">
+              Account destruction
             </div>
-            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/50">
+            <p className="mt-1 max-w-2xl text-sm leading-relaxed text-white/30">
               Permanently removes profile, memory, and subscription access.
             </p>
             <div className="mt-4 max-w-sm">

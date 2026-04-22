@@ -7,469 +7,243 @@ This file is a single-share context doc for external AI systems to quickly under
 Stratify is not an AI writing tool.
 Stratify is a LinkedIn strategy engine.
 
-The product is designed to feel like a weekly operating system:
-
+The product is designed to feel like an adaptive **Weekly Operating System**:
 - market input enters
 - signals are extracted
+- **Intelligence Layer** interprets trends and learning signals
+- **Proof Layer** grounds every claim in observable data
 - strategy directions are formed
 - hooks and drafts are produced as downstream artifacts
-- feedback is retained and reused in future cycles
+- feedback is retained in a **Memory Continuity Chain**
+- the system evolves its strategy based on prior cycles
 
 The UX direction is dark-premium, restrained, system-like, and operational rather than chat-like or marketing-heavy.
 
 Live app:
 - https://stratify-one-teal.vercel.app
 
+## Tech Stack & Architecture
+
+- **Framework**: Next.js 16.2.1 (App Router)
+- **Styling**: Tailwind CSS v4, `clsx`, `tailwind-merge`
+- **Animations**: Framer Motion
+- **Database & Auth**: Supabase (SSR package, Row Level Security)
+- **Billing**: Lemon Squeezy (Webhooks and Checkout APIs implemented)
+- **AI Backend**: Groq (Llama 3.3 70B Model) - *Migrated from Gemini*
+- **Icons**: Lucide React
+
+**Environment Variables Required:**
+- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GROQ_API_KEY`
+- `LEMON_SQUEEZY_API_KEY`, `LEMON_SQUEEZY_STORE_ID`, `LEMON_SQUEEZY_WEBHOOK_SECRET`
+- `NEXT_PUBLIC_APP_URL`
+
+*Note on Local Development:*
+Run `npm run dev` to start the local development server.
+
+## Repository Structure Map
+
+To efficiently navigate the codebase and "see" the whole site, AIs should reference these key directories:
+
+- **`app/`**: Next.js App Router. Contains all pages, layouts, and API routes.
+  - `app/(marketing)/` & `app/page.tsx`: Landing page and public routes.
+  - `app/(auth)/`: Login and registration pages.
+  - `app/(dashboard)/`: Protected routes (dashboard, generate, history, settings).
+  - `app/api/`: Backend API routes (generate, checkout, webhooks).
+- **`components/`**: React components, strictly organized by domain:
+  - `components/marketing/`: Landing page sections (e.g., `LandingPage.tsx`).
+  - `components/dashboard/`: Dashboard state HUD and quick actions.
+  - `components/generate/`: Execution console, insight viewer, hook selection, editor.
+  - `components/history/`: Memory chain and feedback loops.
+  - `components/settings/`: Operator config and billing management.
+  - `components/ui/`: Shared primitive components (buttons, inputs, dialogs, etc.).
+- **`lib/`**: Utilities and core configuration.
+  - `lib/constants/plan-copy.ts`: **CRITICAL SOURCE OF TRUTH** for all monetization strings and loss signals.
+  - `lib/supabase/`: Database clients.
+- **`types/`**: TypeScript interfaces, specifically `types/database.types.ts` for Supabase schema.
+
+*Instructions for AIs: Prioritize reading files in `components/marketing/` and `app/(dashboard)/` to understand the current visual language. Read `plan-copy.ts` before modifying any upgrade CTA.*
+
 ## Core User Journey
 
-1. User lands on the marketing homepage.
+1. User lands on the marketing homepage (Designed as a system-behavior visualization with 3-core visual blocks: Input, Interpretation, Output).
 2. User signs up or logs in with Supabase auth.
-3. User completes onboarding:
-   niche, target audience, tone, optional references, optional goal.
-4. User enters Dashboard, which acts as the current weekly operating surface.
-5. User runs a weekly strategy pass from Generate.
-6. System shows signal proof, strategy insights, paths, and draft outputs.
-7. System stores the weekly cycle in history and increments weekly usage.
-8. User can log post-performance feedback.
-9. Dashboard, Generate, and History reuse retained memory and feedback context.
-10. User manages plan and profile from Settings.
+3. User completes onboarding: niche, target audience, tone, optional references, optional goal.
+4. User enters Dashboard, which acts as a state-driven **System Surface Area**.
+   - Surfaces **System Direction** (a quiet whisper of moving trends).
+   - Surfaces **Proof Signals** (why the system is moving that way).
+5. User runs a weekly pass from Generate (**Execution Console**).
+   - Displays **System Intelligence Strip**: Trend, Learning Signal, and Reason Anchor.
+   - Grounded in **Observable Counts** (e.g., "6 mention [topic]").
+6. System shows signal proof, strategy paths (some sealed), and draft outputs.
+   - Each insight shows **Micro-Provenance** ("Observed in X/Y signals").
+   - Each path shows **Strategic Rationale** ("Matches signal pattern").
+7. System stores the cycle in **History (Memory Continuity Chain)**.
+   - Each card explains the **System Shift** ("What changed") and the **Because** ("Why it changed").
+8. User can log post-performance feedback (Learning).
+9. Dashboard, Generate, and History reuse retained memory and feedback to evolve the strategy.
+10. User manages plan and profile from Settings (Profile name updates are synchronized with Supabase Auth Metadata).
 
 ## Main Routes
 
 Public / marketing:
-
-- `/`:
-  landing page
-- `/login`:
-  auth login
-- `/register`:
-  auth registration
+- `/`: landing page
+- `/login`: auth login
+- `/register`: auth registration
 - `/privacy`
 - `/terms`
 - `/contact`
 
 Protected app:
-
-- `/onboarding`:
-  onboarding wizard
-- `/dashboard`:
-  weekly operating state, learning signals, next action
-- `/generate`:
-  strategy run console and staged output flow
-- `/history`:
-  retained operating memory across weekly cycles
-- `/settings`:
-  system depth / plan management, profile, retrain onboarding, destructive actions
+- `/onboarding`: onboarding wizard
+- `/dashboard`: weekly operating state, intelligence whispers, single focus CTA
+- `/generate`: execution console with intelligence strip and staged output
+- `/history`: memory continuity chain, system shifts, and feedback integration
+- `/settings`: system identity, operator config, plan/depth controls
 
 ## Product Positioning
 
 The product should currently feel like:
-
-- signal interpretation
-- decision support
-- strategic direction generation
-- weekly operating memory
-- visible learning and adaptation
+- **Evolving Intelligence** (not static generation)
+- **Grounded Observation** (provenance over guesses)
+- **Strategy Continuity** (cycles remember each other)
+- **Decision Support** (analytical, not dramatic)
+- **Expanding Depth** upon upgrade
 
 It should not feel like:
-
-- a generic AI writer
+- a generic SaaS landing page
 - a chat assistant
 - a static content generator
 - a dead archive of old runs
+- a hard paywall
 
 ## Product Plans
 
 Canonical plan source:
-
-- `profiles.plan`
+- `profiles.plan` (in DB)
 
 Current plan framing in-product:
-
-- `free`:
-  Surface Layer
-- `basic`:
-  Operating Layer
-- `pro`:
-  Intelligence Layer
+- `free`: Surface Layer
+- `basic`: Operating Layer
+- `pro`: Intelligence Layer
 
 Current commercial reality:
-
-- `free`:
-  1 run/week, cached signal basis, only newest retained cycle open
-- `basic`:
-  3 runs/week, full retained history, usable weekly operating loop
-- `pro`:
-  50 runs/week, deepest live/reference intelligence framing and full continuity
+- `free`: 1 cycle/week, cached signal basis, limited memory continuity. Upgrades framed around expanding continuity.
+- `basic`: 3 cycles/week, full retained history, usable weekly operating loop. Upgrades framed around reference/intelligence access.
+- `pro`: 50 cycles/week, deepest live/reference intelligence framing and full continuity.
 
 Important implementation nuance:
-
-- the current backend still allows non-free trend scraping, so `basic` can receive live trend input in some runs
-- `pro` remains the tier with the deepest reference / intelligence framing
-- monetization was rebuilt around system depth and continuity, not pricing changes
-- Lemon Squeezy billing flow was not changed
+- Monetization has shifted from "limit-based interruptions" to a "desire-based progression layer" (Step X / X.5).
+- Blocked features are now framed as "Sealed Layers."
+- Capacity limits use loss-signal wording: "System continuity pauses at this layer" instead of "Paywall Hit".
 
 ## Onboarding Model
 
 The onboarding setup captures:
-
 - `niche`
 - `target_audience`
 - `tone`
 - optional `goal`
 - optional `reference_posts`
 
-Current niche options:
-
-- `saas_founder`
-- `developer`
-- `freelancer`
-- `creator`
-
 Important current behavior:
-
-- if onboarding is already completed and niche exists, `/onboarding` redirects to `/dashboard`
-- using "Retrain Strategy Model" in settings resets only `onboarding_completed`
-- retraining no longer resets paid plans back to free
-- onboarding UI now follows the same dark-premium product language as the app
+- if onboarding already completed, `/onboarding` redirects to `/dashboard`
+- "Retrain Strategy Model" in settings resets only `onboarding_completed`
+- Onboarding UI follows the dark-premium product language
+- System identity/Config is highlighted in Settings above operator details
 
 ## Generate Pipeline
 
 Primary generation endpoint:
-
-- `/api/generate`
-
-High-level backend pipeline:
-
-1. Verify authenticated user.
-2. Read `profiles.plan` and `onboarding_completed`.
-3. Read onboarding context from `onboarding`.
-4. Enforce weekly usage limits from `usage_tracking`.
-5. Build LinkedIn research context:
-   cached or live depending on plan and available signal path.
-6. Read recent `post_feedback` and derive learning context.
-7. Build insight prompt.
-8. Call Groq for structured strategic insight generation.
-9. Validate insight JSON.
-10. Enrich insights with basis / signal strength / strategic fallback fields.
-11. Build content prompt using onboarding + insights + LinkedIn content context.
-12. Call Groq for hooks/posts generation.
-13. Validate final content JSON.
-14. Upsert weekly result into `content_history`.
-15. Increment weekly usage.
-16. Return a `WeeklyGeneration` payload to the client.
+- `/api/generate` (Uses Groq Llama 3.3 70B API)
 
 High-level frontend generate flow:
-
-1. Pre-run console shows run readiness, market basis, learning context, and output chain.
-2. Loading state advances through explicit pipeline stages:
-   context load, market basis, signal extraction, strategy formation, path compilation, run packaging.
-3. Results are staged as:
-   Signals -> Strategy Paths -> Draft Editor.
-4. Limit and locked states are framed as system-capacity / sealed-depth states rather than generic blockers.
+1. Pre-run console shows run readiness and **System Intelligence Strip** (Trend, Signal, Reason).
+2. Loading progresses through explicit stages: Context, Market, Extraction, Formation, Compilation, Packaging.
+3. Results are staged: Signals (with **Micro-Provenance**) -> Strategy Paths (with **Rationale**) -> Draft Editor.
+4. Higher-level paths/provenance use structural blurs; limit states inform of continuity loss.
+5. Below the primary CTA: "This cycle contributes to system learning."
 
 ## WeeklyGeneration Payload
 
-Current generation payload includes core output plus more proof and learning context.
-
 Main fields:
+- `history_id`, `week_number`, `year`
+- `insights`, `ideas`, `hooks`, `posts`
+- optional `researchUsed`, `trendPostCount`, `researchSummary`, `learningSummary`
+- Structured insight pattern definitions (`pattern`, `implication`, `recommended_move`, `risk`)
 
-- `history_id`
-- `week_number`
-- `year`
-- `insights`
-- `ideas`
-- `hooks`
-- `posts`
-- optional `researchUsed`
-- optional `trendPostCount`
-- optional `researchSummary`
-- optional `learningSummary`
+## Insight & Strategy Path Layer
 
-Important insight contract additions:
+Insights are decision objects. Each insight communicates the strategic signal, pattern, why it matters, recommended move, and risks.
+Strategy Paths show exactly how the system interprets the insight through the hook structure.
 
-- `pattern`
-- `implication`
-- `recommended_move`
-- `risk`
-- optional `basis`
-- optional `signal_strength`
-
-These are parsed defensively so older history entries can still render.
-
-## Research Layer
-
-LinkedIn research is handled via Apify.
-
-Purpose:
-
-- ground strategy runs in real market context
-- support signal proof on the frontend
-- optionally use reference texture during deeper research
-
-Current behavior:
-
-- `free`:
-  no live scrape, cached context only
-- `basic`:
-  operating layer with full continuity, and live trend input can still be available in current backend behavior
-- `pro`:
-  deepest research framing, including reference intelligence when available
-
-Research proof now surfaces:
-
-- source mode:
-  cached / live / limited
-- approximate scanned and retained sample counts when safely available
-- trend layer status
-- reference layer status
-- filter audit:
-  low-signal filtering and hiring-style exclusion
-
-Quality protection currently implemented:
-
-- engagement filter removes low-signal posts
-- job-post style content is filtered out before insight context if content contains 2+ hiring phrases
-- cache TTL is active to limit live scrape frequency
-
-Cost control:
-
-- `trendLimitPerSource` is reduced to `8`
-- `referencePostLimit` is reduced to `2`
-
-## Insight Layer
-
-Insights were rebuilt away from generic commentary and toward decision objects.
-
-Each insight is intended to communicate:
-
-- the strategic signal
-- the detected pattern
-- why it matters
-- what move follows
-- what constraint / risk exists
-- what real basis supports it
-
-The UI now uses more analytical framing such as:
-
-- Strategic Signal
-- Pattern Signal
-- Strategic Implication
-- Recommended Move
-- Constraint / Risk
-- Signal Basis
-
-Insight ordering now prefers stronger evidence-backed items when enough real support exists.
-
-## Learning Loop / Feedback Intelligence
+## Feedback Intelligence (Learning Loop)
 
 Feedback source of truth:
+- `post_feedback` table in Supabase
 
-- `post_feedback`
+The system makes learning visible:
+- Dashboard: surfaces current **System Direction** and **Proof**.
+- Generate: shows **Intelligence Strip** (e.g., "Trending toward list formats").
+- History: surfaces prior operator notes and **Memory Continuity Chain**.
+- System Shifts: explicitly explains strategy evolution via **Because** logic.
 
-The system now tries to make learning visible rather than hidden.
+## Dashboard Behavior (System State Surface)
 
-Current learning behavior:
+Dashboard is a state-driven HUD (Heads-Up Display):
+1. Surfaces current **System Direction**.
+2. Surfaces **Proof** for that direction.
+3. Guides toward the single most logical next action.
+4. Displays memory state (No Memory -> Cycle Ready -> Completed).
 
-- Dashboard shows learning signals when real feedback exists
-- Generate shows learning context before the next run
-- History shows learning notes per cycle when feedback exists
-- the backend derives a structured `learningSummary` from recent retained cycles and feedback
+- 1 dominant central block.
+- 1 secondary depth strip indicating system/monetization depth.
+- Exactly 1 primary CTA at all times strictly mapped to `/generate` or `/history`.
 
-Current learning signals can include:
+## Landing Page Behavior (System Visualization)
 
-- whether performance data exists at all
-- whether the system only has early vs directional feedback
-- stronger and weaker path types when comparison is honest
-- latest operator note
-- repeated pattern / drift awareness across recent cycles
+Landing page abandons standard SaaS narrative.
+It acts as a literal demonstration of system behavior:
+- Minimal Hero containing the active System Loop (Signal -> Pattern -> Strategy -> Draft -> Learning). The Hero uses a 3-block structure (Input -> Interpretation -> Output) with subtle micro-motions for product truth representation.
+- Evolution timeline comparison (Week 1 vs Week 4 block)
+- Provenance readout terminal (Signal Audit log)
+- System Memory chain visualization (Week 1 -> Week 2 -> Week 3 connections)
+- Depth-based monetization block (Desire-based triggers)
 
-Important honesty constraint:
+## Monetization / Paywall Layer (Loss + Action Trigger System)
 
-- learning is heuristic, not a true ML optimization layer
-- the product should not claim causal improvement or fake analytics
+Monetization explicitly uses progression semantics:
+- Free limits are not "blocked" but "Sealed Continuity."
+- Instead of "Upgrade to Pro", buttons declare "Unlock deeper layers" or "Access full system depth".
+- Loss signals gently enforce technical boundaries ("System continuity pauses at this layer").
+- Strategy paths for higher depths are blurred rather than invisible.
 
-## Dashboard Behavior
+## Current Technical Notes & Recent Changes
 
-Dashboard is no longer just a CTA page.
-It acts as the weekly operating surface.
+Important files updated during the systemic rewrite:
+- `app/(dashboard)/dashboard/page.tsx`: System state surface controller.
+- `app/(dashboard)/generate/page.tsx`: Pipeline view and logic. Added a 3-step progress indicator for the result surface (`[● Signals] ——— [○ Strategy Paths] ——— [○ Draft]`).
+- `components/marketing/LandingPage.tsx`: System architecture visualization. **TASK 1 COMPLETE**: The Hero section now uses an explicit 3-block visual system (Input -> Interpretation -> Output) structured as a diagonal cascade with operational truth logic.
+- `lib/constants/plan-copy.ts`: Single source of truth for ALL plan depth strings, loss signals, and CTA labels.
+- `components/generate/ContentHooks.tsx`: Sealed path UI logic.
+- `components/generate/InsightViewer.tsx`: Redesigned into a single-column accordion layout. Signal cards feature dynamic confidence bars, badge styling based on trigger type, and a collapsible detailed view. The "Path Selection Basis" (RunManifest) has been nested at the bottom.
+- `app/api/webhooks/lemonsqueezy/route.ts` & `app/api/checkout/route.ts`: Handling LemonSqueezy subscription events.
+- `components/settings/ProfileForm.tsx`: Fixes for profile name updates using Supabase user metadata instead of relying strictly on potentially missing DB columns.
 
-Current dashboard responsibilities:
+## Next Steps (For the Next AI)
 
-- show current weekly state
-- show whether a cycle exists this week
-- show current strategic / memory context
-- show current learning signals
-- show available capacity
-- determine the next best action
-- surface subtle live system feedback such as recent cycle/feedback freshness
-- keep the primary action visually dominant over the support rail
-
-Typical next-action states:
-
-- run this week’s strategy pass
-- review this week’s cycle
-- revisit retained memory
-- review deeper system layers when current capacity is exhausted
-
-## Generate Behavior
-
-Generate is now an engine console, not a generic result screen.
-
-Current behavior includes:
-
-- explicit staged loading pipeline
-- visible run manifest
-- market basis framing
-- learning context framing
-- result dependency chain:
-  Signals -> Strategy Paths -> Draft Editor
-- contextual locked-depth hints when signal/reference/learning layers are partial or sealed
-- subtle live status signals such as active engine state and recent run freshness
-- center column carries the strongest visual weight; right rail stays secondary
-
-The page should feel like a believable system run, not:
-
-- click button
-- spinner
-- AI blob
-
-## History Behavior
-
-History is no longer framed as a simple archive.
-It is intended to feel like retained operating memory.
-
-Current history behavior:
-
-- shows previous weekly cycles as retained strategy memory
-- surfaces signal memory, execution direction, hooks/output bias, and feedback state when available
-- free users can only access the newest retained cycle
-- older cycles on free are framed as a protected continuity layer, not broken UI
-- basic/pro users can access full retained history
-- learning layer now surfaces memory freshness and feedback-sync state
-
-Important limitation:
-
-- `content_history` is still cycle-based and generally one retained record per week
-- it is not a full multi-version run timeline
-
-## Monetization / Paywall Layer
-
-Monetization was rebuilt around value depth rather than generic limit language.
-
-Current in-product monetization principles:
-
-- free = limited access to system depth
-- basic = usable weekly operating system with continuity
-- pro = deepest intelligence layer
-
-Upgrade surfaces are now tied to value moments such as:
-
-- locked continuity in history
-- partial learning resolution
-- sealed reference intelligence
-- limited market depth
-- weekly capacity gates
-
-Important constraint:
-
-- monetization copy was rebuilt
-- pricing numbers and Lemon Squeezy logic were not changed
-
-## Settings Behavior
-
-Settings currently covers:
-
-- system depth / plan management
-- profile name update
-- current email display
-- retrain strategy model
-- account deletion
-
-Plan management now presents the tiers as depth layers instead of generic feature buttons.
-
-Retrain behavior:
-
-- sets `profiles.onboarding_completed = false`
-- redirects user to onboarding
-- plan remains unchanged
-
-## Data Model
-
-Primary tables:
-
-- `profiles`:
-  auth-linked user record, plan, onboarding status, billing fields
-- `onboarding`:
-  niche/audience/tone/goal/reference context
-- `content_history`:
-  weekly stored generations
-- `usage_tracking`:
-  weekly generation counters + warning flags
-- `post_feedback`:
-  performance metrics + notes
-- `scrape_cache`:
-  cached Apify responses
-- `apify_usage`:
-  research usage tracking
-- `subscriptions`:
-  billing subscription state
-
-Auth source:
-
-- Supabase Auth
-
-## Current Technical Notes
-
-Important current files touched heavily in the recent rebuild:
-
-- `app/(dashboard)/dashboard/page.tsx`
-- `app/(dashboard)/generate/page.tsx`
-- `app/(dashboard)/history/page.tsx`
-- `app/(dashboard)/settings/page.tsx`
-- `app/globals.css`
-- `app/api/generate/route.ts`
-- `components/billing/PaywallModal.tsx`
-- `components/generate/InsightViewer.tsx`
-- `components/system/LiveStatus.tsx`
-- `components/settings/PlanManager.tsx`
-- `lib/apify/cache.ts`
-- `lib/apify/linkedin.ts`
-- `lib/constants/plan-copy.ts`
-- `lib/prompts/content.prompt.ts`
-- `lib/prompts/insight.prompt.ts`
-- `lib/utils/history.ts`
-- `lib/utils/learning.ts`
-- `lib/utils/parsers.ts`
-- `types/index.ts`
-
-Current validation state:
-
-- `npm run lint` passes with existing warnings in:
-  - `components/layout/AnimatedBackground.tsx`
-  - `components/onboarding/steps/GoalStep.tsx`
-  - `components/onboarding/steps/ToneStep.tsx`
-  - `lib/groq/client.ts`
-- `npm run build` passes
-- Next.js still warns that `middleware.ts` should move to `proxy.ts`
+**TASK 2**: Extend the "System Behavior" visual language (established in the Hero section of `LandingPage.tsx`) to the remaining sections of the landing page. 
+- Do not revert to generic SaaS feature grids or abstract AI blobs.
+- Future sections must visualize the system's memory, feedback loop, and analytical depth as operational processes.
 
 ## Current UI Direction
 
-The app structure is now in a strong place.
-The current refinement priority is no longer layout correction.
-
-The UI should now preserve:
-
-- one clear purpose per page
-- strong primary CTA emphasis
-- compressed support copy
-- minimal right-rail competition
-- system-like wording instead of generic SaaS phrasing
-- subtle depth and motion only where they improve scan speed or feedback
+The product is structurally complete.
+Future priority is NOT new features. Priority is ensuring the operational loops (run -> review -> learn -> next run) perform optimally and accurately.
 
 The UI should continue to avoid:
-
-- card-grid thinking
-- equal-weight sections
-- generic marketing copy inside protected product surfaces
-- decorative gradients, glass, or flashy animation
+- Widget grids.
+- Artificial metrics cards (unless structurally part of the Learning Engine).
+- Flashy SaaS marketing gradients or generic chat abstractions.
+- Hard aggressive paywalls that break the user's flow.

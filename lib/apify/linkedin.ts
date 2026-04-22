@@ -294,6 +294,24 @@ function getMarketInputStatus(
   return 'profile-only';
 }
 
+function calculateTimeWindow(posts: LinkedInPostSignal[]): string | undefined {
+  const dates = posts
+    .map((p) => p.postedAt)
+    .filter((d): d is string => Boolean(d))
+    .map((d) => new Date(d))
+    .filter((d) => !isNaN(d.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  if (dates.length === 0) return undefined;
+
+  const formatOptions: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  const first = dates[0].toLocaleDateString('en-US', formatOptions);
+  const last = dates[dates.length - 1].toLocaleDateString('en-US', formatOptions);
+
+  if (first === last) return first;
+  return `${first} – ${last}`;
+}
+
 function buildResearchSummary(params: {
   trendQuery: string;
   trendSourceType: ResearchSourceMode;
@@ -304,6 +322,7 @@ function buildResearchSummary(params: {
   referenceInputCount: number;
   lowSignalPostsFiltered: number;
   jobPostsExcluded: number;
+  timeWindow?: string;
 }): ResearchProvenance {
   const analyzedPostCount = params.trendAnalyzedCount + params.referencePostCount;
   const retainedPostCount = params.trendPostCount + params.referencePostCount;
@@ -325,6 +344,7 @@ function buildResearchSummary(params: {
     lowSignalPostsFiltered: params.lowSignalPostsFiltered,
     jobPostFilterApplied: params.trendAnalyzedCount > 0,
     jobPostsExcluded: params.jobPostsExcluded,
+    timeWindow: params.timeWindow,
   };
 }
 
@@ -757,6 +777,7 @@ export async function buildLinkedInResearchContext(
     referenceInputCount: onboarding.reference_posts?.length ?? 0,
     lowSignalPostsFiltered: lowSignalFilter.removedCount,
     jobPostsExcluded: jobPostFilter.removedCount,
+    timeWindow: calculateTimeWindow(jobPostFilter.posts),
   });
   const insightContext = [
     `LinkedIn research query: ${trendQuery}`,

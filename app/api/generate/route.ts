@@ -1,7 +1,23 @@
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { getUsageStatus, incrementUsage } from '@/lib/utils/usage';
-import { generateStructuredJSON } from '@/lib/groq/client';
+import { generateStructuredJSON, generateText } from '@/lib/groq/client';
+
+function getStrongestInsight(insights: unknown): InsightItem | null {
+  if (!Array.isArray(insights) || insights.length === 0) return null;
+  const validInsights = insights.filter((i): i is InsightItem => i && typeof (i as any).insight === 'string');
+  if (validInsights.length === 0) return null;
+  const rank: Record<string, number> = { strong: 3, moderate: 2, weak: 1 };
+  const sorted = [...validInsights].sort((a, b) => {
+    const rA = rank[a.signal_strength ?? 'weak'] ?? 0;
+    const rB = rank[b.signal_strength ?? 'weak'] ?? 0;
+    if (rA !== rB) return rB - rA;
+    const bA = Array.isArray(a.basis) ? a.basis.length : 0;
+    const bB = Array.isArray(b.basis) ? b.basis.length : 0;
+    return bB - bA;
+  });
+  return sorted[0] ?? null;
+}
 import { buildLinkedInResearchContext, enrichInsightsWithResearchBasis } from '@/lib/apify/linkedin';
 import { buildInsightPrompt } from '@/lib/prompts/insight.prompt';
 import { buildContentPrompt } from '@/lib/prompts/content.prompt';
@@ -138,14 +154,21 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       (recentFeedback ?? []) as StoredFeedbackRecord[]
     );
 
+    const prevStrongest = getStrongestInsight(recentHistory?.[0]?.insights);
+    const lastWeekInsight = prevStrongest?.insight ?? null;
+    const previousPattern = prevStrongest?.format_hint ?? 'generic';
+
     const insightPromptText = buildInsightPrompt(
       onboarding,
       linkedinResearch?.insightContext ?? null,
-      feedbackContext
+      feedbackContext,
+      lastWeekInsight
     );
     let insights: InsightItem[];
+    let runLogicSummary: string | undefined;
+
     try {
-      const rawInsightsResponse = await generateStructuredJSON<{ insights?: unknown }>(
+      const rawInsightsResponse = await generateStructuredJSON<{ insights?: unknown; run_logic_summary?: unknown }>(
         insightPromptText,
         'InsightStage'
       );
@@ -159,6 +182,23 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       }
 
       insights = enrichInsightsWithResearchBasis(rawInsights, linkedinResearch);
+
+      const currentStrongest = getStrongestInsight(insights);
+      const currentPattern = currentStrongest?.format_hint ?? currentStrongest?.pattern ?? 'market';
+      
+      let deltaType = 'established';
+      if (prevStrongest) {
+        deltaType = previousPattern === currentStrongest?.format_hint ? 'strengthened' : 'shifted';
+      }
+
+      const phrasingPrompt = `You are the system voice of a high-end strategy engine. 
+Write exactly ONE concise, professional sentence expressing the following system decision logic:
+- Previous path focus: ${previousPattern}
+- Current path focus: ${currentPattern}
+- Delta type: ${deltaType} (if shifted, we moved away from previous to current. if strengthened, we reinforced current).
+Do NOT include any generic AI terms like "Based on...", "I recommend...". Speak as the system taking action.`;
+
+      runLogicSummary = await generateText(phrasingPrompt);
     } catch (error) {
       console.error('[Generate API] Insight generation failed.', error);
       throw new Error('Insight response was not valid JSON');
@@ -189,6 +229,9 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
         ideas: content.ideas,
         hooks: content.hooks,
         posts: content.posts,
+        research_summary: linkedinResearch.researchSummary,
+        learning_summary: learningSummary,
+        run_logic_summary: runLogicSummary
       }, { onConflict: 'user_id,week_number,year' })
       .select('id')
       .single();
@@ -267,6 +310,7 @@ export async function POST() { // request nesnesi kullanılmadığı için kald�
       trendPostCount: linkedinResearch.trendPosts.length,
       researchSummary: linkedinResearch.researchSummary,
       learningSummary,
+      run_logic_summary: runLogicSummary
     };
 
     const responseCandidate: unknown = responsePayload;

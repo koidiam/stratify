@@ -2,21 +2,15 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
-import { LiveStatus } from '@/components/system/LiveStatus';
 import { createClient } from '@/lib/supabase/server';
-import { getPlanSourceSummary } from '@/lib/constants/plan-copy';
 import {
-  formatLongDate,
-  formatShortDate,
-  getCycleImplication,
   getCycleLeadSignal,
-  getCycleOutputSummary,
   getDominantPostType,
   type StoredCycleRecord,
 } from '@/lib/utils/history';
 import {
   buildLearningSummary,
+  getCycleLearningSnapshot,
   type StoredFeedbackRecord,
 } from '@/lib/utils/learning';
 import { PLAN_LIMITS } from '@/lib/utils/usage';
@@ -27,33 +21,10 @@ function truncateText(value: string, limit: number = 160): string {
   if (value.length <= limit) {
     return value;
   }
-
   return `${value.slice(0, limit).trimEnd()}...`;
 }
 
-function formatContextValue(value: string | null | undefined): string {
-  if (!value || !value.trim()) {
-    return 'Not set';
-  }
-
-  return value;
-}
-
-function getStateBadgeTone(state: 'blocked' | 'active' | 'ready' | 'idle') {
-  if (state === 'blocked') {
-    return 'border-amber-500/20 bg-amber-500/10 text-amber-300';
-  }
-
-  if (state === 'active') {
-    return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300';
-  }
-
-  if (state === 'ready') {
-    return 'border-white/10 bg-white/[0.04] text-white/72';
-  }
-
-  return 'border-white/10 bg-white/[0.02] text-white/52';
-}
+type DashboardState = 'no_memory' | 'new_cycle_window' | 'cycle_ready' | 'cycle_completed';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -76,7 +47,6 @@ export default async function DashboardPage() {
       plan: 'free',
       onboarding_completed: false,
     });
-
     redirect('/onboarding');
   }
 
@@ -124,401 +94,237 @@ export default async function DashboardPage() {
 
   const historyRecords = (recentHistory ?? []) as StoredCycleRecord[];
   const feedbackRecords = (feedback ?? []) as StoredFeedbackRecord[];
-  const latestHistory = historyRecords[0] ?? null;
   const currentWeekHistory =
     historyRecords.find(
       (record) => record.week_number === week && record.year === year
     ) ?? null;
-  const planSource = getPlanSourceSummary(plan);
+  
   const learningSummary = buildLearningSummary(historyRecords, feedbackRecords);
-  const protectedCycleCount = plan === 'free' ? Math.max(historyRecords.length - 1, 0) : 0;
-  const accessibleMemory = plan === 'free' ? historyRecords.slice(0, 1) : historyRecords.slice(0, 3);
+  
+  const isCurrentCycleClosed = currentWeekHistory 
+    ? feedbackRecords.some(fb => fb.history_id === currentWeekHistory.id) 
+    : false;
 
-  const dashboardState = (() => {
+  const dashboardState: DashboardState = (() => {
+    if (historyRecords.length === 0) {
+      return 'no_memory';
+    }
+    
     if (currentWeekHistory) {
-      return {
-        tone: 'active' as const,
-        badge: 'Cycle stored',
-        headline: 'Cycle already captured',
-        description:
-          'Signals, direction, and drafts are attached. Review memory before another run.',
-      };
+      if (!isCurrentCycleClosed) {
+        return 'cycle_ready';
+      }
+      return 'cycle_completed';
     }
-
-    if (!hasRunsRemaining) {
-      return {
-        tone: 'blocked' as const,
-        badge: 'Capacity gate',
-        headline: 'Run limit reached',
-        description:
-          'This week is paused until capacity resets or access changes.',
-      };
-    }
-
-    if (latestHistory) {
-      return {
-        tone: 'ready' as const,
-        badge: 'Run Ready',
-        headline: 'Ready for this week',
-        description: `Last retained cycle: Week ${latestHistory.week_number}, ${latestHistory.year}. Run the next cycle.`,
-      };
-    }
-
-    return {
-        tone: 'idle' as const,
-        badge: 'Memory idle',
-        headline: 'Start the first cycle',
-        description:
-          'No memory exists yet. The first run creates it.',
-      };
+    
+    return 'new_cycle_window';
   })();
 
-  const primaryAction = (() => {
-    if (currentWeekHistory) {
-      return {
-        label: 'Open memory',
-        href: '/history',
-      };
+
+
+  const latestCycle = historyRecords[0] ?? null;
+  const cycleFeedbackRecords = latestCycle 
+    ? feedbackRecords.filter((fb) => fb.history_id === latestCycle.id) 
+    : [];
+  const latestLearning = latestCycle 
+    ? getCycleLearningSnapshot(latestCycle, feedbackRecords, historyRecords[1] ?? null) 
+    : null;
+  
+  let systemShift = 'No measurable change';
+  let systemBecause = 'Insufficient feedback data to establish pattern';
+
+  if (latestCycle && cycleFeedbackRecords.length > 0 && latestLearning) {
+    if (latestLearning.reinforced && latestLearning.reinforced !== 'No statistically dominant outlier yet.' && latestLearning.reinforced !== 'None. Building memory footprint.') {
+      systemShift = latestLearning.reinforced;
+      systemBecause = `${cycleFeedbackRecords.length} executed paths showed clustered engagement on this pattern.`;
+    } else {
+      const dominantPath = getDominantPostType(latestCycle.posts);
+      const previousDominantPath = historyRecords[1] ? getDominantPostType(historyRecords[1].posts) : null;
+      if (dominantPath && previousDominantPath && dominantPath !== previousDominantPath) {
+        systemShift = `Shifted structural bias from last week's ${previousDominantPath} format to ${dominantPath}`;
+        systemBecause = `Prior baseline execution indicated a need for variation towards ${dominantPath}`;
+      } else if (dominantPath && previousDominantPath && dominantPath === previousDominantPath) {
+        systemShift = `Reinforcing prior execution of ${dominantPath} format`;
+        systemBecause = `Prior baseline execution maintained consistent trajectory without negative signals`;
+      } else {
+        systemShift = 'Baseline logic running';
+        systemBecause = 'Variance between formats is currently statistically insignificant';
+      }
     }
-
-    if (!hasRunsRemaining) {
-      return {
-        label: 'Open access',
-        href: '/settings',
-      };
+  } else if (latestCycle && historyRecords.length > 1) {
+    const dominantPath = getDominantPostType(latestCycle.posts);
+    const previousDominantPath = historyRecords[1] ? getDominantPostType(historyRecords[1].posts) : null;
+    if (dominantPath && previousDominantPath && dominantPath !== previousDominantPath) {
+      systemShift = `Shifted bias toward ${dominantPath} formats`;
+      systemBecause = `System exploration expanded from previous ${previousDominantPath} baseline`;
+    } else if (dominantPath) {
+      systemShift = `Maintaining ${dominantPath} baseline`;
+      systemBecause = `Gathering data for initial pattern recognition`;
     }
+  }
 
-    return {
-      label: 'Run engine',
-      href: '/generate',
-    };
-  })();
-
-  const secondaryAction = (() => {
-    if (currentWeekHistory) {
-      return {
-        label: 'Open run surface',
-        href: '/generate',
-      };
-    }
-
-    if (historyRecords.length > 0) {
-      return {
-        label: 'Open memory',
-        href: '/history',
-      };
-    }
-
-    return {
-      label: 'Open settings',
-      href: '/settings',
-    };
-  })();
-
-  const recommendation = (() => {
-    if (currentWeekHistory) {
-      return {
-        title: 'Review this cycle',
-        description:
-          learningSummary.adjustmentContext[0] ??
-          'Open memory before you rerun.',
-        href: '/history',
-        label: 'Open current cycle',
-      };
-    }
-
-    if (!hasRunsRemaining) {
-      return {
-        title: 'Clear the gate',
-        description:
-          'Open access settings to unblock this week.',
-        href: '/settings',
-        label: 'Open access',
-      };
-    }
-
-    if (latestHistory) {
-      return {
-        title: 'Run from memory',
-        description:
-          learningSummary.adjustmentContext[0] ??
-          'Review memory, then run.',
-        href: '/generate',
-        label: 'Open engine',
-      };
-    }
-
-    return {
-        title: 'Create first memory',
-        description:
-          'Run once to create memory.',
-        href: '/generate',
-        label: 'Start engine',
-      };
-  })();
-
-  const compactContext = [
-    `Niche: ${formatContextValue(onboarding.niche)}`,
-    `Audience: ${formatContextValue(onboarding.target_audience)}`,
-    `Tone: ${formatContextValue(onboarding.tone)}`,
-    `Source: ${planSource.label}`,
-  ].join('  /  ');
-
-  const statusFacts = [
-    {
-      label: 'Current cycle',
-      value: currentWeekHistory ? `Week ${week}, ${year} retained` : `Week ${week}, ${year} open`,
+  const uiMap = {
+    no_memory: {
+      stateTitle: 'No cycle yet',
+      direction: 'Awaiting structural baseline',
+      reasoning: 'System memory requires an initial compilation cycle to begin tracking patterns.',
+      ctaLabel: 'Run first cycle',
+      ctaAction: '/generate',
     },
-    {
-      label: 'Run capacity',
-      value: `${currentUsage} / ${planLimit} used`,
+    new_cycle_window: {
+      stateTitle: 'Cycle ready',
+      direction: systemShift,
+      reasoning: systemBecause,
+      ctaLabel: !hasRunsRemaining ? 'Access full continuity' : 'Run this cycle',
+      ctaAction: !hasRunsRemaining ? '/settings' : '/generate',
     },
-    {
-      label: 'Retained memory',
-      value:
-        historyRecords.length === 0
-          ? 'No retained cycles'
-          : plan === 'free' && protectedCycleCount > 0
-            ? `${accessibleMemory.length} visible + ${protectedCycleCount} protected`
-            : `${historyRecords.length} cycles retained`,
+    cycle_ready: {
+      stateTitle: 'Cycle ready',
+      direction: systemShift,
+      reasoning: systemBecause,
+      ctaLabel: 'Review this cycle',
+      ctaAction: '/generate',
     },
-  ];
-
-  const learningNote =
-    learningSummary.adjustmentContext[0] ??
-    (historyRecords.length === 0
-      ? 'Run the first cycle to create memory.'
-      : 'Log post results to start learning.');
+    cycle_completed: {
+      stateTitle: 'Cycle completed',
+      direction: systemShift,
+      reasoning: systemBecause,
+      ctaLabel: 'Review this cycle',
+      ctaAction: '/generate',
+    }
+  }[dashboardState];
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-8 animate-in fade-in duration-500">
-      <header className="flex flex-col gap-4 border-b border-white/5 pb-6 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-white/35">
-            Dashboard
-          </div>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">
-            System state
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/50">
-            Current state. Main action. Next step.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white/42">
-          <span className="rounded-sm border border-white/10 px-2.5 py-1">Week {week}, {year}</span>
-          <span className="rounded-sm border border-white/10 px-2.5 py-1">{plan} plan</span>
-        </div>
-      </header>
-
-      <section className="str-elevated grid gap-6 rounded-sm border border-white/10 bg-[#020202] p-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:p-8">
-        <div className="space-y-5">
-          <div
-            className={`inline-flex items-center rounded-sm border px-3 py-1 text-[10px] font-bold uppercase tracking-[0.24em] ${getStateBadgeTone(dashboardState.tone)}`}
-          >
-            {dashboardState.badge}
-          </div>
-
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
-              System state
+    <main className="min-h-screen bg-background-base px-6 pb-20 pt-20">
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-12 animate-in fade-in duration-500">
+         
+         {/* Dominant State Block */}
+         <section className="flex flex-col items-center justify-center text-center py-10 min-h-[50vh]">
+            {/* System Context Bar */}
+            <div className="flex items-center justify-center gap-4 text-[11px] font-mono tracking-widest text-white/40 uppercase mb-8 pb-4 border-b border-white/[0.06] w-full max-w-md">
+               <span>Last run: {latestCycle ? new Date(latestCycle.created_at).toLocaleDateString() : 'Never'}</span>
+               <span className="w-1 h-1 rounded-full bg-white/20" />
+               <span>Cycles: {historyRecords.length}</span>
+               <span className="w-1 h-1 rounded-full bg-white/20" />
+               <span className="text-accent/80">{plan} plan</span>
             </div>
-            <h2 className="mt-3 text-4xl font-semibold tracking-tight text-white md:text-[2.8rem]">
-              {dashboardState.headline}
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/56">
-              {dashboardState.description}
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <LiveStatus
-                label={currentWeekHistory ? 'Cycle updated' : 'Last run'}
-                timestamp={currentWeekHistory?.created_at ?? latestHistory?.created_at ?? null}
-                fallback="No cycle signal"
-                justNowLabel={currentWeekHistory ? 'Cycle updated just now' : 'Last run just now'}
-                pulse={Boolean(currentWeekHistory?.created_at ?? latestHistory?.created_at)}
-              />
-              <LiveStatus
-                label="Feedback synced"
-                timestamp={learningSummary.lastFeedbackAt}
-                fallback="No feedback signal"
-                justNowLabel="Feedback synced just now"
-              />
-            </div>
-          </div>
 
-          <div className="pt-2">
-            <Link
-              href={primaryAction.href}
-              className="str-cta inline-flex h-14 items-center justify-center rounded-sm bg-white px-7 text-[12px] font-bold uppercase tracking-[0.24em] text-black shadow-[0_10px_30px_-20px_rgba(255,255,255,0.35),0_0_0_1px_rgba(255,255,255,0.12)] hover:bg-white/92"
-            >
-              {primaryAction.label}
-            </Link>
-            <div className="mt-3">
-              <Link
-                href={secondaryAction.href}
-                className="str-soft-transition inline-flex h-10 items-center justify-center rounded-sm border border-white/10 px-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white/64 hover:border-white/20 hover:text-white"
+            <h1 className="mb-4 text-4xl font-medium text-white tracking-tight">{uiMap.stateTitle}</h1>
+            <div className="flex flex-col items-center gap-1.5 mb-10 text-[14px]">
+              <div className="text-white/70">{uiMap.direction}</div>
+              <div className="text-white/70">{uiMap.reasoning}</div>
+            </div>
+            
+            <div className="flex flex-col items-center gap-6">
+              <Link 
+                href={uiMap.ctaAction} 
+                className="bg-white text-black font-semibold text-sm px-8 py-3 rounded-md hover:bg-neutral-100 transition-all duration-150 inline-flex items-center justify-center"
               >
-                {secondaryAction.label}
+                 {uiMap.ctaLabel}
               </Link>
-            </div>
-          </div>
-        </div>
 
-        <aside className="border-t border-white/5 pt-5 text-xs lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
-          <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/28">
-            Next action
-          </div>
-          <p className="mt-2 text-sm font-medium text-white/88">
-            {recommendation.title}
-          </p>
-          <Link
-            href={recommendation.href}
-            className="str-soft-transition mt-3 inline-flex items-center gap-2 text-[11px] text-white/60 hover:text-white"
-          >
-            {recommendation.label}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-
-          <div className="mt-4 space-y-2 border-t border-white/5 pt-3">
-            {statusFacts.map((item) => (
-              <div key={item.label} className="flex items-start justify-between gap-4">
-                <dt className="text-[9px] font-bold uppercase tracking-[0.16em] text-white/26">
-                  {item.label}
-                </dt>
-                <dd className="text-right text-[11px] text-white/54">{item.value}</dd>
+              {/* System State Indicator */}
+              <div className="flex items-center gap-4 text-[10px] font-mono uppercase tracking-widest text-white/40">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>SIGNAL ACTIVE</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent/60" />
+                  <span>MEMORY: {historyRecords.length} CYCLE{historyRecords.length !== 1 && 'S'}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  <span>LEARNING: {learningSummary.status === 'none' ? 'IDLE' : 'LIVE'}</span>
+                </div>
               </div>
-            ))}
-          </div>
-        </aside>
-      </section>
-
-      <section className="border-b border-white/5 pb-4">
-          <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
-            Current context
-          </div>
-          <p className="mt-3 text-sm text-white/66">{compactContext}</p>
-        </section>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-        <section className="str-elevated rounded-sm border border-white/10 bg-[#020202] p-6">
-          <div className="flex flex-col gap-2 border-b border-white/10 pb-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/35">
-                Memory snapshot
-              </div>
-              <h3 className="mt-2 text-xl font-medium text-white">System memory</h3>
             </div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-white/40">
-              {historyRecords.length === 0
-                ? 'No retained cycles'
-                : latestHistory
-                  ? `Latest stored ${formatShortDate(latestHistory.created_at)}`
-                  : 'Memory ready'}
-            </div>
-          </div>
+         </section>
+         
+         {/* Strategic Ledger */}
+         {historyRecords.length > 0 && (
+           <section className="flex flex-col gap-8 w-full border-t border-white/10 pt-16">
+             <div className="text-[12px] font-bold uppercase tracking-[0.1em] text-white/50 px-2">
+               Strategic Ledger
+             </div>
+             
+             <div className="flex flex-col gap-6">
+               {historyRecords.map((record, index) => {
+                 const prevCycle = historyRecords[index + 1] ?? null;
+                 const leadSignal = getCycleLeadSignal(record.insights);
+                 const dominantPath = getDominantPostType(record.posts);
+                 const prevDominantPath = prevCycle ? getDominantPostType(prevCycle.posts) : null;
+                 
+                 const fbRecords = feedbackRecords.filter((fb) => fb.history_id === record.id);
+                 const cLearning = getCycleLearningSnapshot(record, feedbackRecords, prevCycle);
+                 
+                 let localShift = 'Exploration baseline';
+                 let localBecause = 'No prior data to shift from';
+                 
+                 if (index < historyRecords.length - 1) {
+                   if (cLearning.reinforced && cLearning.reinforced !== 'No statistically dominant outlier yet.' && cLearning.reinforced !== 'None. Building memory footprint.') {
+                     localShift = cLearning.reinforced;
+                     localBecause = fbRecords.length > 0 ? `Engagement clustered on this structural pattern` : 'Pattern reinforced';
+                   } else if (dominantPath && prevDominantPath && dominantPath !== prevDominantPath) {
+                     localShift = `Bias shifted to ${dominantPath}`;
+                     localBecause = `System rotated format from ${prevDominantPath} to map engagement surfaces`;
+                   } else if (dominantPath && prevDominantPath && dominantPath === prevDominantPath) {
+                     localShift = `Maintained ${dominantPath} format`;
+                     localBecause = `Previous execution maintained established baseline efficiently`;
+                   } else {
+                     localShift = 'Executing baseline';
+                     localBecause = 'Variance in feedback statistically insignificant';
+                   }
+                 }
 
-          {accessibleMemory.length > 0 ? (
-            <div className="mt-2 divide-y divide-white/10">
-              {accessibleMemory.map((record, index) => {
-                const isCurrentCycle =
-                  record.week_number === week && record.year === year;
-                const leadSignal = truncateText(getCycleLeadSignal(record.insights), 96);
-                const implication = truncateText(getCycleImplication(record.insights), 150);
-                const summary = dominantPathOrSummary(record.hooks, record.posts);
+                 let nextImpact = cLearning.nextImpact;
+                 if (nextImpact.includes('impact sealed') || nextImpact.includes('execution bias sealed')) {
+                   nextImpact = 'Standard baseline paths selected';
+                 }
 
-                return (
-                <details key={record.id} className="group py-4">
-                  <summary className="list-none cursor-pointer">
-                      <div className="str-surface-interactive grid gap-3 rounded-sm px-1 py-1 md:grid-cols-[140px_minmax(0,1fr)_120px] md:items-start">
-                        <div>
-                          <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/32">
-                            {isCurrentCycle ? 'Current cycle' : index === 0 ? 'Latest memory' : 'Retained cycle'}
+                 return (
+                   <div key={record.id} className="bg-[#111111] border border-white/8 rounded-xl p-6 lg:p-8">
+                      <div className="text-xs text-white/30 mb-4">
+                        Week {record.week_number}, {record.year}
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                        <div className="flex flex-col gap-4">
+                          <div>
+                            <div className="text-[10px] tracking-[0.15em] uppercase text-white/50 font-medium mb-1">SIGNAL</div>
+                            <div className="text-sm text-white/80 leading-relaxed">{leadSignal}</div>
                           </div>
-                          <div className="mt-1 text-base font-medium text-white">
-                            Week {record.week_number}, {record.year}
+                          <div>
+                            <div className="text-[10px] tracking-[0.15em] uppercase text-white/50 font-medium mb-1">DECISION</div>
+                            <div className="text-sm text-white/80 leading-relaxed">{localShift}</div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] tracking-[0.15em] uppercase text-white/50 font-medium mb-1">BECAUSE</div>
+                            <div className="text-sm text-white/80 leading-relaxed">{localBecause}</div>
                           </div>
                         </div>
-
-                        <p className="text-sm leading-relaxed text-white/82 line-clamp-1">
-                          {leadSignal}
-                        </p>
-
-                        <div className="text-right text-[11px] text-white/46">
-                          <div>Expand</div>
-                          <div className="mt-1">{summary}</div>
-                        </div>
-                      </div>
-                    </summary>
-
-                    <div className="mt-3 border-t border-white/5 pt-3">
-                      <div className="text-[11px] text-white/50">
-                        {formatLongDate(record.created_at)}
-                      </div>
-                      <p className="mt-2 text-sm leading-relaxed text-white/58">
-                        {implication}
-                      </p>
-                    </div>
-                  </details>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="mt-6 border border-dashed border-white/10 px-4 py-6 text-sm leading-relaxed text-white/55">
-              No cycle memory exists yet. Run the engine once to create the first retained system state for this workspace.
-            </div>
-          )}
-
-          <div className="mt-5 flex flex-wrap gap-4 border-t border-white/10 pt-4 text-[11px] text-white/45">
-            <span>
-              {historyRecords.length === 0
-                ? 'Retained cycles: 0'
-                : `Retained cycles: ${historyRecords.length}`}
-            </span>
-            <span>
-              {learningSummary.annotatedCycleCount === 0
-                ? 'Feedback-linked cycles: 0'
-                : `Feedback-linked cycles: ${learningSummary.annotatedCycleCount}`}
-            </span>
-            {plan === 'free' && protectedCycleCount > 0 && (
-              <span>Protected cycles: {protectedCycleCount}</span>
-            )}
-          </div>
-        </section>
-
-        <aside className="space-y-4 border-t border-white/5 pt-4 text-xs xl:border-l xl:border-t-0 xl:pl-5 xl:pt-0">
-          <div>
-            <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/28">
-              Recommendation
-            </div>
-            <p className="mt-2 text-sm font-medium text-white/88">
-              {recommendation.title}
-            </p>
-            <Link
-              href={recommendation.href}
-              className="str-soft-transition mt-3 inline-flex items-center gap-2 text-[11px] text-white/60 hover:text-white"
-            >
-              {recommendation.label}
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-
-          <div className="border-t border-white/5 pt-4">
-            <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/28">
-              Learning note
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-white/48">
-              {learningNote}
-            </p>
-          </div>
-        </aside>
+                        
+                        <div className="flex flex-col gap-4 md:border-l md:border-white/5 md:pl-8 lg:pl-12">
+                          <div>
+                            <div className="text-[10px] tracking-[0.15em] uppercase text-white/50 font-medium mb-1">CHANGE FROM LAST WEEK</div>
+                            <div className="text-sm text-white/80 leading-relaxed">
+                              {prevDominantPath && dominantPath && dominantPath !== prevDominantPath 
+                                ? `Decreased ${prevDominantPath}, increased ${dominantPath}` 
+                                : `Sustained output structure`}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] tracking-[0.15em] uppercase text-white/50 font-medium mb-1">NEXT IMPACT</div>
+                            <div className="text-sm text-white/80 leading-relaxed">{nextImpact}</div>
+                          </div>
+                        </div></div>
+                     </div>
+                 );
+               })}
+             </div>
+           </section>
+         )}
       </div>
-    </div>
+    </main>
   );
-}
-
-function dominantPathOrSummary(
-  hooks: StoredCycleRecord['hooks'],
-  posts: StoredCycleRecord['posts']
-) {
-  return getDominantPostType(posts) ?? getCycleOutputSummary(hooks, posts);
 }

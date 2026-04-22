@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ArrowRight, Check, Copy } from 'lucide-react';
+import { ArrowRight, Check, Copy, Lock, ChevronDown } from 'lucide-react';
+import Link from 'next/link';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -100,8 +101,10 @@ export function ContentHooks({
   onSelectPost,
   onBack,
   dataSource,
+  userPlan,
 }: Props) {
   const [copiedPostIndex, setCopiedPostIndex] = useState<number | null>(null);
+  const [expandedPathIdx, setExpandedPathIdx] = useState<number | null>(null);
 
   const sourceLabel = dataSource ?? 'Niche signals';
 
@@ -135,77 +138,127 @@ export function ContentHooks({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {posts.map((post, index) => (
-          <Card key={index} className="flex flex-col justify-between rounded-sm str-panel p-5 transition-colors hover:border-white/20">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <span className="str-mono text-white/65">PATH 0{index + 1}</span>
-                <span className="str-mono rounded-sm bg-emerald-500/10 px-2 py-0.5 text-emerald-500/90">
+      <div className="flex flex-col border-y border-white/10 divide-y divide-white/10 bg-[#0a0a0a] rounded-sm overflow-hidden">
+        {posts.map((post, index) => {
+          const isSealed = userPlan !== 'pro' && index >= ((userPlan === 'basic' ? 2 : 1) || 1);
+          const isExpanded = expandedPathIdx === index;
+          
+          return (
+            <div 
+              key={index} 
+              className={`relative flex flex-col p-6 transition-all border-l-2 border-l-transparent hover:border-l-emerald-500 hover:bg-white/[0.02] ${isSealed ? 'opacity-60 bg-black/40' : ''}`}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-white/50">PATH {String(index + 1).padStart(2, '0')}</span>
+                <span className={`text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-sm ${isSealed ? 'bg-white/5 text-white/40' : 'bg-emerald-500/10 text-emerald-500/90'}`}>
                   {formatPathType(post.type)}
                 </span>
               </div>
 
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Entry Point</div>
-                <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-white/88">
+              <div className="mb-2">
+                <p className="text-lg font-semibold text-white leading-snug line-clamp-2">
                   {hooks[index] ?? hooks[0] ?? 'Hook not available.'}
                 </p>
               </div>
 
               {ideas[index]?.idea && (
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Direction</div>
-                  <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/72">{ideas[index]?.idea}</p>
+                <div className="mb-4">
+                  <p className="text-sm text-white/50 leading-relaxed">
+                    {ideas[index]?.idea}
+                  </p>
                 </div>
               )}
 
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/45">Path Interpretation</div>
-                <p className="mt-2 text-sm leading-relaxed text-white/68">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-white/30">Interpretation:</span>
+                <span className="text-[11px] text-white/60 bg-white/5 px-2 py-1 rounded-sm">
                   {getPathInterpretation(
                     hooks[index] ?? hooks[0] ?? '',
                     ideas[index],
                     post.explanation || getSelectionReason(hooks[index] ?? hooks[0] ?? '', ideas[index]),
                   )}
-                </p>
+                </span>
               </div>
 
-              <div className="rounded-sm border border-white/10 bg-black/30 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Draft Preview</div>
-                <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-[12px] leading-relaxed text-white/72">
-                  {post.content}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-5 border-t border-white/10 pt-4 space-y-3">
-              <Button
-                onClick={() => onSelectPost(post.content, index)}
-                className="w-full rounded-sm bg-white text-black transition-all hover:bg-white/90 text-[11px] font-bold uppercase tracking-widest h-10"
+              <button 
+                onClick={() => setExpandedPathIdx(isExpanded ? null : index)}
+                className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white/70 transition-colors w-fit mb-4"
               >
-                Open Draft Editor
-                <ArrowRight className="ml-2 h-3.5 w-3.5" />
-              </Button>
+                {isExpanded ? 'Hide Details' : 'View Details'}
+                {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ArrowRight className="w-3 h-3" />}
+              </button>
 
-              <Button
-                onClick={() => handleCopy(post.content, index)}
-                variant="outline"
-                className="w-full border-white/10 bg-transparent text-white/80 hover:bg-white/5 hover:text-white rounded-sm text-xs font-mono uppercase tracking-wider h-8"
-              >
-                {copiedPostIndex === index ? (
-                  <Check className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+              {isExpanded && (
+                <div className="space-y-4 mb-4 animate-in fade-in duration-300">
+                  <div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400/80 mb-1">
+                      Why this exists
+                    </div>
+                    <div className="text-xs text-emerald-100/60">
+                      Derived from current system shift toward {ideas[index]?.type || formatPathType(post.type)}
+                    </div>
+                  </div>
+
+                  {isSealed ? (
+                    <div className="relative group">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/30 mb-1">Draft Preview</div>
+                      <p className="text-xs leading-relaxed text-transparent blur-[3px] select-none pointer-events-none bg-clip-text bg-gradient-to-b from-white/90 to-transparent">
+                        {post.content.slice(0, 150)}...
+                      </p>
+                      <div className="absolute inset-0 flex flex-col items-start justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Lock className="w-4 h-4 text-white/50 mb-2" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-white/50">Restricted Depth</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Draft Preview</div>
+                      <p className="whitespace-pre-wrap text-xs leading-relaxed text-white/72 line-clamp-2">
+                        {post.content}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex justify-end items-center gap-3 mt-2">
+                {isSealed ? (
+                  <div className="flex items-center gap-4">
+                    <div className="text-[10px] uppercase tracking-widest text-white/40">Sealed Path</div>
+                    <Link href="/settings" className="text-[10px] font-bold uppercase tracking-widest text-emerald-500/80 hover:text-emerald-400 transition-colors">
+                      Unlock deeper layers →
+                    </Link>
+                  </div>
                 ) : (
-                  <Copy className="h-3.5 w-3.5 mr-1" />
+                  <>
+                    <Button
+                      onClick={() => handleCopy(post.content, index)}
+                      variant="ghost"
+                      className="text-white/60 hover:text-white hover:bg-white/10 text-[10px] font-bold uppercase tracking-widest h-8 px-3 rounded-sm"
+                    >
+                      {copiedPostIndex === index ? (
+                        <Check className="h-3.5 w-3.5 mr-1 text-emerald-500" />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      {copiedPostIndex === index ? 'Copied' : 'Copy'}
+                    </Button>
+                    <Button
+                      onClick={() => onSelectPost(post.content, index)}
+                      className="bg-white text-black hover:bg-white/90 transition-all text-[10px] font-bold uppercase tracking-widest h-8 px-4 rounded-sm"
+                    >
+                      Open Draft Editor
+                      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Button>
+                  </>
                 )}
-                {copiedPostIndex === index ? 'Copied' : 'Copy'}
-              </Button>
+              </div>
             </div>
-          </Card>
-        ))}
+          );
+        })}
       </div>
 
-      <div className="pt-1">
+      <div className="pt-2">
         <Button onClick={onBack} variant="ghost" className="text-white/55 hover:text-white font-medium text-sm">
           Back To Signals
         </Button>

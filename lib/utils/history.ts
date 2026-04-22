@@ -1,4 +1,4 @@
-import { InsightItem, PostItem, SignalStrength } from '@/types';
+import { InsightItem, PostItem, SignalStrength, ResearchProvenance, LearningSummary } from '@/types';
 
 export interface StoredCycleRecord {
   id: string;
@@ -8,6 +8,9 @@ export interface StoredCycleRecord {
   insights: InsightItem[] | null;
   hooks: string[] | null;
   posts: PostItem[] | null;
+  research_summary: ResearchProvenance | null;
+  learning_summary: LearningSummary | null;
+  run_logic_summary: string | null;
 }
 
 function hasText(value: string | null | undefined): value is string {

@@ -3,7 +3,7 @@ export type Niche = 'saas_founder' | 'developer' | 'freelancer' | 'creator';
 export type PostType = 'Authority' | 'Personal' | 'Contrarian' | 'How-to' | 'Soft Sell';
 export type ResearchSourceMode = 'live' | 'cached' | 'none';
 export type SignalStrength = 'weak' | 'moderate' | 'strong';
-export type LearningStatus = 'none' | 'early' | 'directional';
+export type LearningStatus = 'none' | 'early' | 'directional' | 'reinforced';
 export type LearningComparisonBasis = 'engagement-rate' | 'engagement-score' | 'insufficient';
 export type MarketInputStatus =
   | 'trend-and-reference'
@@ -81,6 +81,7 @@ export interface WeeklyGeneration extends WeeklyContent {
   trendPostCount?: number;
   researchSummary?: ResearchProvenance;
   learningSummary?: LearningSummary;
+  run_logic_summary?: string;
 }
 
 export interface ApiErrorResponse {
@@ -126,6 +127,7 @@ export interface ResearchProvenance {
   lowSignalPostsFiltered: number;
   jobPostFilterApplied: boolean;
   jobPostsExcluded: number;
+  timeWindow?: string;
 }
 
 export interface LinkedInResearchContext {
